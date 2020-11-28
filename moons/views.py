@@ -1,0 +1,28 @@
+import os
+import datetime
+
+from django.db.models import Sum
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from django.utils.translation import ugettext_lazy as _
+from django.utils import timezone
+from .models import MoonFrack
+
+@login_required
+def extractions(request):
+    if request.user.has_perm(''):
+        days_to_hold = timezone.now() - datetime.timedelta(days=3)
+
+        events = MoonFrack.objects.visible_to(request.user)
+        future_fracks = events.filter(arrival_time__gt=timezone.now())
+        current_fracks = events.filter(arrival_time__gte=days_to_hold, arrival_time__lt=timezone.now())
+    else:
+        raise PermissionDenied('You do not have permission to be here. This has been Logged!')
+
+    context = {
+        'events': future_fracks,
+        'current_fracks': current_fracks,
+    }
+
+    return render(request, 'moons/list.html', context=context)

@@ -1,0 +1,130 @@
+{% extends 'alliancetools/base.html' %}
+{% load i18n %}
+{% load static %}
+{% load humanize %}
+{% load alliancetools_tags %}
+{% block at_block %}
+        <div class="row">
+            <h1 class="text-center">Moon Extractions</h1>
+            <p  class="text-center"><button class="btn btn-xs btn-link viewcontent" id="{{asset.asset.item_id}}"><i class="fa fa-bell"></i></button> Key:</p>
+            <p class="text-center"><span style="background-color: #0D98BA" class="label label-default">Exceptional</span>
+            <span style="background-color: #4B8B3B" class="label label-default">Rare</span>
+            <span style="background-color: #FFAA1D" class="label label-default">Uncommon</span>
+            <span style="background-color: #E86100" class="label label-default">Common</span>
+            <span style="background-color: #9B1C31" class="label label-default">Ubiquitous</span>
+            <span style="background-color: #B57EDC" class="label label-default">Ore</span></p>
+            <h3 class="text-center">Active Moons</h3>
+            <table id="table-inactive" class="table table-hover dataTable">
+                <thead>
+                    <th class="text-center">Arival</th>
+                    <th class="text-center">Structure</th>
+                    <th class="text-center">Moon</th>
+                    <th class="text-center">System</th>
+                    <th class="text-center">Constellation</th>
+                    <th class="text-center">Corporation</th>
+                    <th class="text-center">Ores</th>
+                </thead>
+                <tbody>
+                {% for event in current_fracks %}
+                <tr>
+                    <td class="text-center" style="vertical-align:middle">{{ event.arrival_time|date:"Y-m-d H:i"}}</td>
+                    <td class="text-center" style="vertical-align:middle">{{ event.structure.location_name }}</span></td>
+                    <td class="text-center" style="vertical-align:middle">{{ event.moon_name.name }}</td>
+                    <td class="text-center" style="vertical-align:middle">{{ event.structure.system.name }}</span></td>
+                    <td class="text-center" style="vertical-align:middle">{{ event.structure.system.constellation.name }}</span></td>
+                    <td class="text-center" style="vertical-align:middle"> {{ event.corporation.corporation.corporation_name }}</td>
+                    <td class="text-center" style="vertical-align:middle">{% for ores in event.frack.all %}
+                        <span {{ ores.ore.name|ore_color}} class="label label-default"><b>{{ ores.ore.name }}</b> ({{ores.total_m3|intword}} m3)</span><br>
+                    {% endfor %} </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="8" class="text-center alert alert-warning text-center">{% trans "No Structures Available" %}</td><td style="display: none;"></td><td style="display: none;"></td><td style="display: none;"></td><td style="display: none;"></td><td style="display: none;"></td><td style="display: none;"></td><td style="display: none;"></td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            <h3 class="text-center">Upcoming Moons</h3>
+            <table id="table-structs" class="table table-hover dataTable">
+                <thead>
+                    <th class="text-center">Arival</th>
+                    <th class="text-center">Structure</th>
+                    <th class="text-center">Moon</th>
+                    <th class="text-center">System</th>
+                    <th class="text-center">Constellation</th>
+                    <th class="text-center">Corporation</th>
+                    <th class="text-center">Ores</th>
+                </thead>
+                <tbody>
+                {% for event in events %}
+                <tr>
+                    <td class="text-center" style="vertical-align:middle">{{ event.arrival_time|date:"Y-m-d H:i"}}</td>
+                    <td class="text-center" style="vertical-align:middle">{{ event.structure.location_name }}</span></td>
+                    <td class="text-center" style="vertical-align:middle">{{ event.moon_name.name }}</td>
+                    <td class="text-center" style="vertical-align:middle">{{ event.structure.system.name }}</span></td>
+                    <td class="text-center" style="vertical-align:middle">{{ event.structure.system.constellation.name }}</span></td>
+                    <td class="text-center" style="vertical-align:middle"> {{ event.corporation.corporation.corporation_name }}</td>
+                    <td class="text-center" style="vertical-align:middle">{% for ores in event.frack.all %}
+                        <span {{ ores.ore.name|ore_color}} class="label label-default"><b>{{ ores.ore.name }}</b> ({{ores.total_m3|intword}} m3)</span><br>
+                    {% endfor %} </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="8" class="text-center alert alert-warning text-center">{% trans "No Structures Available" %}</td><td style="display: none;"></td><td style="display: none;"></td><td style="display: none;"></td><td style="display: none;"></td><td style="display: none;"></td><td style="display: none;"></td><td style="display: none;"></td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    <div id="ping-modal" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div id="ping-data">
+                    <pre>{% for event in events %}{% if event.db.corp.id == 137 %}**{{event.db.arrival_time|date:"Y-m-d H:i"}}** - {{ event.db.structure.name }} `{% for v in event.array.ore %}{{ v.name}},{% endfor %}`
+{% endif %}{% endfor %}
+                    </pre>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+{% block extra_javascript %}
+    {% include 'bundles/datatables-js.html' %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.min.js"></script>
+	<script>!function(t){function e(t){var e={columns:[],columnsIdxList:[],bootstrap:!1,autoSize:!0,label:"Filter "};if("bootstrap"in t&&"boolean"==typeof t.bootstrap&&(e.bootstrap=t.bootstrap),"autoSize"in t&&"boolean"==typeof t.autoSize&&(e.autoSize=t.autoSize),"label"in t&&"string"==typeof t.label&&(e.label=t.label),"columns"in t)for(var i=0;i<t.columns.length;i++){var n=t.columns[i];if("idx"in n&&"number"==typeof n.idx){var o=n.idx;e.columns[o]={title:null,maxWidth:null,autoSize:!0},e.columnsIdxList.push(o),"title"in n&&"string"==typeof n.title&&(e.columns[o].title=n.title),"maxWidth"in n&&"string"==typeof n.maxWidth&&(e.columns[o].maxWidth=n.maxWidth),"autoSize"in n&&"boolean"==typeof n.autoSize&&(e.columns[o].autoSize=n.autoSize)}}return e}t(document).on("preInit.dt",function(i,n){if("dt"===i.namespace){var o=new t.fn.dataTable.Api(n),a=o.table().node().id,l=o.init();if("filterDropDown"in l){var r=e(l.filterDropDown);if(0!=r.columns.length){var u=o.table().container(),s=a+"_filterWrapper",c=s+" "+(r.bootstrap?"form-inline":"");t(u).prepend('<div id="'+s+'" class="'+c+'">'+r.label+"</div>"),o.columns(r.columnsIdxList).every(function(){var e=this.index(),i=null!==r.columns[e].title?r.columns[e].title:t(this.header()).html();""==i&&(i="column "+(e+1));var n="form-control "+a+"_filterSelect",o=a+"_filterSelect"+e;t("#"+s).append('<select id="'+o+'" class="'+n+'"></select>');var l=t("#"+o).empty().append('<option value="">('+i+")</option>");})}}}}),t(document).on("init.dt",function(i,n){if("dt"===i.namespace){var o=new t.fn.dataTable.Api(n),a=o.table().node().id,l=o.init();if("filterDropDown"in l){var r=e(l.filterDropDown);o.table().container();o.columns(r.columnsIdxList).every(function(){var e=this,i=e.index(),n=t("#"+(a+"_filterSelect"+i));n.on("change",function(){var i=t.fn.dataTable.util.escapeRegex(t(this).val());e.search(i?"^"+i+"$":"",!0,!1).draw()}),e.data().unique().sort().each(function(t,e){""!=t&&n.append('<option value="'+t+'">'+t+"</option>")})})}}})}(jQuery);</script>
+
+{% endblock %}
+{% block extra_script %}
+    $(".viewcontent").on("click", function() {
+        $("#ping-modal").modal();
+    });
+
+    $(document).ready(function() {
+        $('#table-inactive').DataTable(
+            {"filterDropDown": {columns: [{idx: 0}]}}
+        )
+        $('#table-structs').DataTable({
+            "filterDropDown": {
+					columns: [{
+						idx: 3
+                            },{
+						idx: 4
+                            },{
+						idx: 5
+                            },
+                            ],
+                    bootstrap: true
+            },
+            "columnDefs": [
+                { "searchable": false, "targets": [0] },
+                { "sortable": false, "targets": [6] },
+                { "visible": false, "targets": [3,4,5] }
+            ],
+            "order": [
+                [0, "asc"],
+            ],
+            "pageLength": 25
+        });
+    });
+{% endblock %}
