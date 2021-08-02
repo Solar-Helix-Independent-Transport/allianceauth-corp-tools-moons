@@ -14,7 +14,7 @@
             <span style="background-color: #9B1C31" class="label label-default">Ubiquitous</span>
             <span style="background-color: #B57EDC" class="label label-default">Ore</span></p>
             <h3 class="text-center">Active Moons</h3>
-            <table id="table-inactive" class="table table-hover dataTable">
+            <table id="table-active" class="table table-hover dataTable">
                 <thead>
                     <th class="text-center">Arival</th>
                     <th class="text-center">Structure</th>
@@ -101,9 +101,28 @@
     });
 
     $(document).ready(function() {
-        $('#table-inactive').DataTable(
-            {"filterDropDown": {columns: [{idx: 0}]}}
-        )
+        $('#table-active').DataTable({
+            "filterDropDown": {
+					columns: [{
+						idx: 3
+                            },{
+						idx: 4
+                            },{
+						idx: 5
+                            },
+                            ],
+                    bootstrap: true
+            },
+            "columnDefs": [
+                { "searchable": false, "targets": [0] },
+                { "sortable": false, "targets": [6] },
+                { "visible": false, "targets": [3,4,5] }
+            ],
+            "order": [
+                [0, "asc"],
+            ],
+            "pageLength": 25
+        });
         $('#table-structs').DataTable({
             "filterDropDown": {
 					columns: [{

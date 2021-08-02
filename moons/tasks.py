@@ -3,7 +3,7 @@ import os
 from datetime import timedelta, datetime
 import yaml
 
-from celery import shared_task
+from celery import shared_task, chain
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo, EveAllianceInfo
 from django.utils import timezone
 from . import app_settings
@@ -103,4 +103,35 @@ def process_moon_pulls():
     FrackOre.objects.bulk_create(_ores, batch_size=500)
     return "fetched!"
 
+@shared_task
+def get_recent_observations():
+    start_time = timezone.now() - timedelta(days=5)
+    fracks = MoonFrack.objects.filter(start_time__gte=start_time, start_time__lte=timezone.now())
+    observer_ids = set()
+    task_queue = []
+    for frack in fracks:
+        if frack.structure_id not in observer_ids:
+            observer_ids.add(frack.structure_id)
+            task_queue.append(process_moon_obs.si(frack.structure_id, frack.corporation.corporation_id))
+    chain(task_queue).apply_async(priority=8)
+
+@shared_task
+def process_moon_obs(observer_id, corporation_id):
+    logger.debug("Started Mining Ob Sync for {}".format(observer_id))
+
+    token = get_corp_token(corporation_id, ['esi-industry.read_corporation_mining.v1'], ['Accountant', 'Director'])
+    obs = providers.esi.client().Corporation.get_corporation_corporation_id_mining_observers_observer_id(corporation_id=corporation_id,
+                                                                                                   observer_id=observer_id,
+                                                                                                   token=token.valid_access_token()).results()
+    start_time = timezone.now() - timedelta(days=5)
+    ob_pks = set(MiningObservation.objects.filter(observing_id=observer_id).values_list('frack_pk', flat=True))
+    mining_ob_updates = []
+    mining_ob_creates = []
+    for ob in obs:
+        pk = MiningObservation.build_pk(corporation_id, observer_id, ob.get('character_id'), ob.get('last_updated'))
+        _ob = MiningObservation(ob_pk=pk,
+                                
+                                )
+        if pk in ob_pks:
+            pass
 

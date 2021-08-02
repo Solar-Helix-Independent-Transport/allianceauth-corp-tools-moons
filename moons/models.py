@@ -50,7 +50,8 @@ class FrackOre(models.Model):
 
 # Corp Mining Observation
 class MiningObservation(models.Model):
-    frack = models.ForeignKey(MoonFrack, on_delete=models.CASCADE)
+    ob_pk = models.CharField(max_length=50, primary_key=True)
+
     observing_id = models.BigIntegerField(null=True, default=None, blank=True)
     character_name = models.ForeignKey(EveName, on_delete=models.SET_NULL, null=True, default=None)
 
@@ -60,6 +61,22 @@ class MiningObservation(models.Model):
     recorded_corporation_id = models.IntegerField()
     type_id = models.IntegerField()
     type_name = models.ForeignKey(EveItemType, on_delete=models.SET_NULL, null=True, default=None) 
+
+    @classmethod
+    def build_pk(cls, corp_id, observer_id, observed_character_id, ob_date):
+        """
+        Helper method to get a unique pk for a specific observation. Usefull for bulk updates of data.
+        :param corp_id: Observer Corp.
+        :param observer_id: Mining Observer ID.
+        :param observed_character_id: Character Observed.
+        :param ob_date: DateTime of observation.
+        :return: :class:String
+        """
+        date_str = ob_date.strftime("%Y%m%d")
+        return "{}-{}-{}-{}".format(char_id,
+                                    observer_id,
+                                    observed_character_id,
+                                    date_str)
 
     class Meta:
         indexes = (

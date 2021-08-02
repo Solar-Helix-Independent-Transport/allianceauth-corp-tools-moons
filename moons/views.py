@@ -17,6 +17,7 @@ def extractions(request):
         events = MoonFrack.objects.visible_to(request.user)
         future_fracks = events.filter(arrival_time__gt=timezone.now())
         current_fracks = events.filter(arrival_time__gte=days_to_hold, arrival_time__lt=timezone.now())
+        
     else:
         raise PermissionDenied('You do not have permission to be here. This has been Logged!')
 
@@ -26,3 +27,4 @@ def extractions(request):
     }
 
     return render(request, 'moons/list.html', context=context)
+
