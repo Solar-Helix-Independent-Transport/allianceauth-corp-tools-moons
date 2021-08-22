@@ -48,6 +48,7 @@ def process_moon_pulls():
                                                 notification_type__in=notification_type_filter)
 
     fracks = MoonFrack.objects.filter(start_time__gte=start_time)
+    notification_ids = set(fracks.values_list('notification__notification_id', flat=True))
     frack_dict = {}
     for frack in fracks:
         if frack.moon_id not in frack_dict:
@@ -58,43 +59,45 @@ def process_moon_pulls():
     _ores = []
     for notification in notifications:
         try:
-            notification_data = yaml.load(notification.notification_text)
-            moon_id = notification_data['moonID']
-            start_time = notification.timestamp
-        
-            new_frack = False
-
-            if moon_id in frack_dict:
-                if start_time not in frack_dict[moon_id]:
-                    new_frack = True
-            else:
-                new_frack = True
+            if notification.notification_id not in notification_ids:
+                notification_ids.add(notification.notification_id)
+                notification_data = yaml.load(notification.notification_text)
+                moon_id = notification_data['moonID']
+                start_time = notification.timestamp
             
-            if new_frack:
-                _structure, _c = EveLocation.objects.update_or_create(location_id=notification_data['structureID'],
-                                                                     defaults={
-                                                                         "location_name":notification_data['structureName'],
-                                                                         "system_id":notification_data['solarSystemID']
-                                                                     })
-                _moon, _c = MapSystemMoon.objects.get_or_create_from_esi(moon_id=moon_id)
-                _corp_audit = CorporationAudit.objects.get(corporation__corporation_id=notification.character.character.corporation_id)
-                _frack = MoonFrack.objects.create(corporation=_corp_audit,
-                                                  moon_name=_moon,
-                                                  moon_id=moon_id,
-                                                  notification=notification,
-                                                  structure=_structure,
-                                                  start_time=start_time,
-                                                  arrival_time=filetime_to_dt(notification_data['readyTime']),
-                                                  auto_time=filetime_to_dt(notification_data['autoTime'])
-                                                 )
+                new_frack = False
 
-                for ore, volume in notification_data['oreVolumeByType'].items():
-                    if ore not in _type_list:
-                        _type_list.append(ore)
-                    _ores.append(FrackOre(frack=_frack,
-                                          ore_id=ore,
-                                          total_m3=volume
-                                         ))
+                if moon_id in frack_dict:
+                    if start_time not in frack_dict[moon_id]:
+                        new_frack = True
+                else:
+                    new_frack = True
+                
+                if new_frack:
+                    _structure, _c = EveLocation.objects.update_or_create(location_id=notification_data['structureID'],
+                                                                        defaults={
+                                                                            "location_name":notification_data['structureName'],
+                                                                            "system_id":notification_data['solarSystemID']
+                                                                        })
+                    _moon, _c = MapSystemMoon.objects.get_or_create_from_esi(moon_id=moon_id)
+                    _corp_audit = CorporationAudit.objects.get(corporation__corporation_id=notification.character.character.corporation_id)
+                    _frack = MoonFrack.objects.create(corporation=_corp_audit,
+                                                    moon_name=_moon,
+                                                    moon_id=moon_id,
+                                                    notification=notification,
+                                                    structure=_structure,
+                                                    start_time=start_time,
+                                                    arrival_time=filetime_to_dt(notification_data['readyTime']),
+                                                    auto_time=filetime_to_dt(notification_data['autoTime'])
+                                                    )
+
+                    for ore, volume in notification_data['oreVolumeByType'].items():
+                        if ore not in _type_list:
+                            _type_list.append(ore)
+                        _ores.append(FrackOre(frack=_frack,
+                                            ore_id=ore,
+                                            total_m3=volume
+                                            ))
         except Exception as e:
             logger.warn("Failed to process moon", exc_info=1)
             pass
