@@ -63,7 +63,7 @@ class MiningObservation(models.Model):
     type_name = models.ForeignKey(EveItemType, on_delete=models.SET_NULL, null=True, default=None) 
 
     @classmethod
-    def build_pk(cls, corp_id, observer_id, observed_character_id, ob_date):
+    def build_pk(cls, corp_id, observer_id, observed_character_id, ob_date, type_id):
         """
         Helper method to get a unique pk for a specific observation. Usefull for bulk updates of data.
         :param corp_id: Observer Corp.
@@ -73,10 +73,11 @@ class MiningObservation(models.Model):
         :return: :class:String
         """
         date_str = ob_date.strftime("%Y%m%d")
-        return "{}-{}-{}-{}".format(char_id,
+        return "{}-{}-{}-{}-{}".format(corp_id,
                                     observer_id,
                                     observed_character_id,
-                                    date_str)
+                                    date_str,
+                                    type_id)
 
     class Meta:
         indexes = (
