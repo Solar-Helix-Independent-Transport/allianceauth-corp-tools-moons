@@ -7,8 +7,8 @@ from .models import MoonFrack
 class MoonAdmin(admin.ModelAdmin):
     
     list_select_related = True
-    list_display=['corporation','moon_name', 'arrival_time']
+    list_display=['corporation','moon_name', 'arrival_time', 'notification']
     search_fields = ('corporation', 'moon_name')
-    raw_id_fields = ('corporation', 'moon_name')
+    raw_id_fields = ('corporation', 'moon_name', 'structure', 'notification')
     
 admin.site.register(MoonFrack, MoonAdmin)
