@@ -105,7 +105,7 @@ def process_moon_pulls():
 
 
 @shared_task
-def queue_moon_obs(corp_id, force):
+def queue_moon_obs(corp_id, force=False):
     logger.debug("Started Mining Ob Sync for {}".format(corp_id))
 
     token = get_corp_token(corp_id, ['esi-industry.read_corporation_mining.v1'], ['Accountant', 'Director'])
