@@ -7,11 +7,13 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
-from .models import MoonFrack
+from .models import MoonFrack, MiningObservation
+from corptools.models import EveLocation
+from django.core.exceptions import PermissionDenied
 
 @login_required
 def extractions(request):
-    if request.user.has_perm(''):
+    if request.user.has_perm('moons.view_available'):
         days_to_hold = timezone.now() - datetime.timedelta(days=3)
 
         events = MoonFrack.objects.visible_to(request.user)
@@ -27,4 +29,29 @@ def extractions(request):
     }
 
     return render(request, 'moons/list.html', context=context)
+
+
+@login_required
+def observers(request):
+    all_obs=MiningObservation.objects.all().values('structure').distinct()
+    locations = EveLocation.objects.filter(location_id__in=all_obs)
+    
+    context = {
+        'observers': locations,
+    }
+
+    return render(request, 'moons/observers.html', context=context)
+
+
+@login_required
+def observer(request, observer_id):
+    MiningObservation.objects.filter(observing_id=observer_id)
+
+    context = {
+        'observations': obs,
+    }
+
+    return render(request, 'moons/observers.html', context=context)
+
+
 

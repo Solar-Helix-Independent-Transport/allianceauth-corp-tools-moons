@@ -11,6 +11,7 @@ from .models import MiningObservation, MoonFrack, FrackOre
 from corptools.models import Notification, EveLocation, MapSystemMoon, EveItemType, CorporationAudit, EveName
 from corptools import providers
 from corptools.task_helpers.corp_helpers import get_corp_token
+from corptools.task_helpers.update_tasks import fetch_location_name
 from allianceauth.services.tasks import QueueOnce
 from .app_settings import PUBLIC_MOON_CORPS
 
@@ -124,12 +125,27 @@ def queue_moon_obs(corp_id, force=False):
 def process_moon_obs(observer_id, corporation_id):
     logger.debug("Started Mining Ob Sync for {}".format(observer_id))
 
-    token = get_corp_token(corporation_id, ['esi-industry.read_corporation_mining.v1'], ['Accountant', 'Director'])
+    token = get_corp_token(corporation_id, ['esi-industry.read_corporation_mining.v1', 'esi-universe.read_structures.v1'], ['Accountant', 'Director'])
     obs = providers.esi.client.Industry.get_corporation_corporation_id_mining_observers_observer_id(corporation_id=corporation_id,
                                                                                                    observer_id=observer_id,
                                                                                                    token=token.valid_access_token()).results()
     eve_names = set(EveName.objects.all().values_list('eve_id', flat=True))
     type_names = set(EveItemType.objects.all().values_list('type_id', flat=True))
+
+    observer = None
+    structure_exists = False
+
+    try:
+        observer = EveLocation.objects.get(location_id=observer_id)
+        structure_exists = True
+
+    except EveLocation.DoesNotExist:
+        _ob = fetch_location_name(observer_id, "solar_system", token.character_id)
+        if _ob:
+            _ob.save()
+            observer = _ob
+            structure_exists = True
+
     ob_pks = set(MiningObservation.objects.filter(observing_id=observer_id).values_list('ob_pk', flat=True))
     mining_ob_updates = []
     mining_ob_creates = []
@@ -138,7 +154,7 @@ def process_moon_obs(observer_id, corporation_id):
 
     for ob in obs:
         pk = MiningObservation.build_pk(corporation_id, observer_id, ob.get('character_id'), ob.get('last_updated'), ob.get('type_id'))
-
+        
         if ob.get('character_id') not in eve_names:
             new_eve_names.append(ob.get('character_id'))
             eve_names.add(ob.get('character_id'))
@@ -156,6 +172,10 @@ def process_moon_obs(observer_id, corporation_id):
                                 recorded_corporation_id=ob.get('recorded_corporation_id'),
                                 type_id=ob.get('type_id'),
                                 type_name_id=ob.get('type_id'))
+
+        if structure_exists:
+            _ob.structure = observer
+
         if pk in ob_pks:
             mining_ob_updates.append(_ob)
         else: 
@@ -168,8 +188,42 @@ def process_moon_obs(observer_id, corporation_id):
         MiningObservation.objects.bulk_create(mining_ob_creates)
     
     if len(mining_ob_updates) > 0:
-        MiningObservation.objects.bulk_update(mining_ob_updates, ['quantity','last_updated'])
+        MiningObservation.objects.bulk_update(mining_ob_updates, ['quantity', 'last_updated', 'structure'])
 
     msg = f"Corp:{corporation_id} Moon:{observer_id} Updated:{len(mining_ob_updates)} Created:{len(mining_ob_creates)}"
     logger.debug(msg)
     return msg
+
+
+@shared_task
+def update_ore_prices():
+    url = "https://market.fuzzwork.co.uk/aggregates/?station=60003760&types=34,35,36,37,38,39,40,16634,16643,16647,16641,16640,16650,16635,16648,16633,16646,16651,16644,16652,16639,16636,16649,16638,16653,16637,16642,11399"
+    response = requests.get(url)
+    price_data = response.json()
+    for key, item in price_data.items():
+        name = TypeName.objects.get(type_id=key).name
+        if name not in price_cache:
+            price_cache[name] = {}
+        price_cache[name]['the_forge'] = float(item['buy']['weightedAverage'])
+
+    ores = HelperArrays.get_ore_array()
+    
+    rates = RentalOreRates.objects.get(tag="Trust")
+    tax_rates = {"64":rates.r64, "32":rates.r32, "16":rates.r16, "8":rates.r8, "4":rates.r4, "0":rates.r0}
+
+    refine_yield = rates.refine_rate
+    price_source = 'the_forge'
+    for ore, minerals in ores.items():
+        price = 0
+        for mineral, qty in minerals["minerals"].items():
+            price = price + ( refine_yield * qty * price_cache[mineral][price_source] )
+
+        OrePrice.objects.update_or_create(item=TypeName.objects.get(name=ore),
+                                          defaults={
+                                            "price":price
+                                          })
+        OreTax.objects.update_or_create(item=TypeName.objects.get(name=ore),
+                                          defaults={
+                                            "price":price*tax_rates[minerals["type"]]
+                                          })
+    return json.dumps(price_cache)
