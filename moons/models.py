@@ -1,7 +1,11 @@
 from django.db import models
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 from allianceauth.notifications import notify
-from corptools.models import CorporationAudit, EveLocation, EveItemType, MapSystemMoon, EveLocation, Notification, EveName
+from corptools.models import CorporationAudit, EveLocation, EveItemType, MapConstellation, MapRegion, MapSystem, MapSystemMoon, EveLocation, Notification, EveName
+from django.db.models import Q
+from django.db.models import Subquery, OuterRef
+from django.db.models import Avg
+from django.db.models import FloatField, F, ExpressionWrapper
 
 from . import app_settings
 from .managers import MoonManager
@@ -52,8 +56,11 @@ class FrackOre(models.Model):
 class MiningObservation(models.Model):
     ob_pk = models.CharField(max_length=50, primary_key=True)
 
+    observing_corporation = models.ForeignKey(CorporationAudit, on_delete=models.SET_NULL, null=True, default=None)
+
     observing_id = models.BigIntegerField(null=True, default=None, blank=True)
     structure = models.ForeignKey(EveLocation, on_delete=models.CASCADE, null=True, default=None, blank=True)
+    moon = models.ForeignKey(MapSystemMoon, on_delete=models.SET_NULL, null=True, default=None, blank=True)
 
     character_name = models.ForeignKey(EveName, on_delete=models.SET_NULL, null=True, default=None)
 
@@ -61,8 +68,10 @@ class MiningObservation(models.Model):
     last_updated = models.DateTimeField()
     quantity = models.BigIntegerField()
     recorded_corporation_id = models.IntegerField()
-    type_id = models.IntegerField()
+
     type_name = models.ForeignKey(EveItemType, on_delete=models.SET_NULL, null=True, default=None) 
+    type_id = models.IntegerField()
+
 
     @classmethod
     def build_pk(cls, corp_id, observer_id, observed_character_id, ob_date, type_id):
@@ -91,18 +100,93 @@ class MiningObservation(models.Model):
         )
 
 
-# Market History ( GMetrics )
-class OrePrice(models.Model):
-    item = models.ForeignKey(EveItemType, on_delete=models.DO_NOTHING, related_name='ore_price')
-    price = models.DecimalField(max_digits=20, decimal_places=2)
-    last_update = models.DateTimeField(auto_now=True)
+    @classmethod
+    def tax_moons(cls, start, end):
+        #get all tax items and return the tax for the time period.
+
+        player_data = {}
+        observerd_ids = []
+        observers_taxed = []
+
+        taxes = MiningTax.objects.all().order_by('-rank')
+
+        for tax in taxes:
+
+            type_price = OrePrice.objects.filter(item_id=OuterRef('type_id'))
+
+            observed = MiningObservation.objects.select_related('structure', 'type_name', 'structure__system', 'structure__system__constellation', 'character_name').all() \
+                .annotate(isk_value=ExpressionWrapper(
+                    Subquery(type_price.values('price')) * F('quantity'),
+                        output_field=FloatField())) 
+            
+            if tax.use_variable_tax:
+                tax_price = OreTax.objects.filter(item_id=OuterRef('type_id'), tax=tax.tax_rate)
+                observed = observed.annotate(tax_value=ExpressionWrapper(
+                    Subquery(tax_price.values('price')) * F('quantity'),
+                        output_field=FloatField())) 
+                
+            observed = observed.filter(last_updated__gte=start) \
+                .filter(last_updated__lte=end)
+
+            if tax.corp:
+                observed = observed.filter(observing_corporation__corporation=tax.corp)
+            if tax.region:
+                observed = observed.filter(structure__system__constellation__region=tax.region)
+            if tax.constellation:
+                observed = observed.filter(structure__system__constellation=tax.constellation)
+            if tax.system:
+                observed = observed.filter(structure__system=tax.system)
+            if tax.moon:
+                observed = observed.filter(moon=tax.moon)
+
+            rate = float(tax.flat_tax_rate)
+            # do the ranks
+            observed = observed.exclude(structure__in=observers_taxed)
+            print(observed.query)
+            print(observed.count())
+
+            for i in observed.distinct():
+                if i.structure not in observers_taxed:
+                    observers_taxed.append(i.structure)
+                if i.ob_pk not in observerd_ids:
+                    observerd_ids.append(i.ob_pk)
+                    if i.character_name.name not in player_data:
+                        player_data[str(i.character_name.name)] = {}
+                        player_data[str(i.character_name.name)]['ores'] = {}
+                        player_data[str(i.character_name.name)]['totals_isk'] = 0
+                        player_data[str(i.character_name.name)]['tax_isk'] = 0
+                        player_data[str(i.character_name.name)]['char_id'] = i.character_name.eve_id
+                        player_data[str(i.character_name.name)]["seen_at"] = []
+                    
+                    if i.structure.location_name not in player_data[str(i.character_name.name)]["seen_at"]:
+                        player_data[str(i.character_name.name)]["seen_at"].append(i.structure.location_name)
+
+                    player_data[str(i.character_name.name)]['totals_isk'] = player_data[str(i.character_name.name)]['totals_isk'] + i.isk_value
+                    
+                    if tax.use_variable_tax:
+                        player_data[str(i.character_name.name)]['tax_isk'] = player_data[str(i.character_name.name)]['tax_isk'] + i.tax_value
+                    else:
+                        player_data[str(i.character_name.name)]['tax_isk'] = player_data[str(i.character_name.name)]['tax_isk'] + i.isk_value * rate
+                            
+
+                    if i.type_name not in player_data[str(i.character_name.name)]['ores']: 
+                        player_data[str(i.character_name.name)]['ores'][i.type_name.name] = {}
+                        player_data[str(i.character_name.name)]['ores'][i.type_name.name]["type_id"] = i.type_id
+                        player_data[str(i.character_name.name)]['ores'][i.type_name.name]["value"] = i.isk_value
+                        player_data[str(i.character_name.name)]['ores'][i.type_name.name]["count"] = i.quantity
+                    else:
+                        player_data[str(i.character_name.name)]['ores'][i.type_name.name]["value"] = player_data[str(i.character_name.name)]['ores'][i.type_name.name]["value"]+i.isk_value
+                        player_data[str(i.character_name.name)]['ores'][i.type_name.name]["count"] = player_data[str(i.character_name.name)]['ores'][i.type_name.name]["count"]+i.quantity
 
 
-# tax rates History
-class OreTax(models.Model):
-    item = models.ForeignKey(EveItemType, on_delete=models.DO_NOTHING, related_name='ore_tax')
-    price = models.DecimalField(max_digits=20, decimal_places=2)
-    last_update = models.DateTimeField(auto_now=True)
+        output = {
+            'player_data': player_data
+        }
+
+        return output
+
+
+
 
 
 class OreTaxRates(models.Model):
@@ -116,42 +200,75 @@ class OreTaxRates(models.Model):
     uncommon_rate = models.DecimalField(
         max_digits=5, decimal_places=2)  # uncom
     rare_rate = models.DecimalField(max_digits=5, decimal_places=2)  # rare
-    excptional_rate = models.DecimalField(
+    exceptional_rate = models.DecimalField(
         max_digits=5, decimal_places=2)  # best
+
+    def __str__(self):
+        try:
+            return self.tag
+        except:
+            return "Mining Tax"
+
+
+# Market History ( GMetrics )
+class OrePrice(models.Model):
+    item = models.ForeignKey(EveItemType, on_delete=models.DO_NOTHING, related_name='ore_price')
+    price = models.DecimalField(max_digits=20, decimal_places=2)
+    last_update = models.DateTimeField(auto_now=True)
+
+
+# tax rates History
+class OreTax(models.Model):
+    item = models.ForeignKey(EveItemType, on_delete=models.DO_NOTHING, related_name='ore_tax')
+    price = models.DecimalField(max_digits=20, decimal_places=2)
+    last_update = models.DateTimeField(auto_now=True)
+    tax = models.ForeignKey(OreTaxRates, on_delete=models.CASCADE, related_name='tax_rate')
 
 
 class MiningTax(models.Model):
     corp = models.ForeignKey(
-        EveCorporationInfo, on_delete=models.CASCADE, related_name='moon_mining_tax')
+        EveCorporationInfo, on_delete=models.CASCADE, related_name='moon_mining_tax', null=True, default=None, blank=True)
     tax_rate = models.ForeignKey(
         OreTaxRates, on_delete=models.CASCADE, null=True, default=None, blank=True)
     use_variable_tax = models.BooleanField(default=False)
     flat_tax_rate = models.DecimalField(
-        max_digits=5, decimal_places=2, null=True, default=None, blank=True)  # best
-    region = models.CharField(max_length=50, null=True,
-                              default=None, blank=True)
-    constellation = models.CharField(
-        max_length=50, null=True, default=None, blank=True)
-    system = models.CharField(max_length=50, null=True,
-                              default=None, blank=True)
-    moon = models.CharField(max_length=50, null=True, default=None, blank=True)
+        max_digits=5, decimal_places=2, default=0.0)  # best
+    region = models.ForeignKey(
+        MapRegion, on_delete=models.CASCADE, related_name='tax_region', null=True, default=None, blank=True)
+    constellation = models.ForeignKey(
+        MapConstellation, on_delete=models.CASCADE, related_name='tax_constellation', null=True, default=None, blank=True)
+    system = models.ForeignKey(
+        MapSystem, on_delete=models.CASCADE, related_name='tax_system', null=True, default=None, blank=True)
+    moon = models.ForeignKey(
+        MapSystemMoon, on_delete=models.CASCADE, related_name='tax_moon', null=True, default=None, blank=True)
     rank = models.IntegerField(default=0, null=True, blank=True)
 
     def __str__(self):
         area = "Everywhere"
         if self.region:
-            area = self.region
+            area = f"Region: {self.region.name}"
         elif self.constellation:
-            area = self.constellation
+            area = f"Constellation: {self.constellation.name}"
         elif self.system:
-            area = self.system
+            area = f"System: {self.system.name}"
         elif self.moon:
-            area = self.moon
+            area = f"Moon': {self.moon.name}"
+        
+        corp = "Everyone"
+        if self.corp:
+            corp = self.corp.corporation_name
+
         # return
         rate = ""
         if self.use_variable_tax:
             rate = " Variable ({})".format(self.tax_rate.tag)
         else:
-            rate = "{}%".format(self.tax_rate*100)
-        return "#{3}: Mining Tax {0} for {1}: {2}".format(rate, self.corp, area, self.rank)
+            rate = "{}%".format(self.flat_tax_rate*100)
+        return "#{3}: Mining Tax {0} for {1}, {2}".format(rate, corp, area, self.rank)
 
+
+# tax rates History
+class InvoiceRecord(models.Model):
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+    ore_prices = models.TextField()

@@ -44,6 +44,7 @@ class MoonQuerySet(models.QuerySet):
 
 
 class MoonManager(models.Manager):
+
     def get_queryset(self):
         return MoonQuerySet(self.model, using=self._db)\
             .select_related('moon_name', 'corporation','corporation__corporation', 'structure', 'structure__system', 'structure__system__constellation')\

@@ -1,4 +1,4 @@
-from .models import OrePrice, OreTax
+from .models import OrePrice, OreTax, MiningTax
 from corptools.models import EveItemType, InvTypeMaterials
 from django.db.models import Subquery, OuterRef
 
@@ -6,32 +6,46 @@ from django.db.models import Subquery, OuterRef
 class OreHelper:
 
     rank_ids = {
-        1923: 64,
-        1922:  32,
-        1921: 16,
-        1920: 8,
-        1884: 4
+        1923: "exceptional_rate",
+        1922: "rare_rate",
+        1921: "uncommon_rate",
+        1920: "common_rate",
+        1884: "ubiquitous_rate"
     }
 
     asteroids = 25
 
-    def get_ore_array(self):     
-        mineral_name = EveItemType.objects.filter(type_id=OuterRef('material_type_id'))
-        inv_types = InvTypeMaterials.objects.filter(type__category_id=self.asteroids) \
-            .select_related('eve_type') \
-            .annotate(mineral_name=Subquery(mineral_name.values('name')))
+    def get_ore_array():     
+        inv_types = InvTypeMaterials.objects.filter(eve_type__group__category_id=OreHelper.asteroids) \
+            .select_related('eve_type', 'eve_type__group', 'met_type')
         
         ore_infos = {}
         for comp in inv_types:
             if comp.eve_type.name not in ore_infos:
-                ore_infos[comp.eve_type.name] = {
+                rarity = OreHelper.rank_ids[comp.eve_type.group_id] if comp.eve_type.group_id in OreHelper.rank_ids else "ore_rate"
+                ore_infos[comp.eve_type.pk] = {
                     "minerals": {},
-                    "volume": comp.eve_type.packaged_volume
-                    "name": eve_type.name
+                    "volume": comp.eve_type.packaged_volume,
+                    "model": comp.eve_type,
+                    "rarity": rarity,
+                    "portion": comp.eve_type.portion_size
                 }
-            ore_infos[comp.eve_type.name]['minerals'][comp.mineral_name] = comp.qty
+            ore_infos[comp.eve_type.pk]['minerals'][comp.met_type.name] = comp.qty
         
         return ore_infos
 
 
-  
+    def get_ore_array_with_value():
+        input = OreHelper.get_ore_array()
+        for o in OrePrice.objects.all():
+            input[o.item_id]['value'] = o.price
+
+        return input
+
+
+    def get_ore_array_with_value_and_taxs():
+        input = OreHelper.get_ore_array_with_value()
+        for t in MiningTax.objects.all():
+            input[o.item_id]['value'] = o.price
+
+        return input

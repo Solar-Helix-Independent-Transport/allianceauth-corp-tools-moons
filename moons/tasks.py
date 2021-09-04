@@ -1,13 +1,15 @@
 import logging
-import os 
+import json
 from datetime import timedelta, datetime
 import yaml
+import requests 
 
 from celery import shared_task, chain
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo, EveAllianceInfo
 from django.utils import timezone
 from . import app_settings
-from .models import MiningObservation, MoonFrack, FrackOre
+from .helpers import OreHelper
+from .models import MiningObservation, MoonFrack, FrackOre, OrePrice, OreTaxRates, OreTax
 from corptools.models import Notification, EveLocation, MapSystemMoon, EveItemType, CorporationAudit, EveName
 from corptools import providers
 from corptools.task_helpers.corp_helpers import get_corp_token
@@ -131,9 +133,11 @@ def process_moon_obs(observer_id, corporation_id):
                                                                                                    token=token.valid_access_token()).results()
     eve_names = set(EveName.objects.all().values_list('eve_id', flat=True))
     type_names = set(EveItemType.objects.all().values_list('type_id', flat=True))
+    corp = CorporationAudit.objects.get(corporation__corporation_id=corporation_id)
 
     observer = None
     structure_exists = False
+    moon = None
 
     try:
         observer = EveLocation.objects.get(location_id=observer_id)
@@ -146,12 +150,15 @@ def process_moon_obs(observer_id, corporation_id):
             observer = _ob
             structure_exists = True
 
+    _moon = MoonFrack.objects.filter(structure_id=observer_id, moon_name__isnull=False)
+    if _moon.exists():
+        moon = _moon.last().moon_name
+
     ob_pks = set(MiningObservation.objects.filter(observing_id=observer_id).values_list('ob_pk', flat=True))
     mining_ob_updates = []
     mining_ob_creates = []
     new_eve_names = []
     new_item_types = []
-
     for ob in obs:
         pk = MiningObservation.build_pk(corporation_id, observer_id, ob.get('character_id'), ob.get('last_updated'), ob.get('type_id'))
         
@@ -165,13 +172,15 @@ def process_moon_obs(observer_id, corporation_id):
 
         _ob = MiningObservation(ob_pk=pk,
                                 observing_id=observer_id,
+                                observing_corporation=corp,
                                 character_name_id=ob.get('character_id'),
                                 character_id=ob.get('character_id'),
                                 last_updated=ob.get('last_updated'),
                                 quantity=ob.get('quantity'),
                                 recorded_corporation_id=ob.get('recorded_corporation_id'),
                                 type_id=ob.get('type_id'),
-                                type_name_id=ob.get('type_id'))
+                                type_name_id=ob.get('type_id'),
+                                moon=moon)
 
         if structure_exists:
             _ob.structure = observer
@@ -188,7 +197,7 @@ def process_moon_obs(observer_id, corporation_id):
         MiningObservation.objects.bulk_create(mining_ob_creates)
     
     if len(mining_ob_updates) > 0:
-        MiningObservation.objects.bulk_update(mining_ob_updates, ['quantity', 'last_updated', 'structure'])
+        MiningObservation.objects.bulk_update(mining_ob_updates, ['quantity', 'last_updated', 'structure', 'observing_corporation'])
 
     msg = f"Corp:{corporation_id} Moon:{observer_id} Updated:{len(mining_ob_updates)} Created:{len(mining_ob_creates)}"
     logger.debug(msg)
@@ -197,33 +206,50 @@ def process_moon_obs(observer_id, corporation_id):
 
 @shared_task
 def update_ore_prices():
-    url = "https://market.fuzzwork.co.uk/aggregates/?station=60003760&types=34,35,36,37,38,39,40,16634,16643,16647,16641,16640,16650,16635,16648,16633,16646,16651,16644,16652,16639,16636,16649,16638,16653,16637,16642,11399"
+    url = "https://market.fuzzwork.co.uk/aggregates/?station=60003760&types=34,35,36,37,38,39,40,16634,16643,16647,16641,16640,16650,16635,16648,16633,16646,16651,16644,16652,16639,16636,16649,16638,16653,16637,16642,11399,16272,16274,17889,16273,17888,17887,16275"
     response = requests.get(url)
     price_data = response.json()
+    price_cache = {}
     for key, item in price_data.items():
-        name = TypeName.objects.get(type_id=key).name
+        name, created = EveItemType.objects.get_or_create_from_esi(key)
+        name = name.name
         if name not in price_cache:
             price_cache[name] = {}
         price_cache[name]['the_forge'] = float(item['buy']['weightedAverage'])
 
-    ores = HelperArrays.get_ore_array()
-    
-    rates = RentalOreRates.objects.get(tag="Trust")
-    tax_rates = {"64":rates.r64, "32":rates.r32, "16":rates.r16, "8":rates.r8, "4":rates.r4, "0":rates.r0}
+    ores = OreHelper.get_ore_array()
 
-    refine_yield = rates.refine_rate
-    price_source = 'the_forge'
+    price_source = 'the_forge'  # We only use this now.
+
     for ore, minerals in ores.items():
         price = 0
         for mineral, qty in minerals["minerals"].items():
-            price = price + ( refine_yield * qty * price_cache[mineral][price_source] )
+            price = price + (qty * price_cache[mineral][price_source])
 
-        OrePrice.objects.update_or_create(item=TypeName.objects.get(name=ore),
+        OrePrice.objects.update_or_create(item=minerals['model'],
                                           defaults={
-                                            "price":price
+                                            "price": price/minerals['portion']
                                           })
-        OreTax.objects.update_or_create(item=TypeName.objects.get(name=ore),
-                                          defaults={
-                                            "price":price*tax_rates[minerals["type"]]
-                                          })
+
+    update_tax_prices.apply_async(priority=7)
+
     return json.dumps(price_cache)
+
+
+@shared_task
+def update_tax_prices():
+    taxs = OreTaxRates.objects.all()
+
+    ores = OreHelper.get_ore_array_with_value()
+
+    for tax in taxs:
+        for id, o in ores.items():
+            rate = getattr(tax, o['rarity'])
+            price = float(o['value']) * (float(rate)/100) * (float(tax.refine_rate)/100)
+            OreTax.objects.update_or_create(
+                item=o['model'],
+                tax=tax,
+                defaults={
+                    "price": price
+                }
+            )
