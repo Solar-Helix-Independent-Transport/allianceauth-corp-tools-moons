@@ -206,7 +206,11 @@ def process_moon_obs(observer_id, corporation_id):
 
 @shared_task
 def update_ore_prices():
-    url = "https://market.fuzzwork.co.uk/aggregates/?station=60003760&types=34,35,36,37,38,39,40,16634,16643,16647,16641,16640,16650,16635,16648,16633,16646,16651,16644,16652,16639,16636,16649,16638,16653,16637,16642,11399,16272,16274,17889,16273,17888,17887,16275,27029"
+    mins = OreHelper.get_mineral_array()
+    minstr = str(mins.pop())
+    for i in mins:
+        minstr += f",{i}"
+    url = f"https://market.fuzzwork.co.uk/aggregates/?station=60003760&types={minstr}"
     response = requests.get(url)
     price_data = response.json()
     price_cache = {}

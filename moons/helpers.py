@@ -15,6 +15,10 @@ class OreHelper:
 
     asteroids = 25
 
+    def get_mineral_array():   
+        return list(set(InvTypeMaterials.objects.filter(eve_type__group__category_id=OreHelper.asteroids) \
+            .values_list('met_type_id', flat=True)))
+
     def get_ore_array():     
         inv_types = InvTypeMaterials.objects.filter(eve_type__group__category_id=OreHelper.asteroids) \
             .select_related('eve_type', 'eve_type__group', 'met_type')
