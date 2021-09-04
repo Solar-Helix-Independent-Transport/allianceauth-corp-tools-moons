@@ -3,7 +3,7 @@ import datetime
 
 from django.db.models import Sum
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import render
 from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
@@ -32,6 +32,7 @@ def extractions(request):
 
 
 @login_required
+@permission_required("admin")
 def observers(request):
     all_obs=MiningObservation.objects.all().values('structure').distinct()
     locations = EveLocation.objects.filter(location_id__in=all_obs)
@@ -46,6 +47,7 @@ def observers(request):
 
 
 @login_required
+@permission_required("admin")
 def observer(request, observer_id):
     MiningObservation.objects.filter(observing_id=observer_id)
 
