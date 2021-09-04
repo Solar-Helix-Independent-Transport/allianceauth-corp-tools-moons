@@ -1,7 +1,10 @@
+from datetime import datetime, time
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from allianceauth.authentication.models import CharacterOwnership
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 from allianceauth.notifications import notify
-from corptools.models import CorporationAudit, EveLocation, EveItemType, MapConstellation, MapRegion, MapSystem, MapSystemMoon, EveLocation, Notification, EveName
+from corptools.models import CharacterAsset, CorporationAudit, EveLocation, EveItemType, MapConstellation, MapRegion, MapSystem, MapSystemMoon, EveLocation, Notification, EveName
 from django.db.models import Q
 from django.db.models import Subquery, OuterRef
 from django.db.models import Avg
@@ -16,6 +19,8 @@ if app_settings.discord_bot_active():
     import aadiscordbot
 
 import logging
+import copy
+
 logger = logging.getLogger(__name__)
 
 
@@ -150,33 +155,33 @@ class MiningObservation(models.Model):
                     observers_taxed.append(i.structure)
                 if i.ob_pk not in observerd_ids:
                     observerd_ids.append(i.ob_pk)
-                    if i.character_name.name not in player_data:
-                        player_data[str(i.character_name.name)] = {}
-                        player_data[str(i.character_name.name)]['ores'] = {}
-                        player_data[str(i.character_name.name)]['totals_isk'] = 0
-                        player_data[str(i.character_name.name)]['tax_isk'] = 0
-                        player_data[str(i.character_name.name)]['char_id'] = i.character_name.eve_id
-                        player_data[str(i.character_name.name)]["seen_at"] = []
+                    if i.character_name.eve_id not in player_data:
+                        player_data[i.character_name.eve_id] = {}
+                        player_data[i.character_name.eve_id]['ores'] = {}
+                        player_data[i.character_name.eve_id]['totals_isk'] = 0
+                        player_data[i.character_name.eve_id]['tax_isk'] = 0
+                        player_data[i.character_name.eve_id]['character_model'] = i.character_name
+                        player_data[i.character_name.eve_id]["seen_at"] = []
                     
-                    if i.structure.location_name not in player_data[str(i.character_name.name)]["seen_at"]:
-                        player_data[str(i.character_name.name)]["seen_at"].append(i.structure.location_name)
+                    if i.structure.location_name not in player_data[i.character_name.eve_id]["seen_at"]:
+                        player_data[i.character_name.eve_id]["seen_at"].append(i.structure.location_name)
 
-                    player_data[str(i.character_name.name)]['totals_isk'] = player_data[str(i.character_name.name)]['totals_isk'] + i.isk_value
+                    player_data[i.character_name.eve_id]['totals_isk'] =player_data[i.character_name.eve_id]['totals_isk'] + i.isk_value
                     
                     if tax.use_variable_tax:
-                        player_data[str(i.character_name.name)]['tax_isk'] = player_data[str(i.character_name.name)]['tax_isk'] + i.tax_value
+                        player_data[i.character_name.eve_id]['tax_isk'] = player_data[i.character_name.eve_id]['tax_isk'] + i.tax_value
                     else:
-                        player_data[str(i.character_name.name)]['tax_isk'] = player_data[str(i.character_name.name)]['tax_isk'] + i.isk_value * rate
+                        player_data[i.character_name.eve_id]['tax_isk'] = player_data[i.character_name.eve_id]['tax_isk'] + i.isk_value * rate
                             
 
-                    if i.type_name not in player_data[str(i.character_name.name)]['ores']: 
-                        player_data[str(i.character_name.name)]['ores'][i.type_name.name] = {}
-                        player_data[str(i.character_name.name)]['ores'][i.type_name.name]["type_id"] = i.type_id
-                        player_data[str(i.character_name.name)]['ores'][i.type_name.name]["value"] = i.isk_value
-                        player_data[str(i.character_name.name)]['ores'][i.type_name.name]["count"] = i.quantity
+                    if i.type_name not in player_data[i.character_name.eve_id]['ores']: 
+                        player_data[i.character_name.eve_id]['ores'][i.type_name.name] = {}
+                        player_data[i.character_name.eve_id]['ores'][i.type_name.name]["type_id"] = i.type_id
+                        player_data[i.character_name.eve_id]['ores'][i.type_name.name]["value"] = i.isk_value
+                        player_data[i.character_name.eve_id]['ores'][i.type_name.name]["count"] = i.quantity
                     else:
-                        player_data[str(i.character_name.name)]['ores'][i.type_name.name]["value"] = player_data[str(i.character_name.name)]['ores'][i.type_name.name]["value"]+i.isk_value
-                        player_data[str(i.character_name.name)]['ores'][i.type_name.name]["count"] = player_data[str(i.character_name.name)]['ores'][i.type_name.name]["count"]+i.quantity
+                        player_data[i.character_name.eve_id]['ores'][i.type_name.name]["value"] = player_data[i.character_name.eve_id]['ores'][i.type_name.name]["value"]+i.isk_value
+                        player_data[i.character_name.eve_id]['ores'][i.type_name.name]["count"] = player_data[i.character_name.eve_id]['ores'][i.type_name.name]["count"]+i.quantity
 
 
         output = {
@@ -184,9 +189,6 @@ class MiningObservation(models.Model):
         }
 
         return output
-
-
-
 
 
 class OreTaxRates(models.Model):
@@ -272,3 +274,57 @@ class InvoiceRecord(models.Model):
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
     ore_prices = models.TextField()
+    tax_dump = models.TextField()
+
+
+    @classmethod
+    def sanitize_date(cls, date):
+        return datetime(year=date.year, 
+                        month=date.month, 
+                        day=date.day, 
+                        tzinfo=date.tzinfo, 
+                        hour=0,
+                        minute=0,
+                        second=0)
+
+
+    @classmethod
+    def get_last_invoice_date(cls):
+        try:
+            return InvoiceRecord.objects.all().order_by('-end_date').first().end_date
+        except (ObjectDoesNotExist, AttributeError) as e:
+            return datetime.min
+    
+
+    @classmethod
+    def send_invoices(cls):
+        start_date = cls.sanitize_date(cls.get_last_invoice_date())
+        end_date = cls.sanitize_date(timezone.now())
+        taxes = {}
+
+        tax_data = MiningObservation.tax_moons(start_date, end_date)
+        p_d = copy.deepcopy(tax_data['player_data'])
+
+        all_ownerships = CharacterOwnership.objects.filter(character__character_id__in=tax_data['player_data'].keys()) 
+
+        for o in all_ownerships:
+            if o.user.id not in taxes:
+                taxes[o.user.id] = {
+                    "user": o.user,
+                    "locations": set(),
+                    "characters": set(),
+                    "total_value": 0,
+                    "tax_value": 0
+                }
+
+            tx = p_d.pop(o.character.character_id)
+
+            taxes[o.user.id]['characters'].add(tx.get('character_model').name)
+            taxes[o.user.id]['locations'].update(tx.get('seen_at'))
+            taxes[o.user.id]['total_value'] += tx.get('totals_isk')
+            taxes[o.user.id]['tax_value'] += tx.get('tax_isk')
+            
+            del tx
+
+        return {"knowns": taxes, "unknowns": p_d}
+

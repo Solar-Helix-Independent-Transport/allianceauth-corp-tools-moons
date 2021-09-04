@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
-from .models import MoonFrack, MiningObservation
+from .models import MoonFrack, MiningObservation, InvoiceRecord
 from corptools.models import EveLocation
 from django.core.exceptions import PermissionDenied
 
@@ -36,11 +36,7 @@ def observers(request):
     all_obs=MiningObservation.objects.all().values('structure').distinct()
     locations = EveLocation.objects.filter(location_id__in=all_obs)
     start = timezone.now() - datetime.timedelta(days=30)
-    last30 = MiningObservation.tax_moons(start, timezone.now())
-    ti = 0
-    for c,t in last30['player_data'].items():
-        ti += t['totals_isk']
-    print(f"Total Mined:{ti}")
+    last30 = InvoiceRecord.send_invoices()
     context = {
         'observers': locations,
         'raw_data': last30
