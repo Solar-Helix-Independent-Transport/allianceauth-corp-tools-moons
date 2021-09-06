@@ -5,11 +5,10 @@ import yaml
 import requests 
 
 from celery import shared_task, chain
-from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo, EveAllianceInfo
 from django.utils import timezone
 from . import app_settings
 from .helpers import OreHelper
-from .models import MiningObservation, MoonFrack, FrackOre, OrePrice, OreTaxRates, OreTax
+from .models import MiningObservation, MoonFrack, FrackOre, OrePrice, OreTaxRates, OreTax, InvoiceRecord
 from corptools.models import Notification, EveLocation, MapSystemMoon, EveItemType, CorporationAudit, EveName
 from corptools import providers
 from corptools.task_helpers.corp_helpers import get_corp_token
@@ -257,3 +256,9 @@ def update_tax_prices():
                     "price": price
                 }
             )
+
+
+@shared_task
+def generate_taxes():
+    taxes = InvoiceRecord.generate_invoices()
+    return f"Taxes Generated {taxes.base_ref} Total Mined:{taxes.total_mined:,} Total Tax:{taxes.total_taxed:,}"

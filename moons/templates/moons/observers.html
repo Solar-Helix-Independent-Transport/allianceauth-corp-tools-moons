@@ -5,15 +5,13 @@
 {% load moon_tags %}
 {% block at_block %}
     <h3 class="text-center">Mining Observations</h3>
+    <h5>Known Tax: {{known_tax|intcomma}}</h5>
+    <h5>Unknown Tax: {{unknown_tax|intcomma}}</h5>
     <select id="observer-select" class="form-control" name="state">
         {% for ob in observers %}
-            <option value="{{ob.location_name}}">{{ ob.location_name }}</option>
+            <option value="{{ob.location__id}}">{{ ob.location_name }}</option>
         {% endfor %}
     </select>
-    <div class="row">
-                <pre>{{ raw_data | pprint }}</pre>
-
-    </div>
 {% endblock %}
 {% block extra_javascript %}
     {% include 'bundles/datatables-js.html' %}

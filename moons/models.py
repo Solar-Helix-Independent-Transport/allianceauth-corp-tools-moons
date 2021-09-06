@@ -1,5 +1,6 @@
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth.models import User
 from django.db import models
 from allianceauth.authentication.models import CharacterOwnership
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
@@ -14,12 +15,18 @@ from . import app_settings
 from .managers import MoonManager
 from django.utils import timezone
 
+from invoices.models import Invoice
 from .managers import MoonManager
 if app_settings.discord_bot_active():
     import aadiscordbot
 
+from django.forms import model_to_dict
+from django.core.serializers.json import DjangoJSONEncoder
+from django.db.models import Model
+
 import logging
 import copy
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -130,8 +137,7 @@ class MiningObservation(models.Model):
                     Subquery(tax_price.values('price')) * F('quantity'),
                         output_field=FloatField())) 
                 
-            observed = observed.filter(last_updated__gte=start) \
-                .filter(last_updated__lte=end)
+            observed = observed.filter(last_updated__gte=start).filter(last_updated__lt=end)
 
             if tax.corp:
                 observed = observed.filter(observing_corporation__corporation=tax.corp)
@@ -275,7 +281,9 @@ class InvoiceRecord(models.Model):
     end_date = models.DateTimeField()
     ore_prices = models.TextField()
     tax_dump = models.TextField()
-
+    total_mined = models.DecimalField(max_digits=20, decimal_places=2)
+    total_taxed = models.DecimalField(max_digits=20, decimal_places=2)
+    base_ref = models.CharField(max_length=72, default="")
 
     @classmethod
     def sanitize_date(cls, date):
@@ -297,7 +305,39 @@ class InvoiceRecord(models.Model):
     
 
     @classmethod
-    def send_invoices(cls):
+    def generate_invoice(cls, character, ref, amount, message):
+        #generate an invoice and return it
+        due = timezone.now() + timedelta(days=14)
+        return Invoice(character=character,
+                       amount=amount,
+                       invoice_ref=ref,
+                       note=message,
+                       due_date=due)
+
+
+    @classmethod
+    def ping_invoice(cls, inv):
+        # ping the invoice to the user ( if we know them )
+        message = "\nPlease check auth for how to pay your mining Taxes!"
+        inv.notify(message, title="Mining Taxes")
+
+
+    @classmethod
+    def generate_message(cls, raw_data):
+        # Mining data for the invoice message, characters and stations
+        pass
+
+
+    @classmethod
+    def generate_inv_ref(cls, char_id, start, end):
+        date_str = "%Y%m%d"
+        start_str = start.strftime(date_str)
+        end_str = end.strftime(date_str)
+        return f"MT{char_id}-{start_str}-{end_str}"
+
+
+    @classmethod
+    def generate_invoice_data(cls):
         start_date = cls.sanitize_date(cls.get_last_invoice_date())
         end_date = cls.sanitize_date(timezone.now())
         taxes = {}
@@ -314,7 +354,8 @@ class InvoiceRecord(models.Model):
                     "locations": set(),
                     "characters": set(),
                     "total_value": 0,
-                    "tax_value": 0
+                    "tax_value": 0,
+                    "ref": cls.generate_inv_ref(o.user.id, start_date, end_date)
                 }
 
             tx = p_d.pop(o.character.character_id)
@@ -326,5 +367,76 @@ class InvoiceRecord(models.Model):
             
             del tx
 
-        return {"knowns": taxes, "unknowns": p_d}
+        return {"knowns": taxes, 
+                "unknowns": p_d, 
+                "start": start_date, 
+                "end": end_date}
 
+
+    @classmethod
+    def generate_invoices(cls):
+        from moons.helpers import OreHelper
+        data = cls.generate_invoice_data()
+        total_mined = 0
+        total_taxed = 0
+        # run known people
+        for u, d in data['knowns'].items():
+            try:
+                ref = d['ref']
+                amount = d['tax_value']
+
+                total_mined += d['total_value']
+                total_taxed += d['tax_value']
+
+                character = d['user'].profile.main_character
+
+                message = f"Mining Taxes for: {', '.join(d['characters'])}\nAt: {', '.join(d['locations'])}"
+                inv = cls.generate_invoice(character, ref, amount, message)
+                inv.save()
+                cls.ping_invoice(inv)
+            except KeyError:
+                pass # probably wanna ping admin about it.
+        
+        for u, d in data['unknowns'].items():
+            try:
+                ref = cls.generate_inv_ref(d['character_model'].eve_id, data['start'], data['end'])
+                amount = d['tax_isk']
+
+                total_mined += d['totals_isk']
+                total_taxed += d['tax_isk']
+
+                try: 
+                    character = EveCharacter.objects.get(character_id=d['character_model'].eve_id)
+                except EveCharacter.DoesNotExist:
+                    character = EveCharacter.objects.create_character(character_id=d['character_model'].eve_id)
+
+                message = f"Mining Taxes for: {character.character_name} \nAt: {', '.join(d['seen_at'])}"
+                inv = cls.generate_invoice(character, ref, amount, message)
+                inv.save()
+            except KeyError:
+                pass # probably wanna ping admin about it.
+
+        return cls.objects.create(start_date= data['start'],
+                           end_date= data['end'],
+                           tax_dump= json.dumps(data, cls=ExtendedJsonEncoder),
+                           ore_prices= json.dumps(OreHelper.get_ore_array_with_value(), cls=ExtendedJsonEncoder),
+                           total_mined=total_mined,
+                           total_taxed=total_taxed,
+                           base_ref=cls.generate_inv_ref("[id]",  data['start'],  data['end'])
+                           )
+
+
+class ExtendedJsonEncoder(DjangoJSONEncoder):
+
+    def default(self, o):
+
+        if isinstance(o, User):
+            return {"user_id": o.pk}
+
+        if isinstance(o, Model):
+            return model_to_dict(o)
+
+        if isinstance(o, set):
+            return list(o)
+
+        return super().default(o)

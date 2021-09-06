@@ -36,11 +36,9 @@ def extractions(request):
 def observers(request):
     all_obs=MiningObservation.objects.all().values('structure').distinct()
     locations = EveLocation.objects.filter(location_id__in=all_obs)
-    start = timezone.now() - datetime.timedelta(days=30)
-    last30 = InvoiceRecord.send_invoices()
+        
     context = {
         'observers': locations,
-        'raw_data': last30
     }
 
     return render(request, 'moons/observers.html', context=context)
