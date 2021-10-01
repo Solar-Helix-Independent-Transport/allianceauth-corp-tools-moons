@@ -1,1 +1,2 @@
 recursive-include moons/templates *
+recursive-include moons/ *.py
