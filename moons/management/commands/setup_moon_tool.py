@@ -24,7 +24,7 @@ class Command(BaseCommand):
                 common_rate=0.2,
                 uncommon_rate=0.2,
                 rare_rate=0.2,
-                excptional_rate=0.2
+                exceptional_rate=0.2
             )
         systems = MapSystem.objects.all().count()
         if options['inline']:
