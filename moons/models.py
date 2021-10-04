@@ -155,8 +155,8 @@ class MiningObservation(models.Model):
             rate = float(tax.flat_tax_rate)
             # do the ranks
             observed = observed.exclude(structure__in=observers_taxed)
-            print(observed.query)
-            print(observed.count())
+            #print(observed.query)
+            #print(observed.count())
 
             for i in observed.distinct():
                 if i.structure not in observers_taxed:
