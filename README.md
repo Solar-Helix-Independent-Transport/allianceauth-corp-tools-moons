@@ -14,7 +14,7 @@ moon frack monitoring and taxation, taxation is calculated ( default, but config
 
 ## installation
  0. this app is built on corptools and invoices. install them first.
- 1. pip install allianceauth-corptools-moons
+ 1. `pip install allianceauth-corptools-moons`
  2. set your "public" moons variable in `local.py`
  ```python
     PUBLIC_MOON_CORPS = [1234, 56789, 101112] # where the numbers are the corp ids
