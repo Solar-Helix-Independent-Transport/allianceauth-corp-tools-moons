@@ -46,26 +46,32 @@ class Command(BaseCommand):
                                                                     timezone='UTC'
                                                                     )
         
-        task_obs, o_c= PeriodicTask.objects.update_or_create(
+        task_obs= PeriodicTask.objects.update_or_create(
             task='moons.tasks.run_obs_for_all_corps',
             defaults={
                 'crontab': schedule_20_min,
+                'interval': None,
+                'solar': None,
                 'name': 'Moon Obs Updates',
                 'enabled': True
             }
         )
-        task_prices, o_p= PeriodicTask.objects.update_or_create(
+        task_prices= PeriodicTask.objects.update_or_create(
             task='moons.tasks.update_ore_prices',
             defaults={
                 'crontab': schedule_start_of_month,
+                'interval': None,
+                'solar': None,
                 'name': 'Moon Ore Prices',
                 'enabled': True
             }
         )
-        task_invoice, o_i= PeriodicTask.objects.update_or_create(
+        task_invoice= PeriodicTask.objects.update_or_create(
             task='moons.tasks.generate_taxes',
             defaults={
                 'interval': schedule_bi_weekly,
+                'crontab': None,
+                'solar': None,
                 'name': 'Send Moon Invoices',
                 'enabled': False
             }
