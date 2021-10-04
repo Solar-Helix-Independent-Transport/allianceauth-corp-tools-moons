@@ -110,6 +110,13 @@ def process_moon_pulls():
 
 
 @shared_task
+def run_obs_for_all_corps(force=False):
+    for c in CorporationAudit.objects.all():
+        logger.debug(f"Sending Obs update for {c.corporation}")
+        queue_moon_obs.apply_async(args=[c.corporation.corporation_id], priority=6)
+
+
+@shared_task
 def queue_moon_obs(corp_id, force=False):
     logger.debug("Started Mining Ob Sync for {}".format(corp_id))
 

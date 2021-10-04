@@ -1,22 +1,19 @@
-from datetime import datetime, time, timedelta
+from datetime import datetime, timedelta
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import User
 from django.db import models
 from allianceauth.authentication.models import CharacterOwnership
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
-from allianceauth.notifications import notify
-from corptools.models import CharacterAsset, CorporationAudit, EveLocation, EveItemType, MapConstellation, MapRegion, MapSystem, MapSystemMoon, EveLocation, Notification, EveName
-from django.db.models import Q
+from corptools.models import CorporationAudit, EveItemType, MapConstellation, MapRegion, MapSystem, MapSystemMoon, EveLocation, Notification, EveName
 from django.db.models import Subquery, OuterRef
-from django.db.models import Avg
 from django.db.models import FloatField, F, ExpressionWrapper
 
 from . import app_settings
-from .managers import MoonManager
 from django.utils import timezone
 
 from invoices.models import Invoice
 from .managers import MoonManager
+
 if app_settings.discord_bot_active():
     import aadiscordbot
 
@@ -47,6 +44,10 @@ class MoonFrack(models.Model):
     arrival_time = models.DateTimeField()
     auto_time = models.DateTimeField()
 
+    #frack_pinged = models.BooleanField(default=False)
+    #finish_notification = models.ForeignKey(Notification, on_delete=models.SET_NULL, null=True, default=None)
+    #frack_notification = models.ForeignKey(Notification, on_delete=models.SET_NULL, null=True, default=None)
+    
     class Meta:
         unique_together = (('arrival_time', 'moon_id'),)
 
@@ -59,10 +60,12 @@ class MoonFrack(models.Model):
                        ('view_alliance', 'Can View Own Alliances Moons'),
                        ('view_all', 'Can View All Moons'))
 
+
 class FrackOre(models.Model):
     frack = models.ForeignKey(MoonFrack, on_delete=models.CASCADE, related_name='frack')
     ore = models.ForeignKey(EveItemType, on_delete=models.CASCADE)
     total_m3 = models.DecimalField(max_digits=20, decimal_places=2)
+
 
 # Corp Mining Observation
 class MiningObservation(models.Model):
@@ -83,7 +86,6 @@ class MiningObservation(models.Model):
 
     type_name = models.ForeignKey(EveItemType, on_delete=models.SET_NULL, null=True, default=None) 
     type_id = models.IntegerField()
-
 
     @classmethod
     def build_pk(cls, corp_id, observer_id, observed_character_id, ob_date, type_id):

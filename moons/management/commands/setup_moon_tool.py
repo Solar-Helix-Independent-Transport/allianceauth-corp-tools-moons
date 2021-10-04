@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
 
 from corptools.tasks import update_or_create_map, process_ores_from_esi, update_ore_comp_table
+from django_celery_beat.models import CrontabSchedule, PeriodicTask, IntervalSchedule
 from corptools.models import MapSystem
 from moons.models import OreTaxRates
 from moons.tasks import update_ore_prices
@@ -26,6 +27,50 @@ class Command(BaseCommand):
                 rare_rate=0.2,
                 exceptional_rate=0.2
             )
+        self.stdout.write("Setting up Periodic Tasks!")
+        schedule_bi_weekly, _ = IntervalSchedule.objects.get_or_create(every=14, 
+                        period=IntervalSchedule.DAYS)
+        schedule_20_min, _ = CrontabSchedule.objects.get_or_create(minute='10,30,50',
+                                                                    hour='*',
+                                                                    day_of_week='*',
+                                                                    day_of_month='*',
+                                                                    month_of_year='*',
+                                                                    timezone='UTC'
+                                                                    )
+        
+        schedule_start_of_month, _ = CrontabSchedule.objects.get_or_create(minute='0',
+                                                                    hour='0',
+                                                                    day_of_week='*',
+                                                                    day_of_month='1',
+                                                                    month_of_year='*',
+                                                                    timezone='UTC'
+                                                                    )
+        
+        task_obs, o_c= PeriodicTask.objects.update_or_create(
+            task='moons.tasks.run_obs_for_all_corps',
+            defaults={
+                'crontab': schedule_20_min,
+                'name': 'Moon Obs Updates',
+                'enabled': True
+            }
+        )
+        task_prices, o_p= PeriodicTask.objects.update_or_create(
+            task='moons.tasks.update_ore_prices',
+            defaults={
+                'crontab': schedule_start_of_month,
+                'name': 'Moon Ore Prices',
+                'enabled': True
+            }
+        )
+        task_invoice, o_i= PeriodicTask.objects.update_or_create(
+            task='moons.tasks.update_ore_prices',
+            defaults={
+                'interval': schedule_bi_weekly,
+                'name': 'Moon Invoices',
+                'enabled': True
+            }
+        )
+
         systems = MapSystem.objects.all().count()
         if options['inline']:
             self.stdout.write("Running Tasks inline this may take some time!")
