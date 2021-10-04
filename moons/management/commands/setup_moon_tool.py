@@ -63,11 +63,11 @@ class Command(BaseCommand):
             }
         )
         task_invoice, o_i= PeriodicTask.objects.update_or_create(
-            task='moons.tasks.update_ore_prices',
+            task='moons.tasks.generate_taxes',
             defaults={
                 'interval': schedule_bi_weekly,
-                'name': 'Moon Invoices',
-                'enabled': True
+                'name': 'Send Moon Invoices',
+                'enabled': False
             }
         )
 
