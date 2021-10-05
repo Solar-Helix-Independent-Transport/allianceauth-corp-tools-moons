@@ -165,9 +165,10 @@ def process_moon_obs(observer_id, corporation_id):
     mining_ob_creates = []
     new_eve_names = []
     new_item_types = []
+    new_ob_pks = set()
     for ob in obs:
         pk = MiningObservation.build_pk(corporation_id, observer_id, ob.get('character_id'), ob.get('last_updated'), ob.get('type_id'))
-        
+
         if ob.get('character_id') not in eve_names:
             new_eve_names.append(ob.get('character_id'))
             eve_names.add(ob.get('character_id'))
@@ -193,8 +194,15 @@ def process_moon_obs(observer_id, corporation_id):
 
         if pk in ob_pks:
             mining_ob_updates.append(_ob)
-        else: 
-            mining_ob_creates.append(_ob)
+        else:
+            if pk in new_ob_pks:
+                for _test_ob in mining_ob_creates:
+                    if _test_ob.pk == pk:
+                        _test_ob.quantity += _ob.quantity
+                        break
+            else:
+                mining_ob_creates.append(_ob)
+                new_ob_pks.add(pk)
 
     EveName.objects.create_bulk_from_esi(new_eve_names)
     EveItemType.objects.create_bulk_from_esi(new_item_types)
@@ -203,7 +211,8 @@ def process_moon_obs(observer_id, corporation_id):
         MiningObservation.objects.bulk_create(mining_ob_creates)
     
     if len(mining_ob_updates) > 0:
-        MiningObservation.objects.bulk_update(mining_ob_updates, ['quantity', 'last_updated', 'structure', 'observing_corporation'])
+            
+            MiningObservation.objects.bulk_update(mining_ob_updates, ['quantity', 'last_updated', 'structure', 'observing_corporation'])
 
     msg = f"Corp:{corporation_id} Moon:{observer_id} Updated:{len(mining_ob_updates)} Created:{len(mining_ob_creates)}"
     logger.debug(msg)
