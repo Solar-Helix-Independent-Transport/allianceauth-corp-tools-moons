@@ -398,7 +398,9 @@ class InvoiceRecord(models.Model):
                 cls.ping_invoice(inv)
             except KeyError:
                 pass # probably wanna ping admin about it.
-        
+            except Exception:
+                logger.exception(f"Failed to add invoice for {u}:\n\n{d}")
+
         for u, d in data['unknowns'].items():
             try:
                 ref = cls.generate_inv_ref(d['character_model'].eve_id, data['start'], data['end'])
@@ -417,7 +419,9 @@ class InvoiceRecord(models.Model):
                 inv.save()
             except KeyError:
                 pass # probably wanna ping admin about it.
-
+            except Exception:
+                logger.exception(f"Failed to add invoice for {u}:\n\n{d}")
+                
         return cls.objects.create(start_date= data['start'],
                            end_date= data['end'],
                            tax_dump= json.dumps(data, cls=ExtendedJsonEncoder),
