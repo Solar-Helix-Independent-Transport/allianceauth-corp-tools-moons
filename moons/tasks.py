@@ -4,12 +4,13 @@ from datetime import timedelta, datetime
 import yaml
 import requests 
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from celery import shared_task, chain
 from django.utils import timezone
 from . import app_settings
 from .helpers import OreHelper
 from .models import MiningObservation, MoonFrack, FrackOre, OrePrice, OreTaxRates, OreTax, InvoiceRecord
-from corptools.models import Notification, EveLocation, MapSystemMoon, EveItemType, CorporationAudit, EveName
+from corptools.models import MapSystem, Notification, EveLocation, MapSystemMoon, EveItemType, CorporationAudit, EveName
 from corptools import providers
 from corptools.task_helpers.corp_helpers import get_corp_token
 from corptools.task_helpers.update_tasks import fetch_location_name
@@ -25,7 +26,7 @@ def filetime_to_dt(ft):
 @shared_task
 def process_moon_pulls():
     logger.debug("Started Mining Pull Sync")
-    start_time = timezone.now() - timedelta(days=65)
+    start_time = timezone.now() - timedelta(days=90)
 
     notification_type_filter = ['MoonminingExtractionStarted',]
 
@@ -63,7 +64,7 @@ def process_moon_pulls():
         try:
             if notification.notification_id not in notification_ids:
                 notification_ids.add(notification.notification_id)
-                notification_data = yaml.load(notification.notification_text)
+                notification_data = yaml.load(notification.notification_text, Loader=yaml.UnsafeLoader)
                 moon_id = notification_data['moonID']
                 start_time = notification.timestamp
             
@@ -278,3 +279,61 @@ def update_tax_prices():
 def generate_taxes():
     taxes = InvoiceRecord.generate_invoices()
     return f"Taxes Generated {taxes.base_ref} Total Mined:{taxes.total_mined:,} Total Tax:{taxes.total_taxed:,}"
+
+
+def _get_system_planet_moons(system_id):
+    system = providers.esi.client.Universe.get_universe_systems_system_id(system_id=system_id).result()
+    out = []
+    if system.get('planets', False):
+        for p in system.get('planets'):
+            if p.get('moons'):
+                out += p.get('moons', [])
+    return out
+
+
+@shared_task
+def process_moons_from_esi():
+
+    _moons = []
+    _moon_models_updates = []
+    _moon_models_creates = []
+
+    _processes = []
+    _current_systems = MapSystem.objects.all().values_list('system_id', flat=True)
+    
+    status = providers.esi.client.Status.get_status().result()
+
+    with ThreadPoolExecutor(max_workers=50) as executor:
+        for system in _current_systems:
+            _processes.append(executor.submit(
+                _get_system_planet_moons, system))
+
+    for task in as_completed(_processes):
+        _moons += task.result()
+
+    _processes = []
+    with ThreadPoolExecutor(max_workers=50) as executor:
+        for moon in _moons:
+            _processes.append(executor.submit(
+                providers.esi._get_moon, moon, False))
+
+    _moon_ids = set(list(MapSystemMoon.objects.all().values_list('moon_id', flat=True)))
+    for task in as_completed(_processes):
+        _moon_ob = task.result()
+        if _moon_ob.moon_id in _moon_ids:
+            _moon_models_updates.append(_moon_ob)
+        else:
+            _moon_models_creates.append(_moon_ob)
+
+    if len(_moon_models_creates) > 0:
+        MapSystemMoon.objects.bulk_create(_moon_models_creates, batch_size=1000)
+    
+    if len(_moon_models_updates) > 0:
+        MapSystemMoon.objects.bulk_update(_moon_models_updates, ['name', 'x', 'y', 'z'] , batch_size=1000)
+
+    # sample_mem()
+    output = "Moons: (Updated:{}, Created:{}) " \
+             .format(len(_moon_models_updates),
+                    len(_moon_models_creates))
+    # memdump()
+    return output
