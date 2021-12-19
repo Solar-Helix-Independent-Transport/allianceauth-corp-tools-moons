@@ -7,6 +7,7 @@ from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 from corptools.models import CorporationAudit, EveItemType, MapConstellation, MapRegion, MapSystem, MapSystemMoon, EveLocation, Notification, EveName
 from django.db.models import Subquery, OuterRef
 from django.db.models import FloatField, F, ExpressionWrapper
+from django.db.models.deletion import DO_NOTHING, SET_NULL
 
 from . import app_settings
 from django.utils import timezone
@@ -311,7 +312,7 @@ class InvoiceRecord(models.Model):
         #generate an invoice and return it
         due = timezone.now() + timedelta(days=14)
         return Invoice(character=character,
-                       amount=amount,
+                       amount=round(amount, -6),
                        invoice_ref=ref,
                        note=message,
                        due_date=due)
@@ -394,8 +395,9 @@ class InvoiceRecord(models.Model):
 
                 message = f"Mining Taxes for: {', '.join(d['characters'])}\nAt: {', '.join(d['locations'])}"
                 inv = cls.generate_invoice(character, ref, amount, message)
-                inv.save()
-                cls.ping_invoice(inv)
+                if inv.amount > 0:
+                    inv.save()
+                    cls.ping_invoice(inv)
             except KeyError:
                 pass # probably wanna ping admin about it.
             except Exception:
@@ -416,7 +418,8 @@ class InvoiceRecord(models.Model):
 
                 message = f"Mining Taxes for: {character.character_name} \nAt: {', '.join(d['seen_at'])}"
                 inv = cls.generate_invoice(character, ref, amount, message)
-                inv.save()
+                if inv.amount > 0:
+                    inv.save()
             except KeyError:
                 pass # probably wanna ping admin about it.
             except Exception:
