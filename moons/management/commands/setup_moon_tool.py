@@ -20,12 +20,12 @@ class Command(BaseCommand):
         if OreTaxRates.objects.all().count() == 0:
             OreTaxRates.objects.create(
                 tag="Ore Tax",
-                ore_rate=0.2,
-                ubiquitous_rate=0.2,
-                common_rate=0.2,
-                uncommon_rate=0.2,
-                rare_rate=0.2,
-                exceptional_rate=0.2
+                ore_rate=20,
+                ubiquitous_rate=20,
+                common_rate=20,
+                uncommon_rate=20,
+                rare_rate=20,
+                exceptional_rate=20
             )
         self.stdout.write("Setting up Periodic Tasks!")
         schedule_bi_weekly, _ = IntervalSchedule.objects.get_or_create(every=14, 

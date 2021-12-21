@@ -425,14 +425,14 @@ class InvoiceRecord(models.Model):
             except Exception:
                 logger.exception(f"Failed to add invoice for {u}:\n\n{d}")
                 
-        return cls.objects.create(start_date= data['start'],
-                           end_date= data['end'],
-                           tax_dump= json.dumps(data, cls=ExtendedJsonEncoder),
-                           ore_prices= json.dumps(OreHelper.get_ore_array_with_value(), cls=ExtendedJsonEncoder),
-                           total_mined=total_mined,
-                           total_taxed=total_taxed,
-                           base_ref=cls.generate_inv_ref("[id]",  data['start'],  data['end'])
-                           )
+        return cls.objects.create(start_date=data['start'],
+                                  end_date=data['end'],
+                                  tax_dump=json.dumps(data, cls=ExtendedJsonEncoder),
+                                  ore_prices=json.dumps(OreHelper.get_ore_array_with_value(), cls=ExtendedJsonEncoder),
+                                  total_mined=total_mined,
+                                  total_taxed=total_taxed,
+                                  base_ref=cls.generate_inv_ref("[id]",  data['start'],  data['end'])
+                                 )
 
 
 class ExtendedJsonEncoder(DjangoJSONEncoder):
@@ -449,3 +449,67 @@ class ExtendedJsonEncoder(DjangoJSONEncoder):
             return list(o)
 
         return super().default(o)
+
+
+class MoonRental(models.Model):
+    note = models.TextField()
+    contact = models.ForeignKey(EveCharacter, on_delete=models.CASCADE)
+    corporation = models.ForeignKey(EveCorporationInfo, on_delete=models.CASCADE)
+    moon = models.ForeignKey(MapSystemMoon, on_delete=models.CASCADE)
+    price = models.IntegerField(default=100000000)
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField(default=None, null=True, blank=True)
+    last_invoice = models.ForeignKey(Invoice, on_delete=SET_NULL, default=None, null=True, blank=True)
+
+    @classmethod
+    def generate_inv_ref(cls, char_id, inv_date, single=False):
+        date_str = "%Y%m"
+        if single:
+            date_str = "%Y%m%d-%H%M"
+        start_str = inv_date.strftime(date_str)
+        return f"MR{char_id}-{start_str}"
+
+    @classmethod
+    def ping_invoice(cls, inv):
+        # ping the invoice to the user ( if we know them )
+        message = f"{inv.note}\n\nPlease check auth for how to pay!\n"
+        inv.notify(message, title="Moon Rentals")
+
+    @classmethod
+    def generate_invoice(cls, cid, moons, price, due_date, single=False):
+        msg = f"Moon Rentals for: {', '.join(moons)}"
+        if single:
+            msg = f"Partial Month Moon Rental for: {', '.join(moons)}"
+        return Invoice.objects.create(character_id=cid,
+                        amount=round(price, -6),
+                        invoice_ref=cls.generate_inv_ref(cid, timezone.now(), single=single),
+                        note=msg,
+                        due_date=due_date)
+
+    @classmethod
+    def generate_invoices(cls):
+        moon_rentals = cls.objects.all().select_related("contact", "moon", "contact__character_ownership__user")
+        due = timezone.now() + timedelta(days=14)
+        total_known = 0
+        total_unknown = 0
+        users = {}
+        for m in moon_rentals:
+            try:
+                user_id = m.contact.character_ownership.user.profile.main_character_id
+                if user_id not in users:
+                    users[user_id] = {"uid": user_id,
+                                      "moons" : [],
+                                      "amount" : 0,
+                                      "characters" : set()}
+                users[user_id]["moons"].append(m.moon.name)
+                users[user_id]["amount"] += m.price
+                users[user_id]["characters"].add(m.contact.character_name)
+                total_known += m.price
+            except Exception:
+                cls.generate_invoice(m.contact.id, [m.moon.name], m.price, due).save()
+                total_unknown += m.price
+        for uid, data in users.items():
+            inv = cls.generate_invoice(uid, data['moons'], data['amount'], due)
+            inv.save()
+            cls.ping_invoice(inv)
+        return f"Invocied {total_known} to known Users, and {total_unknown} to unknown characters."

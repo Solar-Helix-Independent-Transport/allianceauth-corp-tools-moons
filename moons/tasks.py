@@ -1,5 +1,6 @@
 import logging
 import json
+import calendar
 from datetime import timedelta, datetime
 import yaml
 import requests 
@@ -9,7 +10,7 @@ from celery import shared_task, chain
 from django.utils import timezone
 from . import app_settings
 from .helpers import OreHelper
-from .models import MiningObservation, MoonFrack, FrackOre, OrePrice, OreTaxRates, OreTax, InvoiceRecord
+from .models import MiningObservation, MoonFrack, FrackOre, MoonRental, OrePrice, OreTaxRates, OreTax, InvoiceRecord
 from corptools.models import MapSystem, Notification, EveLocation, MapSystemMoon, EveItemType, CorporationAudit, EveName
 from corptools import providers
 from corptools.task_helpers.corp_helpers import get_corp_token
@@ -292,14 +293,14 @@ def _get_system_planet_moons(system_id):
 
 
 @shared_task
-def process_moons_from_esi():
+def process_moons_from_esi(regions):
 
     _moons = []
     _moon_models_updates = []
     _moon_models_creates = []
 
     _processes = []
-    _current_systems = MapSystem.objects.all().values_list('system_id', flat=True)
+    _current_systems = MapSystem.objects.filter(region_id__in=regions).values_list('system_id', flat=True)
     
     status = providers.esi.client.Status.get_status().result()
 
@@ -337,3 +338,23 @@ def process_moons_from_esi():
                     len(_moon_models_creates))
     # memdump()
     return output
+
+
+@shared_task
+def invoice_moons():
+    MoonRental.generate_invoices()
+
+
+@shared_task
+def invoice_single_moon(mrid):
+    rental = MoonRental.objects.get(id=mrid)
+    rng = calendar.monthrange(rental.start_date.year, rental.start_date.month)
+    last_day = datetime(rental.start_date.year, rental.start_date.month, rng[1]).day
+    partial_price = round(rental.price / last_day * (last_day-rental.start_date.day), -6)
+    if partial_price > 30000000:
+        due = timezone.now() + timedelta(days=14)
+        inv = MoonRental.generate_invoice(rental.contact.id, [rental.moon.name], partial_price, due, single=True)
+        inv.save()
+        MoonRental.ping_invoice(inv)
+
+

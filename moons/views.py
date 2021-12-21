@@ -56,4 +56,15 @@ def observer(request, observer_id):
     return render(request, 'moons/observers.html', context=context)
 
 
+@login_required
+@permission_required("rental_manager")
+def moon_rental_manager(request):
+    MiningObservation.objects.filter(observing_id=observer_id)
+
+    context = {
+        'observations': obs,
+    }
+
+    return render(request, 'moons/observers.html', context=context)
+
 
