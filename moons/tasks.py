@@ -300,7 +300,7 @@ def process_moons_from_esi(regions):
     _moon_models_creates = []
 
     _processes = []
-    _current_systems = MapSystem.objects.filter(region_id__in=regions).values_list('system_id', flat=True)
+    _current_systems = MapSystem.objects.filter(constellation__region_id__in=regions).values_list('system_id', flat=True)
     
     status = providers.esi.client.Status.get_status().result()
 
