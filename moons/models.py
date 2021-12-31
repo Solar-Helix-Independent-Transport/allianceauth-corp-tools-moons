@@ -488,7 +488,7 @@ class MoonRental(models.Model):
 
     @classmethod
     def generate_invoices(cls):
-        moon_rentals = cls.objects.all().select_related("contact", "moon", "contact__character_ownership__user")
+        moon_rentals = cls.objects.filter(end_date__isnull=True).select_related("contact", "moon", "contact__character_ownership__user")
         due = timezone.now() + timedelta(days=14)
         total_known = 0
         total_unknown = 0
