@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from discord.ext.commands.errors import RoleNotFound
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import User
 from django.db import models
@@ -467,7 +468,10 @@ class MoonRental(models.Model):
         if single:
             date_str = "%Y%m%d-%H%M"
         start_str = inv_date.strftime(date_str)
-        return f"MR{char_id}-{start_str}"
+        ref = f"MR{char_id}-{start_str}"
+        if single:
+            ref = f"{ref}-{single}"
+        return ref
 
     @classmethod
     def ping_invoice(cls, inv):
@@ -478,11 +482,12 @@ class MoonRental(models.Model):
     @classmethod
     def generate_invoice(cls, cid, moons, price, due_date, single=False):
         msg = f"Moon Rentals for: {', '.join(moons)}"
+        ref = cls.generate_inv_ref(cid, timezone.now(), single=single)
         if single:
             msg = f"Partial Month Moon Rental for: {', '.join(moons)}"
         return Invoice.objects.create(character_id=cid,
                         amount=round(price, -6),
-                        invoice_ref=cls.generate_inv_ref(cid, timezone.now(), single=single),
+                        invoice_ref=ref,
                         note=msg,
                         due_date=due_date)
 

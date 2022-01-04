@@ -353,7 +353,7 @@ def invoice_single_moon(mrid):
     partial_price = round(rental.price / last_day * (last_day-rental.start_date.day), -6)
     if partial_price > 30000000:
         due = timezone.now() + timedelta(days=14)
-        inv = MoonRental.generate_invoice(rental.contact.id, [rental.moon.name], partial_price, due, single=True)
+        inv = MoonRental.generate_invoice(rental.contact.id, [rental.moon.name], partial_price, due, single=mrid)
         inv.save()
         MoonRental.ping_invoice(inv)
 
