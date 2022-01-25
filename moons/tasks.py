@@ -49,7 +49,7 @@ def process_moon_pulls():
 
     notifications = Notification.objects.filter(character__character__corporation_id__in=PUBLIC_MOON_CORPS,
                                                 timestamp__gte=start_time,
-                                                notification_type__in=notification_type_filter)
+                                                notification_type__in=notification_type_filter).select_related('notification_text')
 
     fracks = MoonFrack.objects.filter(start_time__gte=start_time)
     notification_ids = set(fracks.values_list('notification__notification_id', flat=True))
@@ -65,7 +65,7 @@ def process_moon_pulls():
         try:
             if notification.notification_id not in notification_ids:
                 notification_ids.add(notification.notification_id)
-                notification_data = yaml.load(notification.notification_text, Loader=yaml.UnsafeLoader)
+                notification_data = yaml.load(notification.notification_text.notification_text, Loader=yaml.UnsafeLoader)
                 moon_id = notification_data['moonID']
                 start_time = notification.timestamp
             
@@ -131,7 +131,7 @@ def queue_moon_obs(corp_id, force=False):
     chain(task_queue).apply_async(priority=8)
 
 
-@shared_task
+@shared_task(bind=True, base=QueueOnce)
 def process_moon_obs(observer_id, corporation_id):
     logger.debug("Started Mining Ob Sync for {}".format(observer_id))
 
@@ -213,7 +213,6 @@ def process_moon_obs(observer_id, corporation_id):
         MiningObservation.objects.bulk_create(mining_ob_creates)
     
     if len(mining_ob_updates) > 0:
-            
             MiningObservation.objects.bulk_update(mining_ob_updates, ['quantity', 'last_updated', 'structure', 'observing_corporation'])
 
     msg = f"Corp:{corporation_id} Moon:{observer_id} Updated:{len(mining_ob_updates)} Created:{len(mining_ob_creates)}"
@@ -353,7 +352,7 @@ def invoice_single_moon(mrid):
     partial_price = round(rental.price / last_day * (last_day-rental.start_date.day), -6)
     if partial_price > 30000000:
         due = timezone.now() + timedelta(days=14)
-        inv = MoonRental.generate_invoice(rental.contact.id, [rental.moon.name], partial_price, due, single=mrid)
+        inv = MoonRental.generate_invoice(rental.contact.id, [rental.moon.name], partial_price, due, single=True)
         inv.save()
         MoonRental.ping_invoice(inv)
 

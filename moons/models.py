@@ -25,6 +25,7 @@ from django.db.models import Model
 import logging
 import copy
 import json
+import hashlib
 
 logger = logging.getLogger(__name__)
 
@@ -481,9 +482,10 @@ class MoonRental(models.Model):
     @classmethod
     def generate_invoice(cls, cid, moons, price, due_date, single=False):
         msg = f"Moon Rentals for: {', '.join(moons)}"
-        ref = cls.generate_inv_ref(cid, timezone.now(), single=single)
         if single:
             msg = f"Partial Month Moon Rental for: {', '.join(moons)}"
+            single = hashlib.sha1(','.join(moons).encode("UTF-8")).hexdigest()[:8]
+        ref = cls.generate_inv_ref(cid, timezone.now(), single=single)
         return Invoice.objects.create(character_id=cid,
                         amount=round(price, -6),
                         invoice_ref=ref,

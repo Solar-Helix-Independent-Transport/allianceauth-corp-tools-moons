@@ -68,3 +68,12 @@ def moon_rental_manager(request):
     return render(request, 'moons/observers.html', context=context)
 
 
+@login_required
+@permission_required("admin")
+def react(request ):
+    context = {
+    }
+
+    return render(request, 'moons/react_base.html', context=context)
+
+
