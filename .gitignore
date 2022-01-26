@@ -113,7 +113,6 @@ scripts/flow/*/.flowconfig
 .grunt
 _SpecRunner.html
 __benchmarks__
-build/
 build2/
 remote-repo/
 coverage/
