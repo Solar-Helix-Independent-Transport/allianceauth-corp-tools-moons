@@ -59,7 +59,7 @@ class MoonsCog(commands.Cog):
         if not self.sender_has_moon_perm(ctx):
             return await ctx.respond(f"You do not have permision to use this command.", ephemeral=True)
 
-        await ctx.respond(f"Calculating the Moon Stats.", ephemeral=True)
+        await ctx.respond(f"Calculating the Moon Stats.")
 
         last_date = InvoiceRecord.get_last_invoice_date()
         e = Embed(title=f"Last Invoice {last_date}!")
@@ -97,7 +97,7 @@ class MoonsCog(commands.Cog):
                     value=f"${total_mined:,}", inline=False)
         e.add_field(name="Total Tax", value=f"${total_taxed:,}", inline=False)
         locations = "\n ".join(list(locations))
-        e.description = f'Locations tracked so far ({len(locations)})\n\n {locations}'
+        e.description = f'Locations tracked so far ({len(list(locations))})\n\n {locations}'
 
         await ctx.channel.send(embed=e)
 
