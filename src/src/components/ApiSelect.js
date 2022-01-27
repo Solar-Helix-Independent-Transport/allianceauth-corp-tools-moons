@@ -5,16 +5,16 @@ const colourStyles = {
   option: (styles) => {
     return {
       ...styles,
-      color: "black"
+      color: "black",
     };
   },
 };
 
-export const ApiSelect = ({setValue, apiLookup}) => {
-  function handleChange(newValue){
+export const ApiSelect = ({ setValue, apiLookup }) => {
+  function handleChange(newValue) {
     console.log("Selected: " + newValue.label);
     setValue(newValue);
-  };
+  }
 
   return (
     <AsyncSelect
@@ -26,4 +26,3 @@ export const ApiSelect = ({setValue, apiLookup}) => {
     />
   );
 };
-

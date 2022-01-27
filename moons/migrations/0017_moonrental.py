@@ -17,15 +17,21 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='MoonRental',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True,
+                 primary_key=True, serialize=False, verbose_name='ID')),
                 ('note', models.TextField()),
                 ('price', models.IntegerField(default=100000000)),
                 ('start_date', models.DateTimeField()),
-                ('end_date', models.DateTimeField(blank=True, default=None, null=True)),
-                ('contact', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='eveonline.evecharacter')),
-                ('corporation', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='eveonline.evecorporationinfo')),
-                ('last_invoice', models.ForeignKey(blank=True, default=None, null=True, on_delete=django.db.models.deletion.SET_NULL, to='invoices.invoice')),
-                ('moon', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='corptools.mapsystemmoon')),
+                ('end_date', models.DateTimeField(
+                    blank=True, default=None, null=True)),
+                ('contact', models.ForeignKey(
+                    on_delete=django.db.models.deletion.CASCADE, to='eveonline.evecharacter')),
+                ('corporation', models.ForeignKey(
+                    on_delete=django.db.models.deletion.CASCADE, to='eveonline.evecorporationinfo')),
+                ('last_invoice', models.ForeignKey(blank=True, default=None, null=True,
+                 on_delete=django.db.models.deletion.SET_NULL, to='invoices.invoice')),
+                ('moon', models.ForeignKey(
+                    on_delete=django.db.models.deletion.CASCADE, to='corptools.mapsystemmoon')),
             ],
         ),
     ]

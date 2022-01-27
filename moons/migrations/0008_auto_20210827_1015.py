@@ -16,26 +16,31 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='miningtax',
             name='constellation',
-            field=models.ForeignKey(blank=True, default=None, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='tax_constellation', to='corptools.mapconstellation'),
+            field=models.ForeignKey(blank=True, default=None, null=True, on_delete=django.db.models.deletion.CASCADE,
+                                    related_name='tax_constellation', to='corptools.mapconstellation'),
         ),
         migrations.AlterField(
             model_name='miningtax',
             name='corp',
-            field=models.ForeignKey(blank=True, default=None, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='moon_mining_tax', to='eveonline.evecorporationinfo'),
+            field=models.ForeignKey(blank=True, default=None, null=True, on_delete=django.db.models.deletion.CASCADE,
+                                    related_name='moon_mining_tax', to='eveonline.evecorporationinfo'),
         ),
         migrations.AlterField(
             model_name='miningtax',
             name='moon',
-            field=models.ForeignKey(blank=True, default=None, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='tax_moon', to='corptools.mapsystemmoon'),
+            field=models.ForeignKey(blank=True, default=None, null=True, on_delete=django.db.models.deletion.CASCADE,
+                                    related_name='tax_moon', to='corptools.mapsystemmoon'),
         ),
         migrations.AlterField(
             model_name='miningtax',
             name='region',
-            field=models.ForeignKey(blank=True, default=None, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='tax_region', to='corptools.mapregion'),
+            field=models.ForeignKey(blank=True, default=None, null=True, on_delete=django.db.models.deletion.CASCADE,
+                                    related_name='tax_region', to='corptools.mapregion'),
         ),
         migrations.AlterField(
             model_name='miningtax',
             name='system',
-            field=models.ForeignKey(blank=True, default=None, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='tax_system', to='corptools.mapsystem'),
+            field=models.ForeignKey(blank=True, default=None, null=True, on_delete=django.db.models.deletion.CASCADE,
+                                    related_name='tax_system', to='corptools.mapsystem'),
         ),
     ]

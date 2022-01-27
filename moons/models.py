@@ -33,12 +33,15 @@ logger = logging.getLogger(__name__)
 class MoonFrack(models.Model):
     objects = MoonManager()
 
-    corporation = models.ForeignKey(CorporationAudit, on_delete=models.CASCADE, related_name='moon')
+    corporation = models.ForeignKey(
+        CorporationAudit, on_delete=models.CASCADE, related_name='moon')
 
-    moon_name = models.ForeignKey(MapSystemMoon, on_delete=models.SET_NULL, null=True, default=None)
+    moon_name = models.ForeignKey(
+        MapSystemMoon, on_delete=models.SET_NULL, null=True, default=None)
     moon_id = models.IntegerField()
 
-    notification = models.ForeignKey(Notification, on_delete=models.SET_NULL, null=True, default=None)
+    notification = models.ForeignKey(
+        Notification, on_delete=models.SET_NULL, null=True, default=None)
 
     structure = models.ForeignKey(EveLocation, on_delete=models.CASCADE)
 
@@ -49,7 +52,7 @@ class MoonFrack(models.Model):
     #frack_pinged = models.BooleanField(default=False)
     #finish_notification = models.ForeignKey(Notification, on_delete=models.SET_NULL, null=True, default=None)
     #frack_notification = models.ForeignKey(Notification, on_delete=models.SET_NULL, null=True, default=None)
-    
+
     class Meta:
         unique_together = (('arrival_time', 'moon_id'),)
 
@@ -58,13 +61,15 @@ class MoonFrack(models.Model):
 
     class Meta:
         permissions = (('view_available', 'Can View Configured Public Moons'),
-                       ('view_corp', 'Can View Own Corps Moons'),  # these do nothing as of now.
+                       # these do nothing as of now.
+                       ('view_corp', 'Can View Own Corps Moons'),
                        ('view_alliance', 'Can View Own Alliances Moons'),
                        ('view_all', 'Can View All Moons'))
 
 
 class FrackOre(models.Model):
-    frack = models.ForeignKey(MoonFrack, on_delete=models.CASCADE, related_name='frack')
+    frack = models.ForeignKey(
+        MoonFrack, on_delete=models.CASCADE, related_name='frack')
     ore = models.ForeignKey(EveItemType, on_delete=models.CASCADE)
     total_m3 = models.DecimalField(max_digits=20, decimal_places=2)
 
@@ -73,20 +78,25 @@ class FrackOre(models.Model):
 class MiningObservation(models.Model):
     ob_pk = models.CharField(max_length=50, primary_key=True)
 
-    observing_corporation = models.ForeignKey(CorporationAudit, on_delete=models.SET_NULL, null=True, default=None)
+    observing_corporation = models.ForeignKey(
+        CorporationAudit, on_delete=models.SET_NULL, null=True, default=None)
 
     observing_id = models.BigIntegerField(null=True, default=None, blank=True)
-    structure = models.ForeignKey(EveLocation, on_delete=models.CASCADE, null=True, default=None, blank=True)
-    moon = models.ForeignKey(MapSystemMoon, on_delete=models.SET_NULL, null=True, default=None, blank=True)
+    structure = models.ForeignKey(
+        EveLocation, on_delete=models.CASCADE, null=True, default=None, blank=True)
+    moon = models.ForeignKey(
+        MapSystemMoon, on_delete=models.SET_NULL, null=True, default=None, blank=True)
 
-    character_name = models.ForeignKey(EveName, on_delete=models.SET_NULL, null=True, default=None)
+    character_name = models.ForeignKey(
+        EveName, on_delete=models.SET_NULL, null=True, default=None)
 
     character_id = models.IntegerField()
     last_updated = models.DateTimeField()
     quantity = models.BigIntegerField()
     recorded_corporation_id = models.IntegerField()
 
-    type_name = models.ForeignKey(EveItemType, on_delete=models.SET_NULL, null=True, default=None) 
+    type_name = models.ForeignKey(
+        EveItemType, on_delete=models.SET_NULL, null=True, default=None)
     type_id = models.IntegerField()
 
     @classmethod
@@ -101,10 +111,10 @@ class MiningObservation(models.Model):
         """
         date_str = ob_date.strftime("%Y%m%d")
         return "{}-{}-{}-{}-{}".format(corp_id,
-                                    observer_id,
-                                    observed_character_id,
-                                    date_str,
-                                    type_id)
+                                       observer_id,
+                                       observed_character_id,
+                                       date_str,
+                                       type_id)
 
     class Meta:
         indexes = (
@@ -115,10 +125,9 @@ class MiningObservation(models.Model):
             models.Index(fields=['character_id'])
         )
 
-
     @classmethod
     def tax_moons(cls, start, end):
-        #get all tax items and return the tax for the time period.
+        # get all tax items and return the tax for the time period.
 
         player_data = {}
         observerd_ids = []
@@ -133,22 +142,27 @@ class MiningObservation(models.Model):
             observed = MiningObservation.objects.select_related('structure', 'type_name', 'structure__system', 'structure__system__constellation', 'character_name').all() \
                 .annotate(isk_value=ExpressionWrapper(
                     Subquery(type_price.values('price')) * F('quantity'),
-                        output_field=FloatField())) 
-            
+                    output_field=FloatField()))
+
             if tax.use_variable_tax:
-                tax_price = OreTax.objects.filter(item_id=OuterRef('type_id'), tax=tax.tax_rate)
+                tax_price = OreTax.objects.filter(
+                    item_id=OuterRef('type_id'), tax=tax.tax_rate)
                 observed = observed.annotate(tax_value=ExpressionWrapper(
                     Subquery(tax_price.values('price')) * F('quantity'),
-                        output_field=FloatField())) 
-                
-            observed = observed.filter(last_updated__gte=start).filter(last_updated__lt=end)
+                    output_field=FloatField()))
+
+            observed = observed.filter(
+                last_updated__gte=start).filter(last_updated__lt=end)
 
             if tax.corp:
-                observed = observed.filter(observing_corporation__corporation=tax.corp)
+                observed = observed.filter(
+                    observing_corporation__corporation=tax.corp)
             if tax.region:
-                observed = observed.filter(structure__system__constellation__region=tax.region)
+                observed = observed.filter(
+                    structure__system__constellation__region=tax.region)
             if tax.constellation:
-                observed = observed.filter(structure__system__constellation=tax.constellation)
+                observed = observed.filter(
+                    structure__system__constellation=tax.constellation)
             if tax.system:
                 observed = observed.filter(structure__system=tax.system)
             if tax.moon:
@@ -157,8 +171,8 @@ class MiningObservation(models.Model):
             rate = float(tax.flat_tax_rate)
             # do the ranks
             observed = observed.exclude(structure__in=observers_taxed)
-            #print(observed.query)
-            #print(observed.count())
+            # print(observed.query)
+            # print(observed.count())
 
             for i in observed.distinct():
                 if i.structure not in observers_taxed:
@@ -172,27 +186,29 @@ class MiningObservation(models.Model):
                         player_data[i.character_name.eve_id]['tax_isk'] = 0
                         player_data[i.character_name.eve_id]['character_model'] = i.character_name
                         player_data[i.character_name.eve_id]["seen_at"] = []
-                    
-                    if i.structure.location_name not in player_data[i.character_name.eve_id]["seen_at"]:
-                        player_data[i.character_name.eve_id]["seen_at"].append(i.structure.location_name)
 
-                    player_data[i.character_name.eve_id]['totals_isk'] =player_data[i.character_name.eve_id]['totals_isk'] + i.isk_value
-                    
+                    if i.structure.location_name not in player_data[i.character_name.eve_id]["seen_at"]:
+                        player_data[i.character_name.eve_id]["seen_at"].append(
+                            i.structure.location_name)
+
+                    player_data[i.character_name.eve_id]['totals_isk'] = player_data[i.character_name.eve_id]['totals_isk'] + i.isk_value
+
                     if tax.use_variable_tax:
                         player_data[i.character_name.eve_id]['tax_isk'] = player_data[i.character_name.eve_id]['tax_isk'] + i.tax_value
                     else:
                         player_data[i.character_name.eve_id]['tax_isk'] = player_data[i.character_name.eve_id]['tax_isk'] + i.isk_value * rate
-                            
 
-                    if i.type_name not in player_data[i.character_name.eve_id]['ores']: 
-                        player_data[i.character_name.eve_id]['ores'][i.type_name.name] = {}
+                    if i.type_name not in player_data[i.character_name.eve_id]['ores']:
+                        player_data[i.character_name.eve_id]['ores'][i.type_name.name] = {
+                        }
                         player_data[i.character_name.eve_id]['ores'][i.type_name.name]["type_id"] = i.type_id
                         player_data[i.character_name.eve_id]['ores'][i.type_name.name]["value"] = i.isk_value
                         player_data[i.character_name.eve_id]['ores'][i.type_name.name]["count"] = i.quantity
                     else:
-                        player_data[i.character_name.eve_id]['ores'][i.type_name.name]["value"] = player_data[i.character_name.eve_id]['ores'][i.type_name.name]["value"]+i.isk_value
-                        player_data[i.character_name.eve_id]['ores'][i.type_name.name]["count"] = player_data[i.character_name.eve_id]['ores'][i.type_name.name]["count"]+i.quantity
-
+                        player_data[i.character_name.eve_id]['ores'][i.type_name.name]["value"] = player_data[
+                            i.character_name.eve_id]['ores'][i.type_name.name]["value"]+i.isk_value
+                        player_data[i.character_name.eve_id]['ores'][i.type_name.name]["count"] = player_data[
+                            i.character_name.eve_id]['ores'][i.type_name.name]["count"]+i.quantity
 
         output = {
             'player_data': player_data
@@ -224,17 +240,20 @@ class OreTaxRates(models.Model):
 
 # Market History ( GMetrics )
 class OrePrice(models.Model):
-    item = models.ForeignKey(EveItemType, on_delete=models.DO_NOTHING, related_name='ore_price')
+    item = models.ForeignKey(
+        EveItemType, on_delete=models.DO_NOTHING, related_name='ore_price')
     price = models.DecimalField(max_digits=20, decimal_places=2)
     last_update = models.DateTimeField(auto_now=True)
 
 
 # tax rates History
 class OreTax(models.Model):
-    item = models.ForeignKey(EveItemType, on_delete=models.DO_NOTHING, related_name='ore_tax')
+    item = models.ForeignKey(
+        EveItemType, on_delete=models.DO_NOTHING, related_name='ore_tax')
     price = models.DecimalField(max_digits=20, decimal_places=2)
     last_update = models.DateTimeField(auto_now=True)
-    tax = models.ForeignKey(OreTaxRates, on_delete=models.CASCADE, related_name='tax_rate')
+    tax = models.ForeignKey(
+        OreTaxRates, on_delete=models.CASCADE, related_name='tax_rate')
 
 
 class MiningTax(models.Model):
@@ -265,7 +284,7 @@ class MiningTax(models.Model):
             area = f"System: {self.system.name}"
         elif self.moon:
             area = f"Moon': {self.moon.name}"
-        
+
         corp = "Everyone"
         if self.corp:
             corp = self.corp.corporation_name
@@ -291,14 +310,13 @@ class InvoiceRecord(models.Model):
 
     @classmethod
     def sanitize_date(cls, date):
-        return datetime(year=date.year, 
-                        month=date.month, 
-                        day=date.day, 
-                        tzinfo=date.tzinfo, 
+        return datetime(year=date.year,
+                        month=date.month,
+                        day=date.day,
+                        tzinfo=date.tzinfo,
                         hour=0,
                         minute=0,
                         second=0)
-
 
     @classmethod
     def get_last_invoice_date(cls):
@@ -306,11 +324,10 @@ class InvoiceRecord(models.Model):
             return InvoiceRecord.objects.all().order_by('-end_date').first().end_date
         except (ObjectDoesNotExist, AttributeError) as e:
             return datetime.min
-    
 
     @classmethod
     def generate_invoice(cls, character, ref, amount, message):
-        #generate an invoice and return it
+        # generate an invoice and return it
         due = timezone.now() + timedelta(days=14)
         return Invoice(character=character,
                        amount=round(amount, -6),
@@ -318,19 +335,16 @@ class InvoiceRecord(models.Model):
                        note=message,
                        due_date=due)
 
-
     @classmethod
     def ping_invoice(cls, inv):
         # ping the invoice to the user ( if we know them )
         message = "\nPlease check auth for how to pay your mining Taxes!"
         inv.notify(message, title="Mining Taxes")
 
-
     @classmethod
     def generate_message(cls, raw_data):
         # Mining data for the invoice message, characters and stations
         pass
-
 
     @classmethod
     def generate_inv_ref(cls, char_id, start, end):
@@ -338,7 +352,6 @@ class InvoiceRecord(models.Model):
         start_str = start.strftime(date_str)
         end_str = end.strftime(date_str)
         return f"MT{char_id}-{start_str}-{end_str}"
-
 
     @classmethod
     def generate_invoice_data(cls):
@@ -349,7 +362,8 @@ class InvoiceRecord(models.Model):
         tax_data = MiningObservation.tax_moons(start_date, end_date)
         p_d = copy.deepcopy(tax_data['player_data'])
 
-        all_ownerships = CharacterOwnership.objects.filter(character__character_id__in=tax_data['player_data'].keys()) 
+        all_ownerships = CharacterOwnership.objects.filter(
+            character__character_id__in=tax_data['player_data'].keys())
 
         for o in all_ownerships:
             if o.user.id not in taxes:
@@ -368,14 +382,13 @@ class InvoiceRecord(models.Model):
             taxes[o.user.id]['locations'].update(tx.get('seen_at'))
             taxes[o.user.id]['total_value'] += tx.get('totals_isk')
             taxes[o.user.id]['tax_value'] += tx.get('tax_isk')
-            
+
             del tx
 
-        return {"knowns": taxes, 
-                "unknowns": p_d, 
-                "start": start_date, 
+        return {"knowns": taxes,
+                "unknowns": p_d,
+                "start": start_date,
                 "end": end_date}
-
 
     @classmethod
     def generate_invoices(cls):
@@ -400,40 +413,46 @@ class InvoiceRecord(models.Model):
                     inv.save()
                     cls.ping_invoice(inv)
             except KeyError:
-                pass # probably wanna ping admin about it.
+                pass  # probably wanna ping admin about it.
             except Exception:
                 logger.exception(f"Failed to add invoice for {u}:\n\n{d}")
 
         for u, d in data['unknowns'].items():
             try:
-                ref = cls.generate_inv_ref(d['character_model'].eve_id, data['start'], data['end'])
+                ref = cls.generate_inv_ref(
+                    d['character_model'].eve_id, data['start'], data['end'])
                 amount = d['tax_isk']
 
                 total_mined += d['totals_isk']
                 total_taxed += d['tax_isk']
 
-                try: 
-                    character = EveCharacter.objects.get(character_id=d['character_model'].eve_id)
+                try:
+                    character = EveCharacter.objects.get(
+                        character_id=d['character_model'].eve_id)
                 except EveCharacter.DoesNotExist:
-                    character = EveCharacter.objects.create_character(character_id=d['character_model'].eve_id)
+                    character = EveCharacter.objects.create_character(
+                        character_id=d['character_model'].eve_id)
 
                 message = f"Mining Taxes for: {character.character_name} \nAt: {', '.join(d['seen_at'])}"
                 inv = cls.generate_invoice(character, ref, amount, message)
                 if inv.amount > 0:
                     inv.save()
             except KeyError:
-                pass # probably wanna ping admin about it.
+                pass  # probably wanna ping admin about it.
             except Exception:
                 logger.exception(f"Failed to add invoice for {u}:\n\n{d}")
-                
+
         return cls.objects.create(start_date=data['start'],
                                   end_date=data['end'],
-                                  tax_dump=json.dumps(data, cls=ExtendedJsonEncoder),
-                                  ore_prices=json.dumps(OreHelper.get_ore_array_with_value(), cls=ExtendedJsonEncoder),
+                                  tax_dump=json.dumps(
+                                      data, cls=ExtendedJsonEncoder),
+                                  ore_prices=json.dumps(
+                                      OreHelper.get_ore_array_with_value(), cls=ExtendedJsonEncoder),
                                   total_mined=total_mined,
                                   total_taxed=total_taxed,
-                                  base_ref=cls.generate_inv_ref("[id]",  data['start'],  data['end'])
-                                 )
+                                  base_ref=cls.generate_inv_ref(
+                                      "[id]",  data['start'],  data['end'])
+                                  )
 
 
 class ExtendedJsonEncoder(DjangoJSONEncoder):
@@ -455,12 +474,14 @@ class ExtendedJsonEncoder(DjangoJSONEncoder):
 class MoonRental(models.Model):
     note = models.TextField()
     contact = models.ForeignKey(EveCharacter, on_delete=models.CASCADE)
-    corporation = models.ForeignKey(EveCorporationInfo, on_delete=models.CASCADE)
+    corporation = models.ForeignKey(
+        EveCorporationInfo, on_delete=models.CASCADE)
     moon = models.ForeignKey(MapSystemMoon, on_delete=models.CASCADE)
     price = models.IntegerField(default=100000000)
     start_date = models.DateTimeField()
     end_date = models.DateTimeField(default=None, null=True, blank=True)
-    last_invoice = models.ForeignKey(Invoice, on_delete=SET_NULL, default=None, null=True, blank=True)
+    last_invoice = models.ForeignKey(
+        Invoice, on_delete=SET_NULL, default=None, null=True, blank=True)
 
     @classmethod
     def generate_inv_ref(cls, char_id, inv_date, single=False):
@@ -484,17 +505,19 @@ class MoonRental(models.Model):
         msg = f"Moon Rentals for: {', '.join(moons)}"
         if single:
             msg = f"Partial Month Moon Rental for: {', '.join(moons)}"
-            single = hashlib.sha1(','.join(moons).encode("UTF-8")).hexdigest()[:8]
+            single = hashlib.sha1(
+                ','.join(moons).encode("UTF-8")).hexdigest()[:8]
         ref = cls.generate_inv_ref(cid, timezone.now(), single=single)
         return Invoice.objects.create(character_id=cid,
-                        amount=round(price, -6),
-                        invoice_ref=ref,
-                        note=msg,
-                        due_date=due_date)
+                                      amount=round(price, -6),
+                                      invoice_ref=ref,
+                                      note=msg,
+                                      due_date=due_date)
 
     @classmethod
     def generate_invoices(cls):
-        moon_rentals = cls.objects.filter(end_date__isnull=True).select_related("contact", "moon", "contact__character_ownership__user")
+        moon_rentals = cls.objects.filter(end_date__isnull=True).select_related(
+            "contact", "moon", "contact__character_ownership__user")
         due = timezone.now() + timedelta(days=14)
         total_known = 0
         total_unknown = 0
@@ -504,15 +527,16 @@ class MoonRental(models.Model):
                 user_id = m.contact.character_ownership.user.profile.main_character_id
                 if user_id not in users:
                     users[user_id] = {"uid": user_id,
-                                      "moons" : [],
-                                      "amount" : 0,
-                                      "characters" : set()}
+                                      "moons": [],
+                                      "amount": 0,
+                                      "characters": set()}
                 users[user_id]["moons"].append(m.moon.name)
                 users[user_id]["amount"] += m.price
                 users[user_id]["characters"].add(m.contact.character_name)
                 total_known += m.price
             except Exception:
-                cls.generate_invoice(m.contact.id, [m.moon.name], m.price, due).save()
+                cls.generate_invoice(
+                    m.contact.id, [m.moon.name], m.price, due).save()
                 total_unknown += m.price
         for uid, data in users.items():
             inv = cls.generate_invoice(uid, data['moons'], data['amount'], due)

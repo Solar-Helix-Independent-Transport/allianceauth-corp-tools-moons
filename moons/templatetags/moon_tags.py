@@ -19,6 +19,5 @@ def ore_color(ore):
             return mark_safe('style="background-color:#B57EDC"')
 
     except:
-        #logging.exception("Messsage")
+        # logging.exception("Messsage")
         return ""
-

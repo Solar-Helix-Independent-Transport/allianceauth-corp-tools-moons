@@ -23,7 +23,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='miningobservation',
             name='frack',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='moons.moonfrack'),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to='moons.moonfrack'),
             preserve_default=False,
         ),
     ]

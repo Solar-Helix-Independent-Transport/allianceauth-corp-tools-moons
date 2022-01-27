@@ -57,5 +57,3 @@ class NewMoonRenatal(Schema):
     contact_id: int
     corporation_id: int
     price: int
-
-

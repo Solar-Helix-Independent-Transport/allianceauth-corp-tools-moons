@@ -46,11 +46,7 @@ export async function searchCorps(search_str) {
   const api = await axios.get(`/moons/api/corporations/search`, {
     params: { search_text: search_str },
   });
-  const corps = return_key_pair(
-    "corporation_name",
-    "corporation_id",
-    api.data
-  );
+  const corps = return_key_pair("corporation_name", "corporation_id", api.data);
   corps.sort();
   return corps;
 }
@@ -59,11 +55,7 @@ export async function searchMoons(search_str) {
   const api = await axios.get(`/moons/api/moons/search`, {
     params: { search_text: search_str },
   });
-  const moons = return_key_pair(
-    "name",
-    "id",
-    api.data
-  );
+  const moons = return_key_pair("name", "id", api.data);
   moons.sort();
   return moons;
 }

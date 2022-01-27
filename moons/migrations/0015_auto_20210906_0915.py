@@ -13,13 +13,15 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='invoicerecord',
             name='total_mined',
-            field=models.DecimalField(decimal_places=2, default=0, max_digits=20),
+            field=models.DecimalField(
+                decimal_places=2, default=0, max_digits=20),
             preserve_default=False,
         ),
         migrations.AddField(
             model_name='invoicerecord',
             name='total_taxed',
-            field=models.DecimalField(decimal_places=2, default=0, max_digits=20),
+            field=models.DecimalField(
+                decimal_places=2, default=0, max_digits=20),
             preserve_default=False,
         ),
     ]
