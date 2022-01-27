@@ -62,7 +62,8 @@ class MoonsCog(commands.Cog):
         await ctx.respond(f"Calculating the Moon Stats.")
 
         last_date = InvoiceRecord.get_last_invoice_date()
-        e = Embed(title=f"Last Invoice {last_date}!")
+        date_str = last_date.strftime('%Y/%m/%d')
+        e = Embed(title=f"Last Invoice {date_str}")
         accounts_seen = 0
         locations = set()
         data = InvoiceRecord.generate_invoice_data()
