@@ -53,7 +53,7 @@ class MoonsCog(commands.Cog):
     @pinger_commands.command(name='print_stats', guild_ids=[int(settings.DISCORD_GUILD_ID)])
     async def info_slash(self, ctx):
         """
-        Print the Months Moning Stats!
+        Print the Uninvocied Mining Stats!
         """
 
         if not self.sender_has_moon_perm(ctx):
