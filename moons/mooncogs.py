@@ -1,24 +1,13 @@
 # Cog Stuff
 from discord.embeds import Embed
-from django_redis import get_redis_connection
-from aadiscordbot.cogs.utils.decorators import sender_has_perm
 from allianceauth.services.modules.discord.models import DiscordUser
 from discord.ext import commands
-from discord.commands import SlashCommandGroup, Option
+from discord.commands import SlashCommandGroup
 
-from discord import AutocompleteContext
 # AA Contexts
 import pprint
-from corptools.models import CharacterAudit
 from django.conf import settings
-from django.db.models.query_utils import Q
-from allianceauth.eveonline.models import EveCharacter
 from moons.models import InvoiceRecord
-import pinger
-
-from pinger.tasks import get_settings, _get_cache_data_for_corp
-from pinger.models import MutedStructure, PingerConfig
-from corptools.models import EveLocation
 
 from aadiscordbot import app_settings
 
