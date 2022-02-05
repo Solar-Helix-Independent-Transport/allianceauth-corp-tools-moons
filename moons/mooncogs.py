@@ -118,17 +118,21 @@ class MoonsCog(commands.Cog):
                 uid=ctx.author.id).user.profile.main_character
             corps = CorporationAudit.objects.filter(
                 corporation__corporation_id=user.corporation_id)
+            corp_names = [f"{c.corporation.corporation_name}" for c in corps]
+
+            await ctx.respond(f"Printing Inactive Drills for {', '.join(corp_names)}", ephemeral=True)
+            await ctx.author.send(f"Printing Inactive Drills for {', '.join(corp_names)}")
 
         else:
             if not self.sender_has_moon_perm(ctx):
                 return await ctx.respond(f"You do not have permission to use this command.", ephemeral=True)
             corps = CorporationAudit.objects.filter(
                 corporation__corporation_id__in=app_settings.PUBLIC_MOON_CORPS)
-
-        if corps.count() > 0:
             corp_names = [f"{c.corporation.corporation_name}" for c in corps]
 
             await ctx.respond(f"Printing Inactive Drills for {', '.join(corp_names)}")
+
+        if corps.count() > 0:
 
             tzactive = timezone.now()
             fracks = MoonFrack.objects.filter(
@@ -141,7 +145,11 @@ class MoonsCog(commands.Cog):
                       for i in range((len(messages) + n - 1) // n)]
             for chunk in chunks:
                 message = "\n".join(chunk)
-                await ctx.send(f"```{message}```")
+                if own_corp:
+                    await ctx.author.send(f"```{message}```")
+                else:
+                    await ctx.send(f"```{message}```")
+
         else:
             await ctx.respond(f"Your corp is not setup in Audit, please contact an admin.")
 
