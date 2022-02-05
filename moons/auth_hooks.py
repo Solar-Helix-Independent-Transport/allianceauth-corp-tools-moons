@@ -25,7 +25,7 @@ def register_menu():
 
 @hooks.register('url_hook')
 def register_url():
-    return UrlHook(urls, 'moons', r'^moons/')
+    return UrlHook(urls, 'moons', r'^m/')
 
 
 @hooks.register('discord_cogs_hook')
