@@ -119,9 +119,11 @@ class MoonsCog(commands.Cog):
             corps = CorporationAudit.objects.filter(
                 corporation__corporation_id=user.corporation_id)
             corp_names = [f"{c.corporation.corporation_name}" for c in corps]
-
-            await ctx.respond(f"Printing Inactive Drills for {', '.join(corp_names)}", ephemeral=True)
-            await ctx.author.send(f"Printing Inactive Drills for {', '.join(corp_names)}")
+            if corps.count() > 0:
+                await ctx.respond(f"Printing Inactive Drills for {', '.join(corp_names)}", ephemeral=True)
+                await ctx.author.send(f"Printing Inactive Drills for {', '.join(corp_names)}")
+            else:
+                await ctx.respond(f"Your corp is not setup in Audit, please contact an admin." ephemeral=True)
 
         else:
             if not self.sender_has_moon_perm(ctx):
@@ -129,29 +131,26 @@ class MoonsCog(commands.Cog):
             corps = CorporationAudit.objects.filter(
                 corporation__corporation_id__in=app_settings.PUBLIC_MOON_CORPS)
             corp_names = [f"{c.corporation.corporation_name}" for c in corps]
+            if corps.count() > 0:
+                await ctx.respond(f"Printing Inactive Drills for {', '.join(corp_names)}")
+            else:
+                await ctx.respond(f"Public corp is not setup, please contact an admin.")
 
-            await ctx.respond(f"Printing Inactive Drills for {', '.join(corp_names)}")
-
-        if corps.count() > 0:
-
-            tzactive = timezone.now()
-            fracks = MoonFrack.objects.filter(
-                arrival_time__gte=tzactive, corporation__in=corps).values_list('structure_id')
-            structures = Structure.objects.filter(structureservice__name__in=[
-                                                  "Moon Drilling"], corporation__in=corps).exclude(structure_id__in=fracks)
-            messages = [f"{s.name}" for s in structures]
-            n = 10
-            chunks = [list(messages[i * n:(i + 1) * n])
-                      for i in range((len(messages) + n - 1) // n)]
-            for chunk in chunks:
-                message = "\n".join(chunk)
-                if own_corp:
-                    await ctx.author.send(f"```{message}```")
-                else:
-                    await ctx.send(f"```{message}```")
-
-        else:
-            await ctx.respond(f"Your corp is not setup in Audit, please contact an admin.")
+        tzactive = timezone.now()
+        fracks = MoonFrack.objects.filter(
+            arrival_time__gte=tzactive, corporation__in=corps).values_list('structure_id')
+        structures = Structure.objects.filter(structureservice__name__in=[
+            "Moon Drilling"], corporation__in=corps).exclude(structure_id__in=fracks)
+        messages = [f"{s.name}" for s in structures]
+        n = 10
+        chunks = [list(messages[i * n:(i + 1) * n])
+                  for i in range((len(messages) + n - 1) // n)]
+        for chunk in chunks:
+            message = "\n".join(chunk)
+            if own_corp:
+                await ctx.author.send(f"```{message}```")
+            else:
+                await ctx.send(f"```{message}```")
 
 
 def setup(bot):
