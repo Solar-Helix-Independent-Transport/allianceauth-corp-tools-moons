@@ -123,7 +123,7 @@ class MoonsCog(commands.Cog):
                 await ctx.respond(f"Printing Inactive Drills for {', '.join(corp_names)}", ephemeral=True)
                 await ctx.author.send(f"Printing Inactive Drills for {', '.join(corp_names)}")
             else:
-                await ctx.respond(f"Your corp is not setup in Audit, please contact an admin." ephemeral=True)
+                await ctx.respond(f"Your corp is not setup in Audit, please contact an admin.", ephemeral=True)
 
         else:
             if not self.sender_has_moon_perm(ctx):
