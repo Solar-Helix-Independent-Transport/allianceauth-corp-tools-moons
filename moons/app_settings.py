@@ -19,7 +19,7 @@ def discord_bot_active():
 
 
 def get_rental_discord_channel():
-    out = getattr(settings, "MOON_RENTAL_CHANNEL", [373640301375651844])
+    out = getattr(settings, "MOON_RENTAL_CHANNEL", 373640301375651844)
     if isinstance(out, int):
         return out
     elif isinstance(out, str):
