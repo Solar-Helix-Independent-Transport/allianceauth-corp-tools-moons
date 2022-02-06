@@ -17,7 +17,7 @@ from .managers import MoonManager
 
 if app_settings.discord_bot_active():
     import aadiscordbot
-
+    from aadiscordbot.tasks import send_message
 from django.forms import model_to_dict
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import Model
@@ -542,4 +542,8 @@ class MoonRental(models.Model):
             inv = cls.generate_invoice(uid, data['moons'], data['amount'], due)
             inv.save()
             cls.ping_invoice(inv)
-        return f"Invocied {total_known} to known Users, and {total_unknown} to unknown characters."
+        if app_settings.discord_bot_active():
+            msg = f"Invoiced Moon Rentals, ${total_known:,} to known Users, and ${total_unknown:,} to un-authed characters."
+            send_message(msg, app_settings.get_rental_discord_channel())
+
+        return f"Invoiced Moon Rentals, {total_known} to known Users, and {total_unknown} to unknown Users."
