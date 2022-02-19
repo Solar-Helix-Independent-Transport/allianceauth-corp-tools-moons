@@ -2,9 +2,9 @@ from moons import __version__
 import os
 from setuptools import find_packages, setup
 install_requires = [
-    'allianceauth>=2.8.7',
-    'allianceauth-corptools>=2.1.0'
-    'allianceauth-invoices>=0.0.5'
+    'allianceauth>=2.9.0',
+    'allianceauth-corptools>=2.1.2'
+    'allianceauth-invoices>=0.1.1'
 ]
 with open(os.path.join(os.path.dirname(__file__), 'README.md')) as readme:
     README = readme.read()
