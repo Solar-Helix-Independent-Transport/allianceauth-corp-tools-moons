@@ -13,7 +13,7 @@ class MoonsHook(MenuItemHook):
                               navactive=['moons:'])
 
     def render(self, request):
-        if request.user.has_perm('moons.access_moons'):
+        if request.user.has_perm('moons.view_available'):
             return MenuItemHook.render(self, request)
         return ''
 
