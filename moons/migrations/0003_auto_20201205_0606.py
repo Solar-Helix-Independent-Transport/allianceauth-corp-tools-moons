@@ -17,7 +17,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='miningobservation',
             name='frack_pk',
-            field=models.CharField(default=None, max_length=50, primary_key=True, serialize=False),
+            field=models.CharField(
+                default=None, max_length=50, primary_key=True, serialize=False),
             preserve_default=False,
         ),
     ]

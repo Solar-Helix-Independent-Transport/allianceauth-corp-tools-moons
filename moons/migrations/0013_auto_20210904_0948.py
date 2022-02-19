@@ -15,7 +15,8 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='InvoiceRecord',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True,
+                 primary_key=True, serialize=False, verbose_name='ID')),
                 ('start_date', models.DateTimeField()),
                 ('end_date', models.DateTimeField()),
                 ('ore_prices', models.TextField()),
@@ -24,6 +25,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='miningobservation',
             name='observing_corporation',
-            field=models.ForeignKey(default=None, null=True, on_delete=django.db.models.deletion.SET_NULL, to='corptools.corporationaudit'),
+            field=models.ForeignKey(
+                default=None, null=True, on_delete=django.db.models.deletion.SET_NULL, to='corptools.corporationaudit'),
         ),
     ]

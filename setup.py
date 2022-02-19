@@ -1,9 +1,10 @@
+from moons import __version__
 import os
 from setuptools import find_packages, setup
 install_requires = [
-    'allianceauth>=2.8.7',
-    'allianceauth-corptools>=2.0.7'
-    'allianceauth-invoices>=0.0.5'
+    'allianceauth>=2.9.0',
+    'allianceauth-corptools>=2.1.2'
+    'allianceauth-invoices>=0.1.1'
 ]
 with open(os.path.join(os.path.dirname(__file__), 'README.md')) as readme:
     README = readme.read()
@@ -12,7 +13,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='allianceauth-corptools-moons',
-    version='0.0.6',
+    version=__version__,
     packages=find_packages(),
     include_package_data=True,
     install_requires=install_requires,
@@ -35,4 +36,3 @@ setup(
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
     ],
 )
-

@@ -34,7 +34,7 @@
                     <td class="text-center" style="vertical-align:middle">{{ event.structure.system.constellation.name }}</span></td>
                     <td class="text-center" style="vertical-align:middle"> {{ event.corporation.corporation.corporation_name }}</td>
                     <td class="text-center" style="vertical-align:middle">{% for ores in event.frack.all %}
-                        <span {{ ores.ore.name|ore_color}} class="label label-default"><b>{{ ores.ore.name }}</b> ({{ores.total_m3|intword}} m3)</span><br>
+                        <span {{ ores.ore.name|ore_color}} class="label label-default" ><b>{{ ores.ore.name }}</b> (<span id="{event.structure.location_name.id}-{ores.ore.id}"> </span>{{ores.total_m3|intword}} m3)</span><br>
                     {% endfor %} </td>
                 </tr>
                 {% empty %}

@@ -16,15 +16,20 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='MoonFrack',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True,
+                 primary_key=True, serialize=False, verbose_name='ID')),
                 ('moon_id', models.IntegerField()),
                 ('start_time', models.DateTimeField()),
                 ('arrival_time', models.DateTimeField()),
                 ('auto_time', models.DateTimeField()),
-                ('corporation', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='moon', to='corptools.corporationaudit')),
-                ('moon_name', models.ForeignKey(default=None, null=True, on_delete=django.db.models.deletion.SET_NULL, to='corptools.mapsystemmoon')),
-                ('notification', models.ForeignKey(default=None, null=True, on_delete=django.db.models.deletion.SET_NULL, to='corptools.notification')),
-                ('structure', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='corptools.evelocation')),
+                ('corporation', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
+                 related_name='moon', to='corptools.corporationaudit')),
+                ('moon_name', models.ForeignKey(default=None, null=True,
+                 on_delete=django.db.models.deletion.SET_NULL, to='corptools.mapsystemmoon')),
+                ('notification', models.ForeignKey(default=None, null=True,
+                 on_delete=django.db.models.deletion.SET_NULL, to='corptools.notification')),
+                ('structure', models.ForeignKey(
+                    on_delete=django.db.models.deletion.CASCADE, to='corptools.evelocation')),
             ],
             options={
                 'permissions': (('view_available', 'Can View Configured Public Moons'), ('view_corp', 'Can View Own Corps Moons'), ('view_alliance', 'Can View Own Alliances Moons'), ('view_all', 'Can View All Moons')),
@@ -33,45 +38,58 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='MiningObservation',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('observing_id', models.BigIntegerField(blank=True, default=None, null=True)),
+                ('id', models.AutoField(auto_created=True,
+                 primary_key=True, serialize=False, verbose_name='ID')),
+                ('observing_id', models.BigIntegerField(
+                    blank=True, default=None, null=True)),
                 ('character_id', models.IntegerField()),
                 ('last_updated', models.DateTimeField()),
                 ('quantity', models.BigIntegerField()),
                 ('recorded_corporation_id', models.IntegerField()),
                 ('type_id', models.IntegerField()),
-                ('char', models.ForeignKey(default=None, null=True, on_delete=django.db.models.deletion.SET_NULL, to='corptools.evename')),
-                ('observer', models.ForeignKey(blank=True, default=None, null=True, on_delete=django.db.models.deletion.SET_NULL, to='corptools.evelocation')),
-                ('type_name', models.ForeignKey(default=None, null=True, on_delete=django.db.models.deletion.SET_NULL, to='corptools.eveitemtype')),
+                ('char', models.ForeignKey(default=None, null=True,
+                 on_delete=django.db.models.deletion.SET_NULL, to='corptools.evename')),
+                ('observer', models.ForeignKey(blank=True, default=None, null=True,
+                 on_delete=django.db.models.deletion.SET_NULL, to='corptools.evelocation')),
+                ('type_name', models.ForeignKey(default=None, null=True,
+                 on_delete=django.db.models.deletion.SET_NULL, to='corptools.eveitemtype')),
             ],
         ),
         migrations.CreateModel(
             name='FrackOre',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True,
+                 primary_key=True, serialize=False, verbose_name='ID')),
                 ('total_m3', models.DecimalField(decimal_places=2, max_digits=20)),
-                ('frack', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='frack', to='moons.moonfrack')),
-                ('ore', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='corptools.eveitemtype')),
+                ('frack', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
+                 related_name='frack', to='moons.moonfrack')),
+                ('ore', models.ForeignKey(
+                    on_delete=django.db.models.deletion.CASCADE, to='corptools.eveitemtype')),
             ],
         ),
         migrations.AddIndex(
             model_name='miningobservation',
-            index=models.Index(fields=['observing_id'], name='moons_minin_observi_0bb532_idx'),
+            index=models.Index(fields=['observing_id'],
+                               name='moons_minin_observi_0bb532_idx'),
         ),
         migrations.AddIndex(
             model_name='miningobservation',
-            index=models.Index(fields=['last_updated'], name='moons_minin_last_up_40e633_idx'),
+            index=models.Index(fields=['last_updated'],
+                               name='moons_minin_last_up_40e633_idx'),
         ),
         migrations.AddIndex(
             model_name='miningobservation',
-            index=models.Index(fields=['recorded_corporation_id'], name='moons_minin_recorde_24c17c_idx'),
+            index=models.Index(
+                fields=['recorded_corporation_id'], name='moons_minin_recorde_24c17c_idx'),
         ),
         migrations.AddIndex(
             model_name='miningobservation',
-            index=models.Index(fields=['type_id'], name='moons_minin_type_id_a09027_idx'),
+            index=models.Index(fields=['type_id'],
+                               name='moons_minin_type_id_a09027_idx'),
         ),
         migrations.AddIndex(
             model_name='miningobservation',
-            index=models.Index(fields=['character_id'], name='moons_minin_charact_436005_idx'),
+            index=models.Index(fields=['character_id'],
+                               name='moons_minin_charact_436005_idx'),
         ),
     ]

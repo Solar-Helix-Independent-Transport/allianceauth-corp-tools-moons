@@ -14,7 +14,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='oretax',
             name='tax',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='tax_rate', to='moons.oretaxrates'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
+                                    related_name='tax_rate', to='moons.oretaxrates'),
             preserve_default=False,
         ),
     ]

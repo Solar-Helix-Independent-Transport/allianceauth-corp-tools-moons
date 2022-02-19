@@ -20,33 +20,33 @@ class Command(BaseCommand):
         if OreTaxRates.objects.all().count() == 0:
             OreTaxRates.objects.create(
                 tag="Ore Tax",
-                ore_rate=0.2,
-                ubiquitous_rate=0.2,
-                common_rate=0.2,
-                uncommon_rate=0.2,
-                rare_rate=0.2,
-                exceptional_rate=0.2
+                ore_rate=20,
+                ubiquitous_rate=20,
+                common_rate=20,
+                uncommon_rate=20,
+                rare_rate=20,
+                exceptional_rate=20
             )
         self.stdout.write("Setting up Periodic Tasks!")
-        schedule_bi_weekly, _ = IntervalSchedule.objects.get_or_create(every=14, 
-                        period=IntervalSchedule.DAYS)
+        schedule_bi_weekly, _ = IntervalSchedule.objects.get_or_create(every=14,
+                                                                       period=IntervalSchedule.DAYS)
         schedule_20_min, _ = CrontabSchedule.objects.get_or_create(minute='10,30,50',
-                                                                    hour='*',
-                                                                    day_of_week='*',
-                                                                    day_of_month='*',
-                                                                    month_of_year='*',
-                                                                    timezone='UTC'
-                                                                    )
-        
+                                                                   hour='*',
+                                                                   day_of_week='*',
+                                                                   day_of_month='*',
+                                                                   month_of_year='*',
+                                                                   timezone='UTC'
+                                                                   )
+
         schedule_start_of_month, _ = CrontabSchedule.objects.get_or_create(minute='0',
-                                                                    hour='0',
-                                                                    day_of_week='*',
-                                                                    day_of_month='1',
-                                                                    month_of_year='*',
-                                                                    timezone='UTC'
-                                                                    )
-        
-        task_obs= PeriodicTask.objects.update_or_create(
+                                                                           hour='0',
+                                                                           day_of_week='*',
+                                                                           day_of_month='1',
+                                                                           month_of_year='*',
+                                                                           timezone='UTC'
+                                                                           )
+
+        task_obs = PeriodicTask.objects.update_or_create(
             task='moons.tasks.run_obs_for_all_corps',
             defaults={
                 'crontab': schedule_20_min,
@@ -56,7 +56,7 @@ class Command(BaseCommand):
                 'enabled': True
             }
         )
-        task_prices= PeriodicTask.objects.update_or_create(
+        task_prices = PeriodicTask.objects.update_or_create(
             task='moons.tasks.update_ore_prices',
             defaults={
                 'crontab': schedule_start_of_month,
@@ -66,7 +66,7 @@ class Command(BaseCommand):
                 'enabled': True
             }
         )
-        task_invoice= PeriodicTask.objects.update_or_create(
+        task_invoice = PeriodicTask.objects.update_or_create(
             task='moons.tasks.generate_taxes',
             defaults={
                 'interval': schedule_bi_weekly,
@@ -93,7 +93,7 @@ class Command(BaseCommand):
             update_ore_prices()
             self.stdout.write("Done!")
         else:
-            que=[]
+            que = []
             self.stdout.write("Sending Tasks to celery for processing!")
             if systems <= 8285:
                 self.stdout.write("Sending Map Update Task")
@@ -108,4 +108,3 @@ class Command(BaseCommand):
             que.append(update_ore_prices.si())
             self.stdout.write("Tasks Queued!")
             chain(que).apply_async(priority=4)
-

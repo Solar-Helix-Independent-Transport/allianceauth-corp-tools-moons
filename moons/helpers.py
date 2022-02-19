@@ -15,14 +15,14 @@ class OreHelper:
 
     asteroids = 25
 
-    def get_mineral_array():   
-        return list(set(InvTypeMaterials.objects.filter(eve_type__group__category_id=OreHelper.asteroids) \
-            .values_list('met_type_id', flat=True)))
+    def get_mineral_array():
+        return list(set(InvTypeMaterials.objects.filter(eve_type__group__category_id=OreHelper.asteroids)
+                        .values_list('met_type_id', flat=True)))
 
-    def get_ore_array():     
+    def get_ore_array():
         inv_types = InvTypeMaterials.objects.filter(eve_type__group__category_id=OreHelper.asteroids) \
             .select_related('eve_type', 'eve_type__group', 'met_type')
-        
+
         ore_infos = {}
         for comp in inv_types:
             if comp.eve_type.name not in ore_infos:
@@ -35,9 +35,8 @@ class OreHelper:
                     "portion": comp.eve_type.portion_size
                 }
             ore_infos[comp.eve_type.pk]['minerals'][comp.met_type.name] = comp.qty
-        
-        return ore_infos
 
+        return ore_infos
 
     def get_ore_array_with_value():
         input = OreHelper.get_ore_array()
@@ -45,7 +44,6 @@ class OreHelper:
             input[o.item_id]['value'] = o.price
 
         return input
-
 
     def get_ore_array_with_value_and_taxs():
         input = OreHelper.get_ore_array_with_value()
