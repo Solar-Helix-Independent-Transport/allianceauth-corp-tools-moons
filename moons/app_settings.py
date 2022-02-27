@@ -1,3 +1,4 @@
+from django.apps import apps
 from django.conf import settings
 
 
@@ -15,7 +16,12 @@ PUBLIC_MOON_CORPS = get_pub()  # trust
 
 
 def discord_bot_active():
-    return 'aadiscordbot' in settings.INSTALLED_APPS
+    if apps.is_installed("aadiscordbot"):
+        import aadiscordbot as ab
+        version = ab.__version__.split(".")
+        if int(version[0]) >= 3:
+            return True
+    return False
 
 
 def get_rental_discord_channel():
