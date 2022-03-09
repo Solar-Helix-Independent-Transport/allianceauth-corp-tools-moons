@@ -5,7 +5,7 @@ from django.db.models import Sum
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import render
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from .models import MoonFrack, MiningObservation, InvoiceRecord
 from corptools.models import EveLocation
