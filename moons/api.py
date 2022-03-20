@@ -79,7 +79,7 @@ def get_moons_and_obs(request, past_days: int):
             past_days = 4
 
     start_date = timezone.now() - timedelta(days=past_days)
-    time_from = timezone.now() - timedelta(days=past_days+4)
+    time_from = timezone.now() - timedelta(days=past_days+1)
 
     events = models.MoonFrack.objects.visible_to(request.user)
     current_fracks = events.filter(
@@ -137,13 +137,10 @@ def get_moons_and_obs(request, past_days: int):
         .annotate(ore_value=ExpressionWrapper(
             Subquery(type_price.values('price')) * Sum('quantity'),
             output_field=FloatField())) \
-        .annotate(name=F('type_name__name')) \
-        .annotate(maxu=Max('last_updated')) \
-        .annotate(minu=Min('last_updated'))
+        .annotate(name=F('type_name__name'))
 
     for o in observations:
         nme = o["name"].split(" ")[-1]
-        print(f"{o['structure']} `{o['name']}` `{nme}` `{o['maxu']}` `{o['minu']}`")
         if request.user.has_perm("moons.view_all"):
             str_ob_dict[o["structure"]][nme]["value"] += o["ore_value"]
         str_ob_dict[o["structure"]][nme]["volume"] += o['mined']

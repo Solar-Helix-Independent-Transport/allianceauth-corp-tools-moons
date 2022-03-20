@@ -249,7 +249,7 @@ const CorporateLedger = () => {
 
   return (
     <ErrorBoundary>
-      <h1 className="text-center">Extractions</h1>
+      <h1 className="text-center">Active Extractions</h1>
       <h5 className="text-center small">Key:</h5>
       <OreColourKey />
       <br />
