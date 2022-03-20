@@ -43,7 +43,7 @@ const CorporateLedger = () => {
             {dateFormat.format(Date.parse(props.value))}{" "}
             {timeFormat.format(Date.parse(props.value))}
             <br />
-            <Label className="small">
+            <Label className="">
               <ReactTimeAgo date={Date.parse(props.value)} />
             </Label>
           </h5>
@@ -163,7 +163,7 @@ const CorporateLedger = () => {
                     >
                       <h5>
                         {ore.type.name}{" "}
-                        <Label className="small">
+                        <Label style={{ marginLeft: "5px" }} className="">
                           {(
                             (ore.total_volume /
                               props.cell.row.original.total_m3) *
@@ -171,9 +171,13 @@ const CorporateLedger = () => {
                           ).toFixed(0)}
                           %
                         </Label>
-                        <Label className="small pull-right">
-                          ${Number(ore.value / 1000000000).toFixed(2)}B Mined
-                        </Label>
+                        {ore.value > 0 ? (
+                          <Label className="" style={{ marginLeft: "5px" }}>
+                            ${Number(ore.value / 1000000000).toFixed(2)}B Mined
+                          </Label>
+                        ) : (
+                          <></>
+                        )}
                         <Label
                           className="pull-right"
                           bsSize="small"

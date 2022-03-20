@@ -2,11 +2,11 @@ import React from "react";
 import { Label } from "react-bootstrap";
 
 export const OreColourMap = {
-  1884: "#9B1C31", // Ubiqu
-  1921: "#FFAA1D", // uncom
-  1922: "#4B8B3B", // rare
-  1920: "#E86100", // common
-  1923: "#0D98BA", // exccept
+  1884: "#0D98BA",
+  1921: "#FFAA1D",
+  1920: "#4B8B3B",
+  1922: "#E86100",
+  1923: "#9B1C31",
 };
 
 export const OreColourKey = () => {

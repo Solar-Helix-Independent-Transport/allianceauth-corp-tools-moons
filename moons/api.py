@@ -10,7 +10,7 @@ from ninja.security import django_auth
 from ninja.responses import codes_4xx
 
 from django.core.exceptions import PermissionDenied
-from django.db.models import F, Sum, Q
+from django.db.models import F, Sum, Q, Max, Min
 from django.db.models import Subquery, OuterRef
 from django.db.models import FloatField, F, ExpressionWrapper
 
@@ -137,11 +137,15 @@ def get_moons_and_obs(request, past_days: int):
         .annotate(ore_value=ExpressionWrapper(
             Subquery(type_price.values('price')) * Sum('quantity'),
             output_field=FloatField())) \
-        .annotate(name=F('type_name__name'))
+        .annotate(name=F('type_name__name')) \
+        .annotate(maxu=Max('last_updated')) \
+        .annotate(minu=Min('last_updated'))
 
     for o in observations:
         nme = o["name"].split(" ")[-1]
-        str_ob_dict[o["structure"]][nme]["value"] += o["ore_value"]
+        print(f"{o['structure']} `{o['name']}` `{nme}` `{o['maxu']}` `{o['minu']}`")
+        if request.user.has_perm("moons.view_all"):
+            str_ob_dict[o["structure"]][nme]["value"] += o["ore_value"]
         str_ob_dict[o["structure"]][nme]["volume"] += o['mined']
 
         if o['type_id'] in JACKPOT_IDS:
