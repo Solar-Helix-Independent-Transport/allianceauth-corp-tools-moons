@@ -116,6 +116,7 @@ def process_moon_pulls():
 
     EveItemType.objects.create_bulk_from_esi(_type_list)
     FrackOre.objects.bulk_create(_ores, batch_size=500)
+
     return "fetched!"
 
 
@@ -235,6 +236,10 @@ def process_moon_obs(self, observer_id, corporation_id):
                                               'quantity', 'last_updated', 'structure', 'observing_corporation'])
 
     msg = f"Corp:{corporation_id} Moon:{observer_id} Updated:{len(mining_ob_updates)} Created:{len(mining_ob_creates)}"
+
+    corp.last_update_observers = timezone.now()
+    corp.save()
+
     logger.debug(msg)
     return msg
 

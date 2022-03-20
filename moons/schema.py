@@ -13,6 +13,8 @@ class MoonPermisions(Schema):
 class IdName(Schema):
     id: int
     name: str
+    cat: Optional[str]
+    cat_id: Optional[int]
 
 
 class Character(Schema):
@@ -34,16 +36,23 @@ class Corporation(Schema):
 class OreVolume(Schema):
     type: IdName
     volume: int
+    total_volume: int
+    value: float
 
 
 class ExtractionEvent(Schema):
     ObserverName: str
     moon: IdName
+    system: str
+    constellation: str
+    region: str
     extraction_end: datetime
     mined_ore: Optional[List[OreVolume]]
+    jackpot: bool = False
+    total_m3: int
 
 
-class MoonRenatal(Schema):
+class MoonRental(Schema):
     moon: IdName
     system: IdName
     contact: Character
@@ -52,7 +61,7 @@ class MoonRenatal(Schema):
     start_date: datetime
 
 
-class NewMoonRenatal(Schema):
+class NewMoonRental(Schema):
     moon_id: int
     contact_id: int
     corporation_id: int

@@ -1,14 +1,18 @@
-import "./App.css";
 import React from "react";
-import { PanelLoader } from "./components/PanelLoader";
-import { MoonRentalPannel } from "./components/MoonRentalPannel";
+import CorporateLedger from "./pages/CorporateLedger";
+import { QueryClient, QueryClientProvider } from "react-query";
+import en from "javascript-time-ago/locale/en";
+import TimeAgo from "javascript-time-ago";
+
+TimeAgo.addDefaultLocale(en);
+
+const queryClient = new QueryClient();
 
 function App() {
   return (
-    <>
-      <PanelLoader></PanelLoader>
-      <MoonRentalPannel></MoonRentalPannel>
-    </>
+    <QueryClientProvider client={queryClient}>
+      <CorporateLedger></CorporateLedger>
+    </QueryClientProvider>
   );
 }
 

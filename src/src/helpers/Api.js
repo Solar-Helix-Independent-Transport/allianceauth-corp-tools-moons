@@ -30,7 +30,7 @@ function return_key_pair(label_key, value_key, ob) {
 }
 
 export async function searchChars(search_str) {
-  const api = await axios.get(`/moons/api/characters/search`, {
+  const api = await axios.get(`/m/api/characters/search`, {
     params: { search_text: search_str },
   });
   const characters = return_key_pair(
@@ -43,7 +43,7 @@ export async function searchChars(search_str) {
 }
 
 export async function searchCorps(search_str) {
-  const api = await axios.get(`/moons/api/corporations/search`, {
+  const api = await axios.get(`/m/api/corporations/search`, {
     params: { search_text: search_str },
   });
   const corps = return_key_pair("corporation_name", "corporation_id", api.data);
@@ -52,10 +52,18 @@ export async function searchCorps(search_str) {
 }
 
 export async function searchMoons(search_str) {
-  const api = await axios.get(`/moons/api/moons/search`, {
+  const api = await axios.get(`/m/api/moons/search`, {
     params: { search_text: search_str },
   });
   const moons = return_key_pair("name", "id", api.data);
   moons.sort();
   return moons;
+}
+
+export async function getExtractions(days = 4) {
+  const api = await axios.get(`/m/api/extractions`, {
+    params: { past_days: days },
+  });
+
+  return api.data;
 }

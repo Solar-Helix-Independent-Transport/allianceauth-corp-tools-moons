@@ -11,6 +11,9 @@ from ninja.responses import codes_4xx
 
 from django.core.exceptions import PermissionDenied
 from django.db.models import F, Sum, Q
+from django.db.models import Subquery, OuterRef
+from django.db.models import FloatField, F, ExpressionWrapper
+
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 from django.conf import settings
 
@@ -39,75 +42,115 @@ def get_user_permisions(request, search_text: str):
     return []
 
 
-@api.get(
-    "/moon/search",
-    response={200: List[schema.IdName]},
-    tags=["Moons"]
-)
-def get_moon_search(request, search_text: str):
-    return MapSystemMoon.objects.filter(name__icontains=search_text).values("name", id=F("moon_id"))
+JACKPOT_IDS = [
+    46281,  # Glistening Zeolites
+    46283,  # Glistening Sylvite
+    46285,  # Glistening Bitumens
+    46287,  # Glistening Coesite
+    46305,  # Glowing Carnotite
+    46307,  # Glowing Zircon
+    46309,  # Glowing Pollucite
+    46311,  # Glowing Cinnabar
+    46297,  # Shimmering Otavite
+    46299,  # Shimmering Sperrylite
+    46301,  # Shimmering Vanadinite
+    46303,  # Shimmering Chromite
+    46289,  # Twinkling Cobaltite
+    46291,  # Twinkling Euxenite
+    46293,  # Twinkling Titanite
+    46295,  # Twinkling Scheelite
+    46313,  # Shining Xenotime
+    46315,  # Shining Monazite
+    46317,  # Shining Loparite
+    46319,  # Shining Ytterbite
+]
 
 
 @api.get(
-    "/character/search",
-    response={200: List[schema.Character]},
-    tags=["Character"]
-)
-def get_character_search(request, search_text: str):
-    return EveCharacter.objects.filter(character_name__icontains=search_text)
-
-
-@api.get(
-    "/extraction/active",
+    "/extractions/",
     response={200: List[schema.ExtractionEvent]},
     tags=["Observers"]
 )
-def get_observer_usage(request, observer_id: int):
-    if not request.user.has_perm("moons.access_moons"):
+def get_moons_and_obs(request, past_days: int):
+    if not request.user.has_perm("moons.view_available"):
         return []
-    time_from = timezone.now() - timedelta(days=6)
+    if past_days > 4:
+        if not request.user.has_perm("moons.view_all"):
+            past_days = 4
+
+    start_date = timezone.now() - timedelta(days=past_days)
+    time_from = timezone.now() - timedelta(days=past_days+4)
+
+    events = models.MoonFrack.objects.visible_to(request.user)
+    current_fracks = events.filter(
+        arrival_time__gte=start_date,
+        arrival_time__lt=timezone.now()).select_related(
+            "moon_name",
+            "moon_name__system",
+            "moon_name__system__constellation",
+            "moon_name__system__constellation__region",
+    ).prefetch_related('frack',
+                       "frack__ore",
+                       "frack__ore__group"
+                       )
+
+    type_price = models.OrePrice.objects.filter(item_id=OuterRef('type_id'))
+
+    output = {}
+    str_ob_dict = {}
+
+    for e in current_fracks:
+        output[e.structure_id] = {
+            "ObserverName": e.structure.location_name,
+            "system": e.moon_name.system.name,
+            "constellation": e.moon_name.system.constellation.name,
+            "region": e.moon_name.system.constellation.region.name,
+            "moon": {
+                "name": e.moon_name.name,
+                "id": e.moon_id
+            },
+            "extraction_end": e.arrival_time,
+            "mined_ore": [],
+            "total_m3": 0
+        }
+        for o in e.frack.all():
+            if e.structure_id not in str_ob_dict:
+                str_ob_dict[e.structure_id] = {}
+            output[e.structure_id]['total_m3'] += o.total_m3
+            str_ob_dict[e.structure_id][o.ore.name] = {
+                "type": {
+                    "id": o.ore_id,
+                    "name": o.ore.name,
+                    "cat": o.ore.group.name,
+                    "cat_id": o.ore.group_id
+                },
+                "volume": 0,
+                "total_volume": o.total_m3,
+                "value": 0
+            }
+
     observations = models.MiningObservation.objects \
-        .filter(observing_id=observer_id, last_updated__gte=time_from) \
-        .values('type_id') \
+        .filter(last_updated__gte=time_from) \
+        .filter(observing_id__in=current_fracks.values_list("structure_id", flat=True)) \
+        .values('structure', 'type_id') \
         .annotate(mined=(Sum('quantity') * F('type_name__volume'))) \
+        .annotate(ore_value=ExpressionWrapper(
+            Subquery(type_price.values('price')) * Sum('quantity'),
+            output_field=FloatField())) \
         .annotate(name=F('type_name__name'))
 
-    return observations
+    for o in observations:
+        nme = o["name"].split(" ")[-1]
+        str_ob_dict[o["structure"]][nme]["value"] += o["ore_value"]
+        str_ob_dict[o["structure"]][nme]["volume"] += o['mined']
 
+        if o['type_id'] in JACKPOT_IDS:
+            output[o["structure"]]["jackpot"] = True
 
-@api.get(
-    "/extraction/remaining",
-    response={200: List[schema.OreVolume]},
-    tags=["Observers"]
-)
-def get_observer_usage(request, observer_id: int):
-    if not request.user.has_perm("moons.access_moons"):
-        return []
-    time_from = timezone.now() - timedelta(days=6)
-    observations = models.MiningObservation.objects \
-        .filter(observing_id=observer_id, last_updated__gte=time_from) \
-        .values('type_id') \
-        .annotate(mined=(Sum('quantity') * F('type_name__volume'))) \
-        .annotate(name=F('type_name__name'))
+    for s, o in str_ob_dict.items():
+        output[s]["mined_ore"] = list(o.values())
 
-    return observations
-
-
-logger = logging.getLogger(__name__)
-
-
-api = NinjaAPI(title="MoonTool API", version="0.0.1",
-               urls_namespace='moons:api', auth=django_auth, csrf=True,
-               openapi_url=settings.DEBUG and "/openapi.json" or "")
-
-
-@api.get(
-    "/user/permisions",
-    response={200: schema.MoonPermisions},
-    tags=["User"]
-)
-def get_user_permisions(request, search_text: str):
-    return []
+    return list(output.values())
 
 
 @api.get(
@@ -138,30 +181,12 @@ def get_character_search(request, search_text: str, limit: int = 10):
 
 
 @api.get(
-    "/extraction/active",
-    response={200: List[schema.ExtractionEvent]},
-    tags=["Observers"]
-)
-def get_observer_usage(request, observer_id: int):
-    if not request.user.has_perm("moons.access_moons"):
-        return []
-    time_from = timezone.now() - timedelta(days=6)
-    observations = models.MiningObservation.objects \
-        .filter(observing_id=observer_id, last_updated__gte=time_from) \
-        .values('type_id') \
-        .annotate(mined=(Sum('quantity') * F('type_name__volume'))) \
-        .annotate(name=F('type_name__name'))
-
-    return observations
-
-
-@api.get(
     "/rental/list",
-    response={200: List[schema.MoonRenatal]},
+    response={200: List[schema.MoonRental]},
     tags=["Rentals"]
 )
 def get_moon_rentals(request):
-    if not request.user.has_perm("moons.access_moons"):
+    if not request.user.has_perm("moons.add_moonrental"):
         return []
 
     rentals = models.MoonRental.objects.filter(end_date__isnull=True).select_related(
@@ -189,10 +214,13 @@ def get_moon_rentals(request):
 
 @api.post(
     "/rental/new",
-    response={200: schema.MoonRenatal, 403: str},
+    response={200: schema.MoonRental, 403: str},
     tags=["Rentals"]
 )
-def post_moon_rental_new(request, rental: schema.NewMoonRenatal = Form(...)):
+def post_moon_rental_new(request, rental: schema.NewMoonRental = Form(...)):
+    if not request.user.has_perm("moons.add_moonrental"):
+        return 403, "Permision Denied!"
+
     if models.MoonRental.objects.filter(moon_id=rental.moon_id, end_date__isnull=True).exists():
         return 403, "Moon Already Rented!"
     try:
