@@ -1,8 +1,7 @@
 from django.db import models
-from django.core.exceptions import ObjectDoesNotExist
 import logging
 
-from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo, EveAllianceInfo
+from moons import app_settings
 
 logger = logging.getLogger(__name__)
 
@@ -36,16 +35,23 @@ class MoonQuerySet(models.QuerySet):
                 else:
                     queries.append(
                         models.Q(corporation__corporation__corporation_id=char.corporation_id))
+            if user.has_perm('moons.view_available'):
+                queries.append(
+                    models.Q(corporation__corporation__corporation_id__in=app_settings.PUBLIC_MOON_CORPS))
+
             logger.debug('%s queries for user %s characters.' %
                          (len(queries), user))
+
             # filter based on queries
+            assert len(queries) > 0
+
             query = queries.pop()
             for q in queries:
                 query |= q
             return self.filter(query)
         except AssertionError:
             logger.debug(
-                'User %s has no main character. Nothing visible.' % user)
+                'User %s has no main or permissions. Nothing visible.' % user)
             return self.none()
 
 
