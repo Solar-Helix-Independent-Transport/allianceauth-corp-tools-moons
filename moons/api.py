@@ -34,12 +34,19 @@ api = NinjaAPI(title="MoonTool API", version="0.0.1",
 
 
 @api.get(
-    "/user/permisions",
+    "/user/permissions",
     response={200: schema.MoonPermisions},
     tags=["User"]
 )
-def get_user_permisions(request, search_text: str):
-    return []
+def get_user_permisions(request):
+    return {
+        "view_public_extractions": request.user.has_perm('moons.view_available'),
+        "view_corp_extractions": request.user.has_perm('moons.view_corp'),
+        "view_alliance_extractions": request.user.has_perm('moons.view_alliance'),
+        "view_observations": request.user.has_perm('moons.view_all'),
+        "view_rentals": request.user.has_perm('moons.view_moonrental'),
+        "edit_rentals": request.user.has_perm('moons.change_moonrental'),
+    }
 
 
 JACKPOT_IDS = [
@@ -74,9 +81,9 @@ JACKPOT_IDS = [
 def get_moons_and_obs(request, past_days: int):
     if not request.user.has_perm("moons.view_available"):
         return []
-    if past_days > 4:
+    if past_days > 3:
         if not request.user.has_perm("moons.view_all"):
-            past_days = 4
+            past_days = 3
 
     start_date = timezone.now() - timedelta(days=past_days)
     time_from = timezone.now() - timedelta(days=past_days+1)
@@ -147,6 +154,68 @@ def get_moons_and_obs(request, past_days: int):
 
         if o['type_id'] in JACKPOT_IDS:
             output[o["structure"]]["jackpot"] = True
+
+    for s, o in str_ob_dict.items():
+        output[s]["mined_ore"] = list(o.values())
+
+    return list(output.values())
+
+
+@api.get(
+    "/extractions/future",
+    response={200: List[schema.ExtractionEvent]},
+    tags=["Observers"]
+)
+def get_future_extractions(request):
+    if not request.user.has_perm("moons.view_all"):
+        return []
+
+    start_date = timezone.now()
+
+    events = models.MoonFrack.objects.visible_to(request.user)
+    current_fracks = events.filter(
+        arrival_time__gte=start_date).select_related(
+            "moon_name",
+            "moon_name__system",
+            "moon_name__system__constellation",
+            "moon_name__system__constellation__region",
+    ).prefetch_related('frack',
+                       "frack__ore",
+                       "frack__ore__group"
+                       )
+
+    output = {}
+    str_ob_dict = {}
+
+    for e in current_fracks:
+        output[e.structure_id] = {
+            "ObserverName": e.structure.location_name,
+            "system": e.moon_name.system.name,
+            "constellation": e.moon_name.system.constellation.name,
+            "region": e.moon_name.system.constellation.region.name,
+            "moon": {
+                "name": e.moon_name.name,
+                "id": e.moon_id
+            },
+            "extraction_end": e.arrival_time,
+            "mined_ore": [],
+            "total_m3": 0
+        }
+        for o in e.frack.all():
+            if e.structure_id not in str_ob_dict:
+                str_ob_dict[e.structure_id] = {}
+            output[e.structure_id]['total_m3'] += o.total_m3
+            str_ob_dict[e.structure_id][o.ore.name] = {
+                "type": {
+                    "id": o.ore_id,
+                    "name": o.ore.name,
+                    "cat": o.ore.group.name,
+                    "cat_id": o.ore.group_id
+                },
+                "volume": 0,
+                "total_volume": o.total_m3,
+                "value": 0
+            }
 
     for s, o in str_ob_dict.items():
         output[s]["mined_ore"] = list(o.values())

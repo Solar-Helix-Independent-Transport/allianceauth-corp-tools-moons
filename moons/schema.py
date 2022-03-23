@@ -5,7 +5,9 @@ from ninja import Schema
 
 class MoonPermisions(Schema):
     view_public_extractions: bool = False
-    view_public_observations: bool = False
+    view_corp_extractions: bool = False
+    view_alliance_extractions: bool = False
+    view_observations: bool = False
     view_rentals: bool = False
     edit_rentals: bool = False
 

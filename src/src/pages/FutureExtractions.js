@@ -1,7 +1,7 @@
 import React from "react";
 import { Panel, Label } from "react-bootstrap";
 import { useQuery } from "react-query";
-import { getExtractions } from "../helpers/Api";
+import { getFutureExtractions } from "../helpers/Api";
 import {
   BaseTable,
   textColumnFilter,
@@ -24,10 +24,10 @@ const timeFormat = Intl.DateTimeFormat("default", {
   hour12: false,
 });
 
-const CorporateLedger = () => {
+const FutureExtractions = () => {
   const { isLoading, isFetching, error, data } = useQuery(
-    ["extractions"],
-    () => getExtractions(),
+    ["future-extractions"],
+    () => getFutureExtractions(),
     {
       initialData: [],
     }
@@ -63,19 +63,7 @@ const CorporateLedger = () => {
         ),
       },
       {
-        Header: "Jackpot",
-        accessor: "jackpot",
-        Cell: (props) =>
-          props.value ? (
-            <div className="text-center jackpot">
-              <i class="fas fa-award" style={{ fontSize: "64px" }}></i>
-            </div>
-          ) : (
-            <></>
-          ),
-      },
-      {
-        Header: "Ore Composition Remaining",
+        Header: "Ore Composition",
         accessor: "mined_ore",
         Filter: ({
           column: { setFilter, filterValue, preFilteredRows, id },
@@ -130,9 +118,10 @@ const CorporateLedger = () => {
           props.value ? (
             <div className="">
               {props.value.map((ore) => {
-                let mined = Number(
-                  (ore.volume / ore.total_volume) * 100
-                ).toFixed(1);
+                let percent = (
+                  (ore.total_volume / props.cell.row.original.total_m3) *
+                  100
+                ).toFixed(0);
                 return (
                   <div
                     style={{
@@ -164,20 +153,8 @@ const CorporateLedger = () => {
                       <h5>
                         {ore.type.name}{" "}
                         <Label style={{ marginLeft: "5px" }} className="">
-                          {(
-                            (ore.total_volume /
-                              props.cell.row.original.total_m3) *
-                            100
-                          ).toFixed(0)}
-                          %
+                          {percent}%
                         </Label>
-                        {ore.value > 0 ? (
-                          <Label className="" style={{ marginLeft: "5px" }}>
-                            ${Number(ore.value / 1000000000).toFixed(2)}B Mined
-                          </Label>
-                        ) : (
-                          <></>
-                        )}
                         <Label
                           className="pull-right"
                           bsSize="small"
@@ -197,17 +174,16 @@ const CorporateLedger = () => {
                       >
                         <div
                           className={
-                            mined > 70
-                              ? "progress-bar progress-bar-striped progress-bar-warning"
-                              : "progress-bar progress-bar-striped progress-bar-info active"
+                            "progress-bar progress-bar-striped progress-bar-info active"
                           }
                           style={{
-                            width: mined + "%",
+                            width: percent + "%",
                             color: "black",
+                            backgroundColor: OreColourMap[ore.type.cat_id],
                           }}
                         >
-                          {mined}
-                          {"% Mined"}
+                          {percent}
+                          {"%"}
                         </div>
                       </div>
                     </div>
@@ -219,23 +195,6 @@ const CorporateLedger = () => {
             <></>
           ),
       },
-      //{
-      //  Header: "Mined Value",
-      //  Cell: (props) =>
-      //    props.cell.row.original.mined_ore ? (
-      //      <>
-      //        $
-      //        {Number(
-      //          props.cell.row.original.mined_ore.reduce((p, c) => {
-      //            return (p += c.value);
-      //          }, 0) / 1000000000
-      //        ).toFixed(2)}{" "}
-      //        Bill
-      //      </>
-      //    ) : (
-      //      <></>
-      //    ),
-      //},
     ],
     []
   );
@@ -243,7 +202,7 @@ const CorporateLedger = () => {
   const defaultSort = [
     {
       id: "extraction_end",
-      desc: true,
+      desc: false,
     },
   ];
 
@@ -263,4 +222,4 @@ const CorporateLedger = () => {
   );
 };
 
-export default CorporateLedger;
+export default FutureExtractions;

@@ -61,7 +61,6 @@ class MoonFrack(models.Model):
 
     class Meta:
         permissions = (('view_available', 'Can View Configured Public Moons'),
-                       # these do nothing as of now.
                        ('view_corp', 'Can View Own Corps Moons'),
                        ('view_alliance', 'Can View Own Alliances Moons'),
                        ('view_all', 'Can View All Moons'))

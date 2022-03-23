@@ -18,9 +18,28 @@ class MoonsHook(MenuItemHook):
         return ''
 
 
+class MoonsBetaHook(MenuItemHook):
+    def __init__(self):
+        MenuItemHook.__init__(self,
+                              _('Moon Board Beta'),
+                              'fas fa-moon fa-fw',
+                              'moons:r',
+                              navactive=['moons:r'])
+
+    def render(self, request):
+        if request.user.has_perm('moons.view_all'):
+            return MenuItemHook.render(self, request)
+        return ''
+
+
 @hooks.register('menu_item_hook')
 def register_menu():
     return MoonsHook()
+
+
+@hooks.register('menu_item_hook')
+def register_beta_menu():
+    return MoonsBetaHook()
 
 
 @hooks.register('url_hook')
