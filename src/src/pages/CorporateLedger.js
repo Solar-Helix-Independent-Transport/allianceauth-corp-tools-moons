@@ -188,13 +188,7 @@ const CorporateLedger = () => {
                           {ore.type.cat}
                         </Label>
                       </h5>
-                      <div
-                        className="progress"
-                        style={{
-                          minWidth: "250px",
-                          maxWidth: "2000px",
-                        }}
-                      >
+                      <div className="progress">
                         <div
                           className={
                             mined > 70

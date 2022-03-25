@@ -168,8 +168,7 @@ const FutureExtractions = () => {
                       <div
                         className="progress"
                         style={{
-                          minWidth: "250px",
-                          maxWidth: "2000px",
+                          minWidth: "40vw",
                         }}
                       >
                         <div
