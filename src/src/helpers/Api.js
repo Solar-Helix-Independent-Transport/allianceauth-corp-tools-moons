@@ -60,7 +60,7 @@ export async function searchMoons(search_str) {
   return moons;
 }
 
-export async function getExtractions(days = 20) {
+export async function getExtractions(days = 3) {
   const api = await axios.get(`/m/api/extractions`, {
     params: { past_days: days },
   });
