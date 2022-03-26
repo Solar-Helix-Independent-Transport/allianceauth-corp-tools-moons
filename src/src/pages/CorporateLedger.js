@@ -75,7 +75,7 @@ const CorporateLedger = () => {
           ),
       },
       {
-        Header: "Ore Composition Remaining",
+        Header: "Ore Composition",
         accessor: "mined_ore",
         Filter: ({
           column: { setFilter, filterValue, preFilteredRows, id },
@@ -128,87 +128,92 @@ const CorporateLedger = () => {
         },
         Cell: (props) =>
           props.value ? (
-            <div className="">
-              {props.value.map((ore) => {
-                let mined = Number(
-                  (ore.volume / ore.total_volume) * 100
-                ).toFixed(1);
-                return (
-                  <div
-                    style={{
-                      display: "flex",
-                      alignContent: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <img
-                      alt={ore.type.name}
-                      style={{
-                        width: "32px",
-                        height: "32px",
-                        margin: "15px",
-                        borderRadius: "30px",
-                        backgroundColor: OreColourMap[ore.type.cat_id],
-                      }}
-                      src={
-                        "https://images.evetech.net/types/" +
-                        ore.type.id +
-                        "/icon"
-                      }
-                    ></img>
-                    <div
-                      style={{
-                        flexGrow: 1,
-                      }}
-                    >
-                      <h5>
-                        {ore.type.name}{" "}
-                        <Label style={{ marginLeft: "5px" }} className="">
-                          {(
-                            (ore.total_volume /
-                              props.cell.row.original.total_m3) *
-                            100
-                          ).toFixed(0)}
-                          %
-                        </Label>
-                        {ore.value > 0 ? (
-                          <Label className="" style={{ marginLeft: "5px" }}>
-                            ${Number(ore.value / 1000000000).toFixed(2)}B Mined
-                          </Label>
-                        ) : (
-                          <></>
-                        )}
-                        <Label
-                          className="pull-right"
-                          bsSize="small"
+            <>
+              <div className="">
+                {props.value.map((ore) => {
+                  let mined = Number(
+                    (ore.volume / ore.total_volume) * 100
+                  ).toFixed(1);
+                  return (
+                    <>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignContent: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <img
+                          alt={ore.type.name}
                           style={{
+                            width: "30px",
+                            height: "30px",
+                            margin: "15px",
+                            borderRadius: "30px",
                             backgroundColor: OreColourMap[ore.type.cat_id],
                           }}
-                        >
-                          {ore.type.cat}
-                        </Label>
-                      </h5>
-                      <div className="progress">
-                        <div
-                          className={
-                            mined > 70
-                              ? "progress-bar progress-bar-striped progress-bar-warning"
-                              : "progress-bar progress-bar-striped progress-bar-info active"
+                          src={
+                            "https://images.evetech.net/types/" +
+                            ore.type.id +
+                            "/icon"
                           }
+                        ></img>
+                        <div
                           style={{
-                            width: mined + "%",
-                            color: "black",
+                            flexGrow: 1,
                           }}
                         >
-                          {mined}
-                          {"% Mined"}
+                          <h5>
+                            {ore.type.name}{" "}
+                            <Label style={{ marginLeft: "5px" }} className="">
+                              {(
+                                (ore.total_volume /
+                                  props.cell.row.original.total_m3) *
+                                100
+                              ).toFixed(0)}
+                              %
+                            </Label>
+                            {ore.value > 0 ? (
+                              <Label className="" style={{ marginLeft: "5px" }}>
+                                ${Number(ore.value / 1000000000).toFixed(2)}B
+                                Mined
+                              </Label>
+                            ) : (
+                              <></>
+                            )}
+                            <Label
+                              className="pull-right"
+                              bsSize="small"
+                              style={{
+                                backgroundColor: OreColourMap[ore.type.cat_id],
+                              }}
+                            >
+                              {ore.type.cat}
+                            </Label>
+                          </h5>
+                          <div className="progress" style={{ margin: "0px" }}>
+                            <div
+                              className={
+                                mined > 70
+                                  ? "progress-bar progress-bar-striped progress-bar-warning"
+                                  : "progress-bar progress-bar-striped progress-bar-info active"
+                              }
+                              style={{
+                                width: mined + "%",
+                                color: "black",
+                              }}
+                            >
+                              {mined}
+                              {"% Mined"}
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                    </>
+                  );
+                })}
+              </div>
+            </>
           ) : (
             <></>
           ),

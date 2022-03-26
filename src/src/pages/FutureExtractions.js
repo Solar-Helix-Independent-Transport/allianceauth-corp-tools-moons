@@ -133,8 +133,8 @@ const FutureExtractions = () => {
                     <img
                       alt={ore.type.name}
                       style={{
-                        width: "32px",
-                        height: "32px",
+                        width: "30px",
+                        height: "30px",
                         margin: "15px",
                         borderRadius: "30px",
                         backgroundColor: OreColourMap[ore.type.cat_id],
@@ -169,6 +169,7 @@ const FutureExtractions = () => {
                         className="progress"
                         style={{
                           minWidth: "40vw",
+                          margin: "0px",
                         }}
                       >
                         <div

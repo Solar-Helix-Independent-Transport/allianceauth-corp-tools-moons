@@ -13,7 +13,7 @@ class MoonsHook(MenuItemHook):
                               navactive=['moons:'])
 
     def render(self, request):
-        if request.user.has_perm('moons.view_available'):
+        if request.user.is_superuser():
             return MenuItemHook.render(self, request)
         return ''
 
@@ -21,13 +21,13 @@ class MoonsHook(MenuItemHook):
 class MoonsBetaHook(MenuItemHook):
     def __init__(self):
         MenuItemHook.__init__(self,
-                              _('Moon Board Beta'),
+                              _('Moon Board'),
                               'fas fa-moon fa-fw',
                               'moons:r',
                               navactive=['moons:r'])
 
     def render(self, request):
-        if request.user.has_perm('moons.view_all'):
+        if request.user.has_perm('moons.view_available'):
             return MenuItemHook.render(self, request)
         return ''
 
