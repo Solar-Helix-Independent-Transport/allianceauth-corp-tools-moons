@@ -13,7 +13,7 @@ class MoonsHook(MenuItemHook):
                               navactive=['moons:'])
 
     def render(self, request):
-        if request.user.is_superuser():
+        if request.user.is_superuser:
             return MenuItemHook.render(self, request)
         return ''
 
