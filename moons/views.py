@@ -14,7 +14,7 @@ from django.core.exceptions import PermissionDenied
 
 @login_required
 def extractions(request):
-    if request.user.has_perm('moons.view_available'):
+    if request.user.has_perm('moons.view_all'):
         days_to_hold = timezone.now() - datetime.timedelta(days=3)
 
         events = MoonFrack.objects.visible_to(request.user)
