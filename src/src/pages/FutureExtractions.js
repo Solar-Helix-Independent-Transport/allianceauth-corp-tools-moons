@@ -53,12 +53,30 @@ const FutureExtractions = () => {
         Header: "Moon Name",
         accessor: "moon.name",
         Filter: textColumnFilter,
-        filter: "text",
+        filter: (rows, ids, filterValue) => {
+          return rows.filter((row) => {
+            return ids.some((id) => {
+              if (!filterValue) {
+                return true;
+              } else {
+                let rowValue = row.values[id];
+                rowValue += " ";
+                rowValue += row.original.ObserverName;
+                rowValue += " ";
+                rowValue += row.original.constellation;
+                return rowValue
+                  ? rowValue.toLowerCase().includes(filterValue.toLowerCase())
+                  : false;
+              }
+            });
+          });
+        },
         Cell: (props) => (
           <div className="text-center">
             <h4>{props.value}</h4>
             <br />
             <h5>{props.cell.row.original.ObserverName}</h5>
+            <h5>{props.cell.row.original.constellation}</h5>
           </div>
         ),
       },
