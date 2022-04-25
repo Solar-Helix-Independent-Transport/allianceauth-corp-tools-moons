@@ -21,6 +21,8 @@ from . import models
 from corptools.models import MapSystemMoon
 from . import schema
 
+from invoices.models import Invoice
+
 from django.db.models import Sum
 
 import logging
@@ -260,6 +262,38 @@ def get_moon_rentals(request):
         return []
 
     rentals = models.MoonRental.objects.filter(end_date__isnull=True).select_related(
+        "moon", "moon__system", "contact", "corporation")
+    out = []
+    for r in rentals:
+        out.append(
+            {"moon": {
+                "id": r.moon.moon_id,
+                "name": r.moon.name
+            },
+                "system": {
+                "id": r.moon.system.system_id,
+                "name": r.moon.system.name
+            },
+                "contact": r.contact,
+                "corporation": r.corporation,
+                "price": r.price,
+                "start_date": r.start_date
+            }
+        )
+
+    return out
+
+
+@api.get(
+    "/rental/payments",
+    response={200: List[schema.MoonRental]},
+    tags=["Rentals"]
+)
+def get_moon_rental_payments(request):
+    if not request.user.has_perm("moons.add_moonrental"):
+        return []
+
+    payments = Invoice.objects.filter(paid=False).select_related(
         "moon", "moon__system", "contact", "corporation")
     out = []
     for r in rentals:
