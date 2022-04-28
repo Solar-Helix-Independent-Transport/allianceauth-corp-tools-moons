@@ -4,7 +4,11 @@ import { Navbar } from "react-bootstrap";
 
 import NavLink from "./NavLinkActive";
 
-const MoonMenu = ({ futureExtractions = false, observers = false }) => {
+const MoonMenu = ({
+  futureExtractions = false,
+  observers = false,
+  admin = false,
+}) => {
   return (
     <Navbar fluid collapseOnSelect>
       <Navbar.Header>
@@ -16,12 +20,15 @@ const MoonMenu = ({ futureExtractions = false, observers = false }) => {
           <NavLink key="active" href={`#/active`}>
             Active Moons
           </NavLink>
-          {futureExtractions ? (
+          {futureExtractions && (
             <NavLink key="future" href={`#/future`}>
               Future Extractions
             </NavLink>
-          ) : (
-            <></>
+          )}
+          {admin && (
+            <NavLink key="admin" href={`#/admin`}>
+              Admin
+            </NavLink>
           )}
         </Nav>
       </Navbar.Collapse>

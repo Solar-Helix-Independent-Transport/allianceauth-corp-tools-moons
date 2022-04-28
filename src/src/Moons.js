@@ -13,6 +13,7 @@ import {
   Redirect,
 } from "react-router-dom";
 import MoonMenu from "./components/MoonMenu";
+import AdminList from "./pages/Admin";
 
 TimeAgo.addDefaultLocale(en);
 
@@ -24,15 +25,14 @@ function Moons() {
   ) : (
     <Router>
       <br />
-      <MoonMenu futureExtractions={data.view_observations} />
+      <MoonMenu futureExtractions={data.view_observations} admin={data.su} />
       <Switch>
         <Route exact path={"/"} component={() => <Redirect to="/active" />} />
         <Route path={"/active"} component={() => CorporateLedger()} />
-        {data.view_observations ? (
+        {data.view_observations && (
           <Route path={"/future"} component={() => FutureExtractions()} />
-        ) : (
-          <></>
         )}
+        {data.su && <Route path={"/admin"} component={() => AdminList()} />}
       </Switch>
     </Router>
   );

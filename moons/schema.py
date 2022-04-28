@@ -10,6 +10,7 @@ class MoonPermisions(Schema):
     view_observations: bool = False
     view_rentals: bool = False
     edit_rentals: bool = False
+    su: bool = False
 
 
 class IdName(Schema):

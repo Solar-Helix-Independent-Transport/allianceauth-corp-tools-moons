@@ -79,3 +79,9 @@ export async function getPerms() {
 
   return api.data;
 }
+
+export async function getAdminList() {
+  const api = await axios.get(`/m/api/admin/list`);
+
+  return api.data;
+}

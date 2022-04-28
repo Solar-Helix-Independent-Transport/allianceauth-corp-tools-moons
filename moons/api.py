@@ -16,9 +16,10 @@ from django.db.models import FloatField, F, ExpressionWrapper
 
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 from django.conf import settings
+from esi.models import Token
 
 from . import models
-from corptools.models import MapSystemMoon
+from corptools.models import CharacterAudit, CorporationAudit, MapSystemMoon
 from . import schema
 
 from invoices.models import Invoice
@@ -48,6 +49,7 @@ def get_user_permisions(request):
         "view_observations": request.user.has_perm('moons.view_all'),
         "view_rentals": request.user.has_perm('moons.view_moonrental'),
         "edit_rentals": request.user.has_perm('moons.change_moonrental'),
+        "su": request.user.is_superuser
     }
 
 
@@ -323,7 +325,7 @@ def get_moon_rental_payments(request):
 )
 def post_moon_rental_new(request, rental: schema.NewMoonRental = Form(...)):
     if not request.user.has_perm("moons.add_moonrental"):
-        return 403, "Permision Denied!"
+        return 403, "Permission Denied!"
 
     if models.MoonRental.objects.filter(moon_id=rental.moon_id, end_date__isnull=True).exists():
         return 403, "Moon Already Rented!"
@@ -356,3 +358,46 @@ def post_moon_rental_new(request, rental: schema.NewMoonRental = Form(...)):
         "price": new_rental.price,
         "start_date": new_rental.start_date
     }
+
+
+@api.get(
+    "/admin/list",
+    response={200: List, 403: str},
+    tags=["Admin"]
+)
+def get_corp_stats(request):
+    if not request.user.is_superuser:
+        return 403, "Permission Denied!"
+
+    corps = CorporationAudit.objects.visible_to(request.user)
+
+    output = []
+
+    for c in corps:
+        _c = {
+            "name": c.corporation.corporation_name,
+            "char_tokens": 0,
+            "corp_tokens": 0,
+            "obs": c.last_update_observers,
+            "frack": "Never"
+        }
+
+        chars = CharacterAudit.objects.filter(character__corporation_id=c.corporation.corporation_id,
+                                              characterroles__accountant=True,
+                                              active=True)
+
+        _c["char_tokens"] = chars.count()
+        dt = chars.aggregate(Max("last_update_notif"))
+        _c["frack"] = dt["last_update_notif__max"]
+        scopes = ['esi-industry.read_corporation_mining.v1',
+                  'esi-universe.read_structures.v1']
+
+        tokens = Token.objects \
+            .filter(character_id__in=chars.values_list("character__character_id", flat=True)) \
+            .require_scopes(scopes)
+
+        _c["corp_tokens"] = tokens.count()
+
+        output.append(_c)
+
+    return output
