@@ -77,6 +77,9 @@ const FutureExtractions = () => {
             <br />
             <h5>{props.cell.row.original.ObserverName}</h5>
             <h5>{props.cell.row.original.constellation}</h5>
+            <Label>
+              ${Number(props.cell.row.original.value / 1000000000).toFixed(2)}B
+            </Label>
           </div>
         ),
       },
@@ -181,6 +184,16 @@ const FutureExtractions = () => {
                           }}
                         >
                           {ore.type.cat}
+                        </Label>
+                        <Label
+                          className="pull-right"
+                          bsSize="small"
+                          style={{
+                            backgroundColor: OreColourMap[ore.type.cat_id],
+                            marginRight: "2px",
+                          }}
+                        >
+                          ${Number(ore.value / 1000000000).toFixed(2)}B
                         </Label>
                       </h5>
                       <div

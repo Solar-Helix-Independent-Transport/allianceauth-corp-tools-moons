@@ -53,6 +53,7 @@ class ExtractionEvent(Schema):
     mined_ore: Optional[List[OreVolume]]
     jackpot: bool = False
     total_m3: int
+    value: int
 
 
 class MoonRental(Schema):

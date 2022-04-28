@@ -4,6 +4,7 @@ from datetime import timedelta
 from typing import List
 from django.utils import timezone
 from django.utils.timezone import activate
+from moons.helpers import OreHelper
 
 from ninja import NinjaAPI, Form, main
 from ninja.security import django_auth
@@ -188,6 +189,8 @@ def get_future_extractions(request):
                        "frack__ore__group"
                        )
 
+    type_prices = OreHelper.get_ore_array_with_value()
+
     output = {}
     str_ob_dict = {}
 
@@ -203,12 +206,17 @@ def get_future_extractions(request):
             },
             "extraction_end": e.arrival_time,
             "mined_ore": [],
-            "total_m3": 0
+            "total_m3": 0,
+            "value": 0
         }
         for o in e.frack.all():
+            value = int(float(
+                o.total_m3) / float(type_prices[o.ore_id]["volume"]) * float(type_prices[o.ore_id]["value"]))
             if e.structure_id not in str_ob_dict:
                 str_ob_dict[e.structure_id] = {}
             output[e.structure_id]['total_m3'] += o.total_m3
+            output[e.structure_id]['value'] += value
+
             str_ob_dict[e.structure_id][o.ore.name] = {
                 "type": {
                     "id": o.ore_id,
@@ -218,7 +226,7 @@ def get_future_extractions(request):
                 },
                 "volume": 0,
                 "total_volume": o.total_m3,
-                "value": 0
+                "value": value
             }
 
     for s, o in str_ob_dict.items():
