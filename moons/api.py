@@ -123,7 +123,9 @@ def get_moons_and_obs(request, past_days: int):
             },
             "extraction_end": e.arrival_time,
             "mined_ore": [],
-            "total_m3": 0
+            "total_m3": 0,
+            "value": 0
+
         }
         for o in e.frack.all():
             if e.structure_id not in str_ob_dict:
