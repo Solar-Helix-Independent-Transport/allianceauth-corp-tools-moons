@@ -11,6 +11,7 @@ const AdminList = () => {
     () => getAdminList(),
     {
       initialData: [],
+      refetchOnWindowFocus: false,
     }
   );
 

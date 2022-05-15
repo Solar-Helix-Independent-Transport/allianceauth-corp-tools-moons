@@ -30,6 +30,7 @@ const PastLedger = () => {
     () => getPastExtractions(),
     {
       initialData: [],
+      refetchOnWindowFocus: false,
     }
   );
 

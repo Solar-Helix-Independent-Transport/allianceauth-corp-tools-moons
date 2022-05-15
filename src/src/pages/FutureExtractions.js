@@ -30,6 +30,7 @@ const FutureExtractions = () => {
     () => getFutureExtractions(),
     {
       initialData: [],
+      refetchOnWindowFocus: false,
     }
   );
 

@@ -30,6 +30,7 @@ const CorporateLedger = () => {
     () => getExtractions(),
     {
       initialData: [],
+      refetchOnWindowFocus: false,
     }
   );
 

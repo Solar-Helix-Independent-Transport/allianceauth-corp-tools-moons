@@ -19,7 +19,9 @@ import PastLedger from "./pages/PastLedger";
 TimeAgo.addDefaultLocale(en);
 
 function Moons() {
-  const { isLoading, data } = useQuery(["perms"], () => getPerms());
+  const { isLoading, data } = useQuery(["perms"], () => getPerms(), {
+    refetchOnWindowFocus: false,
+  });
 
   return isLoading ? (
     <PanelLoader></PanelLoader>
