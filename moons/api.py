@@ -4,7 +4,7 @@ from datetime import timedelta
 from typing import List
 from django.utils import timezone
 from django.utils.timezone import activate
-from moons.helpers import OreHelper
+from moons.helpers import OreHelper, what_frack_id
 
 from ninja import NinjaAPI, Form, main
 from ninja.security import django_auth
@@ -83,13 +83,15 @@ JACKPOT_IDS = [
     response={200: List[schema.ExtractionEvent]},
     tags=["Observers"]
 )
-def get_moons_and_obs(request, past_days: int):
+def get_moons_and_obs(request):
     if not request.user.has_perm("moons.view_available"):
         return []
-    if past_days > 3:
-        if not request.user.has_perm("moons.view_all"):
-            past_days = 3
+    past_days = 3
 
+    return get_moons_and_extractions(request, past_days)
+
+
+"""
     start_date = timezone.now() - timedelta(days=past_days)
     time_from = timezone.now() - timedelta(days=past_days+1)
 
@@ -161,6 +163,107 @@ def get_moons_and_obs(request, past_days: int):
 
         if o['type_id'] in JACKPOT_IDS:
             output[o["structure"]]["jackpot"] = True
+
+    for s, o in str_ob_dict.items():
+        output[s]["mined_ore"] = list(o.values())
+
+    return list(output.values())
+"""
+
+
+@api.get(
+    "/extractions/past",
+    response={200: List[schema.ExtractionEvent]},
+    tags=["Observers"]
+)
+def get_moons_and_obs_past(request):
+    if not request.user.has_perm("moons.view_all"):
+        return []
+
+    past_days = 30*12  # 12 months = max pull 6 events per moon
+
+    return get_moons_and_extractions(request, past_days)
+
+
+def get_moons_and_extractions(request, past_days):
+    start_date = timezone.now() - timedelta(days=past_days)
+    time_from = timezone.now() - timedelta(days=past_days+1)
+
+    events = models.MoonFrack.objects.visible_to(request.user)
+    current_fracks = events.filter(
+        arrival_time__gte=start_date,
+        arrival_time__lt=timezone.now()).select_related(
+            "moon_name",
+            "moon_name__system",
+            "moon_name__system__constellation",
+            "moon_name__system__constellation__region",
+    ).prefetch_related('frack',
+                       "frack__ore",
+                       "frack__ore__group"
+                       )
+
+    type_price = models.OrePrice.objects.filter(item_id=OuterRef('type_id'))
+
+    output = {}
+    str_ob_dict = {}
+
+    for e in current_fracks:
+        output[e.id] = {
+            "ObserverName": e.structure.location_name,
+            "system": e.moon_name.system.name,
+            "constellation": e.moon_name.system.constellation.name,
+            "region": e.moon_name.system.constellation.region.name,
+            "moon": {
+                "name": e.moon_name.name,
+                "id": e.moon_id
+            },
+            "extraction_end": e.arrival_time,
+            "extraction_end": e.arrival_time,
+            "mined_ore": [],
+            "total_m3": 0,
+            "value": 0,
+            "structure_id": e.structure.location_id
+        }
+
+        for o in e.frack.all():
+            if e.id not in str_ob_dict:
+                str_ob_dict[e.id] = {}
+            output[e.id]['total_m3'] += o.total_m3
+            str_ob_dict[e.id][o.ore.name] = {
+                "type": {
+                    "id": o.ore_id,
+                    "name": o.ore.name,
+                    "cat": o.ore.group.name,
+                    "cat_id": o.ore.group_id
+                },
+                "volume": 0,
+                "total_volume": o.total_m3,
+                "value": 0
+            }
+
+    observations = models.MiningObservation.objects \
+        .filter(last_updated__gte=time_from) \
+        .filter(observing_id__in=current_fracks.values_list("structure_id", flat=True)) \
+        .values('structure', 'type_id', "last_updated") \
+        .annotate(mined=(Sum('quantity') * F('type_name__volume'))) \
+        .annotate(ore_value=ExpressionWrapper(
+            Subquery(type_price.values('price')) * Sum('quantity'),
+            output_field=FloatField())) \
+        .annotate(name=F('type_name__name'))
+
+    for o in observations:
+        frack = what_frack_id(output, o)
+        if frack == False:
+            continue
+        nme = o["name"].split(" ")[-1]
+        if frack in str_ob_dict:
+            if request.user.has_perm("moons.view_all"):
+                str_ob_dict[frack][nme]["value"] += o["ore_value"]
+                output[frack]['value'] += o["ore_value"]
+            str_ob_dict[frack][nme]["volume"] += o['mined']
+
+        if o['type_id'] in JACKPOT_IDS:
+            output[frack]["jackpot"] = True
 
     for s, o in str_ob_dict.items():
         output[s]["mined_ore"] = list(o.values())

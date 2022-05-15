@@ -1,7 +1,7 @@
 import React from "react";
 import { Panel, Label } from "react-bootstrap";
 import { useQuery } from "react-query";
-import { getExtractions } from "../helpers/Api";
+import { getPastExtractions } from "../helpers/Api";
 import {
   BaseTable,
   textColumnFilter,
@@ -24,10 +24,10 @@ const timeFormat = Intl.DateTimeFormat("default", {
   hour12: false,
 });
 
-const CorporateLedger = () => {
+const PastLedger = () => {
   const { isLoading, isFetching, error, data } = useQuery(
-    ["extractions"],
-    () => getExtractions(),
+    ["extractions", "Past"],
+    () => getPastExtractions(),
     {
       initialData: [],
     }
@@ -286,4 +286,4 @@ const CorporateLedger = () => {
   );
 };
 
-export default CorporateLedger;
+export default PastLedger;

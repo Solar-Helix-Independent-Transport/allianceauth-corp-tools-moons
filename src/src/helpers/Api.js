@@ -68,6 +68,12 @@ export async function getExtractions(days = 3) {
   return api.data;
 }
 
+export async function getPastExtractions() {
+  const api = await axios.get(`/m/api/extractions/past`);
+
+  return api.data;
+}
+
 export async function getFutureExtractions() {
   const api = await axios.get(`/m/api/extractions/future`);
 

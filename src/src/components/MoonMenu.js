@@ -21,9 +21,14 @@ const MoonMenu = ({
             Active Moons
           </NavLink>
           {futureExtractions && (
-            <NavLink key="future" href={`#/future`}>
-              Future Extractions
-            </NavLink>
+            <>
+              <NavLink key="future" href={`#/future`}>
+                Future Extractions
+              </NavLink>
+              <NavLink key="past" href={`#/past`}>
+                Past Extractions
+              </NavLink>
+            </>
           )}
           {admin && (
             <NavLink key="admin" href={`#/admin`}>

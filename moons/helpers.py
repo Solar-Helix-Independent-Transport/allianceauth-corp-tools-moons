@@ -1,6 +1,7 @@
-from .models import OrePrice, OreTax, MiningTax
+from .models import MiningObservation, OrePrice, OreTax, MiningTax
 from corptools.models import EveItemType, InvTypeMaterials
 from django.db.models import Subquery, OuterRef
+from django.utils import timezone
 
 
 class OreHelper:
@@ -51,3 +52,18 @@ class OreHelper:
             input[o.item_id]['value'] = o.price
 
         return input
+
+
+def what_frack_id(fracks: dict, observation: dict):
+    """
+        takes dict of fracks, and a mining observation dict and returns coresponding frack
+    """
+    date = observation["last_updated"]
+    for id, f in fracks.items():
+        if f['structure_id'] == observation['structure']:
+            compare_to = f["extraction_end"]
+            diff = date - compare_to
+            if -2 <= diff.days <= 5:
+                return id
+
+    return False

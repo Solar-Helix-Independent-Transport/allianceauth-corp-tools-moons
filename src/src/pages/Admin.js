@@ -5,17 +5,6 @@ import { getAdminList } from "../helpers/Api";
 import { BaseTable } from "../components/BaseTable";
 import ErrorBoundary from "../components/ErrorBoundary";
 
-const dateFormat = Intl.DateTimeFormat("default", {
-  year: "numeric",
-  month: "long",
-  day: "numeric",
-});
-const timeFormat = Intl.DateTimeFormat("default", {
-  hour: "numeric",
-  minute: "numeric",
-  hour12: false,
-});
-
 const AdminList = () => {
   const { isLoading, isFetching, error, data } = useQuery(
     ["admin-corps"],

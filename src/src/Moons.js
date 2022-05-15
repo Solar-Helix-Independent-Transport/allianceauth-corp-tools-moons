@@ -14,6 +14,7 @@ import {
 } from "react-router-dom";
 import MoonMenu from "./components/MoonMenu";
 import AdminList from "./pages/Admin";
+import PastLedger from "./pages/PastLedger";
 
 TimeAgo.addDefaultLocale(en);
 
@@ -29,10 +30,13 @@ function Moons() {
       <Switch>
         <Route exact path={"/"} component={() => <Redirect to="/active" />} />
         <Route path={"/active"} component={() => CorporateLedger()} />
-        {data.view_observations && (
-          <Route path={"/future"} component={() => FutureExtractions()} />
-        )}
         {data.su && <Route path={"/admin"} component={() => AdminList()} />}
+        {data.view_observations && (
+          <>
+            <Route path={"/future"} component={() => FutureExtractions()} />
+            <Route path={"/past"} component={() => PastLedger()} />
+          </>
+        )}
       </Switch>
     </Router>
   );

@@ -27,6 +27,29 @@ def filetime_to_dt(ft):
 
 
 @shared_task
+def cleanup_all_fracks():
+    for f in MoonFrack.objects.all().values_list("structure", flat=True).distinct():
+        cleanup_moon_pulls.delay(f)
+
+
+@shared_task
+def cleanup_moon_pulls(observer_id):
+    fracks = list(MoonFrack.objects.filter(
+        structure_id=observer_id).order_by('arrival_time'))
+    removals = []
+    for index, frack in enumerate(fracks):
+        if index+1 < len(fracks):
+            if frack.arrival_time > fracks[index + 1].start_time:
+                removals.append(frack)
+    cnt = len(removals)
+    if cnt:
+        for df in removals:
+            df.delete()
+        return f"Removed {cnt} bad extractions."
+    return f"No bad extractions."
+
+
+@shared_task
 def process_moon_pulls():
     logger.debug("Started Mining Pull Sync")
     start_time = timezone.now() - timedelta(days=90)
