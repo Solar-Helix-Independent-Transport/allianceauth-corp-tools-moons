@@ -30,7 +30,7 @@ class Command(BaseCommand):
         self.stdout.write("Setting up Periodic Tasks!")
         schedule_bi_weekly, _ = IntervalSchedule.objects.get_or_create(every=14,
                                                                        period=IntervalSchedule.DAYS)
-        schedule_20_min, _ = CrontabSchedule.objects.get_or_create(minute='10,30,50',
+        schedule_30_min, _ = CrontabSchedule.objects.get_or_create(minute='30',
                                                                    hour='*',
                                                                    day_of_week='*',
                                                                    day_of_month='*',
@@ -49,10 +49,20 @@ class Command(BaseCommand):
         task_obs = PeriodicTask.objects.update_or_create(
             task='moons.tasks.run_obs_for_all_corps',
             defaults={
-                'crontab': schedule_20_min,
+                'crontab': schedule_30_min,
                 'interval': None,
                 'solar': None,
                 'name': 'Moon Obs Updates',
+                'enabled': True
+            }
+        )
+        task_frack = PeriodicTask.objects.update_or_create(
+            task='moons.tasks.process_moon_pulls',
+            defaults={
+                'crontab': schedule_30_min,
+                'interval': None,
+                'solar': None,
+                'name': 'Moon Frack Updates',
                 'enabled': True
             }
         )
