@@ -30,3 +30,20 @@ def get_rental_discord_channel():
         return out
     elif isinstance(out, str):
         return int(out)
+
+
+MOONS_ORE_RATE_BUCKET = getattr(
+    settings, "MOONS_ORE_RATE_BUCKET", "weightedAverage")
+_valid_buckets = [
+    "weightedAverage",
+    "max",
+    "min",
+    "stddev",
+    "median",
+    "percentile"
+]
+MOONS_ORE_RATE_BUY_SELL = getattr(settings, "MOONS_ORE_RATE_BUY_SELL", "buy")
+_valid_buy_sell = [
+    "buy",
+    "sell"
+]

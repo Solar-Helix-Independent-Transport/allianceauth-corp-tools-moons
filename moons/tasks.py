@@ -269,6 +269,8 @@ def process_moon_obs(self, observer_id, corporation_id):
 
 @shared_task
 def update_ore_prices():
+    logger.info(
+        f"Pulling Ore values from Jita @`{app_settings.MOONS_ORE_RATE_BUY_SELL}`-`{app_settings.MOONS_ORE_RATE_BUCKET}`")
     mins = OreHelper.get_mineral_array()
     minstr = str(mins.pop())
     for i in mins:
@@ -282,7 +284,8 @@ def update_ore_prices():
         name = name.name
         if name not in price_cache:
             price_cache[name] = {}
-        price_cache[name]['the_forge'] = float(item['buy']['weightedAverage'])
+        price_cache[name]['the_forge'] = float(
+            item[app_settings.MOONS_ORE_RATE_BUY_SELL][app_settings.MOONS_ORE_RATE_BUCKET])
 
     ores = OreHelper.get_ore_array()
 
