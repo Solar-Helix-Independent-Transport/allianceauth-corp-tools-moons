@@ -26,7 +26,7 @@ class OreHelper:
 
         ore_infos = {}
         for comp in inv_types:
-            if comp.eve_type.name not in ore_infos:
+            if comp.eve_type.pk not in ore_infos:
                 rarity = OreHelper.rank_ids[comp.eve_type.group_id] if comp.eve_type.group_id in OreHelper.rank_ids else "ore_rate"
                 ore_infos[comp.eve_type.pk] = {
                     "minerals": {},
@@ -46,7 +46,7 @@ class OreHelper:
 
         return input
 
-    def get_ore_array_with_value_and_taxs():
+    def get_ore_array_with_value_and_taxes():
         input = OreHelper.get_ore_array_with_value()
         for t in MiningTax.objects.all():
             input[o.item_id]['value'] = o.price
