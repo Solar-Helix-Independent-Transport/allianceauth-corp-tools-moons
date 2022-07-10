@@ -16,18 +16,18 @@ clean:
 
 dev:
 	pip install --upgrade pip
-	pip install wheel
-	pip install tox
+	pip install wheel -U
+	pip install tox -U
 	pip install -e .
 
 test:
 	tox
 
 deploy:
-	pip install twine
+	pip install twine -U
 	echo "[pypi]" > ~/.pypirc
 	echo "username=__token__" >> ~/.pypirc
-	echo "password=${pypi-api-token}" >> ~/.pypirc
+	echo "password=${secrets.PYPI_APIKEY}" >> ~/.pypirc
 	cut -c-20 ~/.pypirc
 
 package:

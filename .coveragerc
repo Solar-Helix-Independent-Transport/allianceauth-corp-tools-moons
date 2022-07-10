@@ -6,6 +6,8 @@ source =
 omit =
     */moons/migrations/*
     */moons/tasks.py
+    */moons/admin.py
+    */moons/templatetags/*
     */tests/*
     */.tox/*
     */bin/*
