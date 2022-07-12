@@ -287,21 +287,9 @@ def update_ore_prices():
         price_cache[name]['the_forge'] = float(
             item[app_settings.MOONS_ORE_RATE_BUY_SELL][app_settings.MOONS_ORE_RATE_BUCKET])
 
-    ores = OreHelper.get_ore_array()
+    OreHelper.set_prices(price_cache)
 
-    price_source = 'the_forge'  # We only use this now.
-
-    for ore, minerals in ores.items():
-        price = 0
-        for mineral, qty in minerals["minerals"].items():
-            price = price + (qty * price_cache[mineral][price_source])
-
-        OrePrice.objects.update_or_create(item=minerals['model'],
-                                          defaults={
-            "price": price/minerals['portion']
-        })
-
-    update_tax_prices.apply_async(priority=7)
+    update_tax_prices()
 
     return json.dumps(price_cache)
 
