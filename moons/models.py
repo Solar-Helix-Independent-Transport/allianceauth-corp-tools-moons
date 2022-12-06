@@ -125,6 +125,54 @@ class MiningObservation(models.Model):
         )
 
     @classmethod
+    def explain_taxes(cls, start, end):
+        tax_data = {
+            "structures": [],
+            "taxes": {}
+        }
+        observers_taxed = []
+
+        taxes = MiningTax.objects.all().order_by('-rank')
+
+        for tax in taxes:
+            if tax.id not in tax_data["taxes"]:
+                tax_data["taxes"][tax.id] = {
+                    "name": str(tax),
+                    "structures": []
+
+                }
+            observed = MiningObservation.objects.select_related(
+                'structure', 'type_name', 'structure__system', 'structure__system__constellation', 'character_name').all()
+            observed = observed.filter(
+                last_updated__gte=start).filter(last_updated__lt=end)
+
+            if tax.corp:
+                observed = observed.filter(
+                    observing_corporation__corporation=tax.corp)
+            if tax.region:
+                observed = observed.filter(
+                    structure__system__constellation__region=tax.region)
+            if tax.constellation:
+                observed = observed.filter(
+                    structure__system__constellation=tax.constellation)
+            if tax.system:
+                observed = observed.filter(structure__system=tax.system)
+            if tax.moon:
+                observed = observed.filter(moon=tax.moon)
+
+            observed = observed.exclude(structure_id__in=observers_taxed)
+
+            strucutures = list(observed.values_list(
+                "structure__location_name", flat=True).distinct())
+            tax_data["taxes"][tax.id]['structures'] += strucutures
+            tax_data['structures'] += strucutures
+            strucuture_ids = list(observed.values_list(
+                "structure_id", flat=True).distinct())
+            observers_taxed += strucuture_ids
+        tax_data["taxes"] = list(tax_data["taxes"].values())
+        return tax_data
+
+    @classmethod
     def tax_moons(cls, start, end):
         # get all tax items and return the tax for the time period.
 
@@ -291,10 +339,10 @@ class MiningTax(models.Model):
         # return
         rate = ""
         if self.use_variable_tax:
-            rate = " Variable ({})".format(self.tax_rate.tag)
+            rate = "Variable ({})".format(self.tax_rate.tag)
         else:
-            rate = "{}%".format(self.flat_tax_rate*100)
-        return "#{3}: Mining Tax {0} for {1}, {2}".format(rate, corp, area, self.rank)
+            rate = "of {}%".format(self.flat_tax_rate*100)
+        return "Rank {3}: Mining Tax {0} for all `{1}` structures within, {2}".format(rate, corp, area, self.rank)
 
 
 # tax rates History

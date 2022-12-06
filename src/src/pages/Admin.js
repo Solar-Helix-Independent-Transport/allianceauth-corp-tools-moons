@@ -4,6 +4,8 @@ import { useQuery } from "react-query";
 import { getAdminList } from "../helpers/Api";
 import { BaseTable } from "../components/BaseTable";
 import ErrorBoundary from "../components/ErrorBoundary";
+import { ExplainPre } from "../components/ExplainTax";
+import { OutstandingTax } from "../components/OutstandingTax";
 
 const AdminList = () => {
   const { isLoading, isFetching, error, data } = useQuery(
@@ -46,6 +48,20 @@ const AdminList = () => {
       <Panel>
         <Panel.Body>
           <BaseTable {...{ isLoading, isFetching, data, columns, error }} />
+        </Panel.Body>
+      </Panel>
+      <Panel>
+        <Panel.Body>
+          <ErrorBoundary>
+            <OutstandingTax />
+          </ErrorBoundary>
+        </Panel.Body>
+      </Panel>
+      <Panel>
+        <Panel.Body>
+          <ErrorBoundary>
+            <ExplainPre />
+          </ErrorBoundary>
         </Panel.Body>
       </Panel>
     </ErrorBoundary>

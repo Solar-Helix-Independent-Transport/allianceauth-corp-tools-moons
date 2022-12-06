@@ -91,3 +91,15 @@ export async function getAdminList() {
 
   return api.data;
 }
+
+export async function getAdminExpliain() {
+  const api = await axios.get(`/m/api/admin/explain`);
+
+  return api.data;
+}
+
+export async function getAdmimOutstanding() {
+  const api = await axios.get(`/m/api/admin/outstanding`);
+
+  return api.data;
+}

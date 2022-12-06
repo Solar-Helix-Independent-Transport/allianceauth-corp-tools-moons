@@ -51,6 +51,7 @@ def observers(request):
 @permission_required("moons.view_available")
 def react(request):
     context = {
+        "app_name": "moons"
     }
 
     return render(request, 'moons/react_base.html', context=context)

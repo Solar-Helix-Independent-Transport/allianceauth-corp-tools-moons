@@ -514,3 +514,64 @@ def get_corp_stats(request):
         output.append(_c)
 
     return output
+
+
+@api.get(
+    "/admin/explain",
+    response={200: dict, 403: str},
+    tags=["Admin"]
+)
+def get_explain_tax(request):
+    if not request.user.is_superuser:
+        return 403, "Permission Denied!"
+    last_date = models.InvoiceRecord.get_last_invoice_date()
+    data = models.MiningObservation.explain_taxes(last_date, timezone.now())
+    return data
+
+
+@api.get(
+    "/admin/outstanding",
+    response={200: list, 403: str},
+    tags=["Admin"]
+)
+def get_outstanding_tax(request):
+    if not request.user.is_superuser:
+        return 403, "Permission Denied!"
+    output = []
+    last_date = models.InvoiceRecord.get_last_invoice_date()
+    output.append(f"Last Invoice {last_date}!")
+    locations = set()
+    data = models.InvoiceRecord.generate_invoice_data()
+    total_mined = 0
+    total_taxed = 0
+    # run known people
+    for u, d in data['knowns'].items():
+        try:
+            total_mined += d['total_value']
+            total_taxed += d['tax_value']
+            for l in d['locations']:
+                locations.add(l)
+        except KeyError:
+            pass  # probably wanna ping admin about it.
+
+    for u, d in data['unknowns'].items():
+        try:
+            total_mined += d['totals_isk']
+            total_taxed += d['tax_isk']
+            for l in d['seen_at']:
+                locations.add(l)
+        except KeyError:
+            pass  # probably wanna ping admin about it.
+
+    output.append(f"We've seen {len(data['knowns'])} known members!")
+    output.append(
+        f"We've seen { len(data['unknowns']) } unknown characters!")
+    output.append(f"Who have mined ${total_mined:,} worth of ore!")
+    output.append(
+        f"Current Tax puts this at ${total_taxed:,} in taxes!\n")
+    output.append(f"the structures included are:")
+
+    for s in locations:
+        output.append(f"  - {s}")
+
+    return output
