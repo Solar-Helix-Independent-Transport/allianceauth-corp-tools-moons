@@ -4,15 +4,15 @@ help:
 	@echo "This project assumes that an active Python virtualenv is present."
 	@echo "The following make targets are available:"
 	@echo "  dev        install all deps for dev environment"
+	@echo "  devjs      Run the react dev environment"
 	@echo "  clean      remove all old packages"
 	@echo "  test       run tests"
-	@echo "  deploy     Configure the PyPi config file in CI"
-	@echo "  packagejs  Build the React Project"
-	@echo "  packagepy  Build the PyPi package"
+	@echo "  deploy     Push to PyPi"
+	@echo "  package    Build the PyPi package"
 
 clean:
 	rm -rf dist/*
-	rm -rf frontend/build/*
+	rm -rf src/build/*
 
 dev:
 	pip install --upgrade pip
@@ -24,11 +24,8 @@ test:
 	tox
 
 deploy:
-	pip install twine -U
-	echo "[pypi]" > ~/.pypirc
-	echo "username=__token__" >> ~/.pypirc
-	echo "password=${secrets.PYPI_APIKEY}" >> ~/.pypirc
-	cut -c-20 ~/.pypirc
+	pip install twine
+	twine upload dist/*
 
 package:
 	cd src;yarn install;yarn build
