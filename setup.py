@@ -2,7 +2,7 @@ from moons import __version__
 import os
 from setuptools import find_packages, setup
 install_requires = [
-    'allianceauth>=2.9.0',
+    'allianceauth>=3.0.0',
     'allianceauth-corptools>=2.1.2',
     'allianceauth-invoices>=0.1.1'
 ]
