@@ -1,6 +1,7 @@
 import React from "react";
 import { getAdmimOutstanding } from "../helpers/Api";
 import { useQuery } from "react-query";
+import { ProgressBar } from "react-bootstrap";
 
 export const OutstandingTax = () => {
   const { isLoading, isFetching, error, data } = useQuery(
@@ -10,15 +11,22 @@ export const OutstandingTax = () => {
       refetchOnWindowFocus: false,
     }
   );
-  if (isLoading) return <pre></pre>;
-  if (isFetching) return <pre>Loading...</pre>;
   return (
-    <pre>
-      {console.log(data)}
-      {`Mining Taxes:\n`}
-      {data.map((i) => (
-        <>{`${i}\n`}</>
-      ))}
-    </pre>
+    <>
+      <ProgressBar
+        striped={isFetching}
+        active={isFetching}
+        bsStyle={error ? "danger" : isFetching ? "info" : "success"}
+        now={100}
+      />
+
+      <pre>
+        {`Mining Taxes:\n`}
+        {isLoading ? "Loading..." : ""}
+        {data?.map((i) => (
+          <>{`${i}\n`}</>
+        ))}
+      </pre>
+    </>
   );
 };
