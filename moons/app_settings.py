@@ -47,3 +47,5 @@ _valid_buy_sell = [
     "buy",
     "sell"
 ]
+
+MOONS_ENABLE_RENT_COG = getattr(settings, "MOONS_ENABLE_RENT_COG", False)

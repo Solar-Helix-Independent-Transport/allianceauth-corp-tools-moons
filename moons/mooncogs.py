@@ -1,7 +1,9 @@
 # Cog Stuff
 from typing import Optional
 from corptools.models import CorporationAudit, Structure
+from discord import AutocompleteContext, Interaction, option
 from discord.embeds import Embed
+from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 from allianceauth.services.modules.discord.models import DiscordUser
 from discord.ext import commands
 from discord.commands import SlashCommandGroup
@@ -10,13 +12,19 @@ from discord.commands import SlashCommandGroup
 import pprint
 from django.conf import settings
 from django.utils import timezone
-from moons.models import InvoiceRecord, MoonFrack
+from moons.models import InvoiceRecord, MoonFrack, MoonRental
+from corptools.models import MapSystemMoon
 
 from moons import app_settings
 
 import logging
 
 logger = logging.getLogger(__name__)
+
+BLUE = 0x3498db
+MAGENTA = 0xe91e63
+GREYPLE = 0x99aab5
+RED = 0x992d22
 
 
 class MoonsCog(commands.Cog):
@@ -151,6 +159,96 @@ class MoonsCog(commands.Cog):
                 await ctx.author.send(f"```{message}```")
             else:
                 await ctx.send(f"```{message}```")
+
+    if app_settings.MOONS_ENABLE_RENT_COG:
+        rental_commands = SlashCommandGroup(
+            "moon_rentals", "Moon Rental Commands", guild_ids=[int(settings.DISCORD_GUILD_ID)])
+
+        async def search_moons(ctx: AutocompleteContext):
+            """Returns a list of moons that begin with the characters entered so far."""
+            return list(MapSystemMoon.objects.filter(name__icontains=ctx.value).values_list("name", flat=True)[:10])
+
+        async def search_characters(ctx: AutocompleteContext):
+            """Returns a list of colors that begin with the characters entered so far."""
+            return list(EveCharacter.objects.filter(character_name__icontains=ctx.value).values_list('character_name', flat=True)[:10])
+
+        async def search_corp(ctx: AutocompleteContext):
+            """Returns a list of colors that begin with the characters entered so far."""
+            return list(EveCorporationInfo.objects.filter(corporation_name__icontains=ctx.value).values_list('corporation_name', flat=True)[:10])
+
+        @rental_commands.command(name='status', guild_ids=[int(settings.DISCORD_GUILD_ID)])
+        @option("moon", description="Search for a Moon!", autocomplete=search_moons)
+        async def moon_rental_status(self, ctx: Interaction, moon: str):
+            """
+            Print Moons Status!
+            """
+            ctx.defer()
+            if not self.sender_has_moon_perm(ctx):
+                return await ctx.respond(f"You do not have permission to use this command.", ephemeral=True)
+
+            moon_q = MoonRental.objects.filter(
+                moon__name=moon, end_date__isnull=True)
+
+            msgs = []
+            for m in MoonRental.objects.filter(moon__name=moon):
+                msgs.append(
+                    f"{m.start_date.strftime('%y-%m-%d')} to {m.end_date.strftime('%y-%m-%d') if m.end_date else ' ACTIVE '} by {m.contact} [{m.corporation}]")
+            msgs = "\n".join(msgs)
+
+            if not moon_q.exists():
+                return await ctx.respond(f"{moon} Available!\n```\n{msgs}\n```")
+            else:
+                return await ctx.respond(f"{moon} is rented!\n```\n{msgs}\n```")
+
+        @rental_commands.command(name='rent', guild_ids=[int(settings.DISCORD_GUILD_ID)])
+        @option("moon", description="Search for a Moon!", autocomplete=search_moons)
+        @option("character", description="Search for a Character!", autocomplete=search_characters)
+        @option("corporation", description="Search for a Corporation!", autocomplete=search_corp)
+        @option("price", description="Price per month!")
+        async def moon_rental_rent(self, ctx: Interaction, moon: str, character: str, corporation: str, price: int = 100000000):
+            """
+            Rent a moon!
+            """
+            ctx.defer()
+            if not self.sender_has_moon_perm(ctx):
+                return await ctx.respond(f"You do not have permission to use this command.", ephemeral=True)
+
+            moon_q = MoonRental.objects.filter(
+                moon__name=moon, end_date__isnull=True)
+
+            if not moon_q.exists():
+                moon = MapSystemMoon.objects.get(name=moon)
+                char = EveCharacter.objects.get(character_name=character)
+                corp = EveCorporationInfo.objects.get(
+                    corporation_name=corporation)
+                MoonRental.objects.create(moon=moon, contact=char, corporation=corp,
+                                          price=price, start_date=timezone.now(), note=f"rented by {ctx.author}")
+                return await ctx.respond(f"Rented `{moon}` to `{character} [{corporation}]` for ${price:,}")
+            else:
+                return await ctx.respond(f"**Unable to rent** `{moon}` to `{character}` Already rented!")
+
+        @rental_commands.command(name='unrent', guild_ids=[int(settings.DISCORD_GUILD_ID)])
+        @option("moon", description="Search for a Moon!", autocomplete=search_moons)
+        @option("character", description="Search for a Character!", autocomplete=search_characters)
+        async def moon_rental_unrent(self, ctx: Interaction, moon: str, character: str):
+            """
+            Rent a moon!
+            """
+            ctx.defer()
+            if not self.sender_has_moon_perm(ctx):
+                return await ctx.respond(f"You do not have permission to use this command.", ephemeral=True)
+
+            moon_q = MoonRental.objects.filter(
+                moon__name=moon, end_date__isnull=True)
+
+            if moon_q.exists():
+                m = moon_q.first()
+                m.end_date = timezone.now()
+                m.note += f"\nUnrented by {character}, completed by {ctx.author}"
+                m.save()
+                return await ctx.respond(f"Unrented `{moon}` from `{m.contact}` by `{character}`")
+            else:
+                return await ctx.respond(f"**Unable to unrent** `{moon}` no rental found?")
 
 
 def setup(bot):
