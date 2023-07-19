@@ -62,6 +62,18 @@ class MoonsCog(commands.Cog):
         except Exception as e:
             return False
 
+    def sender_has_moon_rental_create_perm(self, ctx):
+        id = ctx.author.id
+        try:
+            has_perm = DiscordUser.objects.get(
+                uid=id).user.has_perm("moons.change_moonrental")
+            if has_perm:
+                return True
+            else:
+                return False
+        except Exception as e:
+            return False
+
     @pinger_commands.command(name='print_stats', guild_ids=[int(settings.DISCORD_GUILD_ID)])
     async def info_slash(self, ctx):
         """
@@ -166,15 +178,21 @@ class MoonsCog(commands.Cog):
 
         async def search_moons(ctx: AutocompleteContext):
             """Returns a list of moons that begin with the characters entered so far."""
-            return list(MapSystemMoon.objects.filter(name__icontains=ctx.value).values_list("name", flat=True)[:10])
+            resp = list(MapSystemMoon.objects.filter(
+                name__icontains=ctx.value).values_list("name", flat=True)[:10])
+            return resp
 
         async def search_characters(ctx: AutocompleteContext):
             """Returns a list of colors that begin with the characters entered so far."""
-            return list(EveCharacter.objects.filter(character_name__icontains=ctx.value).values_list('character_name', flat=True)[:10])
+            resp = list(EveCharacter.objects.filter(
+                character_name__icontains=ctx.value).values_list('character_name', flat=True)[:10])
+            return resp
 
         async def search_corp(ctx: AutocompleteContext):
             """Returns a list of colors that begin with the characters entered so far."""
-            return list(EveCorporationInfo.objects.filter(corporation_name__icontains=ctx.value).values_list('corporation_name', flat=True)[:10])
+            resp = list(EveCorporationInfo.objects.filter(
+                corporation_name__icontains=ctx.value).values_list('corporation_name', flat=True)[:10])
+            return resp
 
         @rental_commands.command(name='status', guild_ids=[int(settings.DISCORD_GUILD_ID)])
         @option("moon", description="Search for a Moon!", autocomplete=search_moons)
@@ -183,7 +201,7 @@ class MoonsCog(commands.Cog):
             Print Moons Status!
             """
             ctx.defer()
-            if not self.sender_has_moon_perm(ctx):
+            if not self.sender_has_moon_rental_create_perm(ctx):
                 return await ctx.respond(f"You do not have permission to use this command.", ephemeral=True)
 
             moon_q = MoonRental.objects.filter(
@@ -210,7 +228,7 @@ class MoonsCog(commands.Cog):
             Rent a moon!
             """
             ctx.defer()
-            if not self.sender_has_moon_perm(ctx):
+            if not self.sender_has_moon_rental_create_perm(ctx):
                 return await ctx.respond(f"You do not have permission to use this command.", ephemeral=True)
 
             moon_q = MoonRental.objects.filter(
@@ -235,7 +253,7 @@ class MoonsCog(commands.Cog):
             Rent a moon!
             """
             ctx.defer()
-            if not self.sender_has_moon_perm(ctx):
+            if not self.sender_has_moon_rental_create_perm(ctx):
                 return await ctx.respond(f"You do not have permission to use this command.", ephemeral=True)
 
             moon_q = MoonRental.objects.filter(
