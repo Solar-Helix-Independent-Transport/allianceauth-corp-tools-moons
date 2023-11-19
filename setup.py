@@ -3,7 +3,7 @@ import os
 from setuptools import find_packages, setup
 install_requires = [
     'allianceauth>=3.0.0',
-    'allianceauth-corptools>=2.5.5'
+    'allianceauth-corptools>=2.5.5',
     'allianceauth-invoices>=0.1.1',
     'django-ninja>=1.0.1,<2.0.0',
 ]
