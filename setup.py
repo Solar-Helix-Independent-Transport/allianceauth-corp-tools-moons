@@ -4,7 +4,8 @@ from setuptools import find_packages, setup
 install_requires = [
     'allianceauth>=3.0.0',
     'allianceauth-corptools>=2.1.2',
-    'allianceauth-invoices>=0.1.1'
+    'allianceauth-invoices>=0.1.1',
+    'django-ninja>=1.0.1,<2.0.0'
 ]
 with open(os.path.join(os.path.dirname(__file__), 'README.md')) as readme:
     README = readme.read()
