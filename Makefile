@@ -18,7 +18,6 @@ dev:
 	pip install --upgrade pip
 	pip install wheel -U
 	pip install tox -U
-	pip install -e .
 
 test:
 	tox
