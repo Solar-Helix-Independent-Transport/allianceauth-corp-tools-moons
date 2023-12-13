@@ -12,7 +12,7 @@ help:
 
 clean:
 	rm -rf dist/*
-	rm -rf src/build/*
+	rm -rf moons_src/build/*
 
 dev:
 	pip install --upgrade pip
@@ -28,8 +28,8 @@ deploy:
 
 package:
 	pip install -U hatch
-	cd src;yarn install;yarn build
+	cd moons_src;yarn install;yarn build
 	hatch build
 
 devjs:
-	cd src;yarn install;yarn start
+	cd moons_src;yarn install;yarn start
