@@ -288,7 +288,7 @@ def get_future_extractions(request):
 
     events = models.MoonFrack.objects.visible_to(request.user)
 
-    if perm_view_limited and perm_view_all:
+    if perm_view_limited and not perm_view_all:
         end_time = timezone.now() + timedelta(days=app_settings.MOONS_LIMITED_FUTURE_DAYS)
         events = events.filter(
             arrival_time__lte=end_time,
