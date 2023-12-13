@@ -21,11 +21,12 @@
     "react-table": "^7.7.0",
     "react-time-ago": "^7.1.4",
     "recharts": "^2.1.9",
+    "vite": "^5.0.8",
     "web-vitals": "^1.1.2"
   },
   "scripts": {
-    "start": "npx vite",
-    "build": "npx vite build"
+    "start": "vite",
+    "build": "vite build"
   },
   "eslintConfig": {
     "extends": [
