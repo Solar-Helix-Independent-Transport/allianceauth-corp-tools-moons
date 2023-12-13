@@ -210,13 +210,37 @@ class MoonsCog(commands.Cog):
             msgs = []
             for m in MoonRental.objects.filter(moon__name=moon):
                 msgs.append(
-                    f"{m.start_date.strftime('%y-%m-%d')} to {m.end_date.strftime('%y-%m-%d') if m.end_date else ' ACTIVE '} by {m.contact} [{m.corporation}]")
+                    f"{m.start_date.strftime('%y-%m-%d')} to {m.end_date.strftime('%y-%m-%d') if m.end_date else ' ACTIVE '} by {m.contact} [{m.corporation}] for ${m.price:,}")
             msgs = "\n".join(msgs)
 
             if not moon_q.exists():
                 return await ctx.respond(f"{moon} Available!\n```\n{msgs}\n```")
             else:
                 return await ctx.respond(f"{moon} is rented!\n```\n{msgs}\n```")
+
+        @rental_commands.command(name='character_status', guild_ids=[int(settings.DISCORD_GUILD_ID)])
+        @option("character", description="Search for a Character!", autocomplete=search_characters)
+        async def moon_rental_character_status(self, ctx: Interaction, character: str):
+            """
+            Print Moons Status!
+            """
+            ctx.defer()
+            if not self.sender_has_moon_rental_create_perm(ctx):
+                return await ctx.respond(f"You do not have permission to use this command.", ephemeral=True)
+
+            moon_q = MoonRental.objects.filter(
+                contact__character_name=character, end_date__isnull=True)
+
+            msgs = []
+            for m in moon_q:
+                msgs.append(
+                    f"{m.moon} by {m.contact} [{m.corporation}] for ${m.price:,}")
+            msgs = "\n".join(msgs)
+
+            if not moon_q.exists():
+                return await ctx.respond(f"{character} has no rentals.")
+            else:
+                return await ctx.respond(f"{character} has rented!\n```\n{msgs}\n```")
 
         @rental_commands.command(name='rent', guild_ids=[int(settings.DISCORD_GUILD_ID)])
         @option("moon", description="Search for a Moon!", autocomplete=search_moons)
