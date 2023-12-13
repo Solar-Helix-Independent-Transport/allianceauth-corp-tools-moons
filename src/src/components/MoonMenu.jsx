@@ -6,6 +6,7 @@ import NavLink from "./NavLinkActive";
 
 const MoonMenu = ({
   futureExtractions = false,
+  limitedFutureExtractions = false,
   observers = false,
   admin = false,
 }) => {
@@ -20,15 +21,15 @@ const MoonMenu = ({
           <NavLink key="active" href={`#/active`}>
             Active Moons
           </NavLink>
+          {futureExtractions | limitedFutureExtractions && (
+            <NavLink key="future" href={`#/future`}>
+              Future Extractions
+            </NavLink>
+          )}
           {futureExtractions && (
-            <>
-              <NavLink key="future" href={`#/future`}>
-                Future Extractions
-              </NavLink>
-              <NavLink key="past" href={`#/past`}>
-                Past Extractions
-              </NavLink>
-            </>
+            <NavLink key="past" href={`#/past`}>
+              Past Extractions
+            </NavLink>
           )}
           {admin && (
             <NavLink key="admin" href={`#/admin`}>
