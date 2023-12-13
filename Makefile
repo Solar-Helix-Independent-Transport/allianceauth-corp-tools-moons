@@ -28,8 +28,9 @@ deploy:
 	twine upload dist/*
 
 package:
+	pip install -U hatch
 	cd src;yarn install;yarn build
-	python setup.py sdist
+	hatch build
 
 devjs:
 	cd src;yarn install;yarn start

@@ -22,6 +22,7 @@ from esi.models import Token
 from . import models
 from corptools.models import CharacterAudit, CorporationAudit, MapSystemMoon
 from . import schema
+from . import app_settings
 
 from invoices.models import Invoice
 
@@ -47,6 +48,7 @@ def get_user_permisions(request):
         "view_public_extractions": request.user.has_perm('moons.view_available'),
         "view_corp_extractions": request.user.has_perm('moons.view_corp'),
         "view_alliance_extractions": request.user.has_perm('moons.view_alliance'),
+        "view_limited_future": request.user.has_perm('moons.view_limited_future'),
         "view_observations": request.user.has_perm('moons.view_all'),
         "view_rentals": request.user.has_perm('moons.view_moonrental'),
         "edit_rentals": request.user.has_perm('moons.change_moonrental'),
@@ -277,12 +279,22 @@ def get_moons_and_extractions(request, past_days):
     tags=["Observers"]
 )
 def get_future_extractions(request):
-    if not request.user.has_perm("moons.view_all"):
+    perm_view_all = request.user.has_perm("moons.view_all")
+    perm_view_limited = request.user.has_perm("moons.view_limited_future")
+    if not (perm_view_all or perm_view_limited):
         return []
 
     start_date = timezone.now()
 
     events = models.MoonFrack.objects.visible_to(request.user)
+
+    if perm_view_limited and perm_view_all:
+        end_time = timezone.now() + timedelta(days=app_settings.MOONS_LIMITED_FUTURE_DAYS)
+        events = events.filter(
+            arrival_time__lte=end_time,
+            moon_name__system__constellation__region_id__in=app_settings.MOONS_LIMITED_FUTURE_REGIONS
+        )
+
     current_fracks = events.filter(
         arrival_time__gte=start_date).select_related(
             "moon_name",

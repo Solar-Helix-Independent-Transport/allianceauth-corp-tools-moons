@@ -48,4 +48,7 @@ _valid_buy_sell = [
     "sell"
 ]
 
-MOONS_ENABLE_RENT_COG = getattr(settings, "MOONS_ENABLE_RENT_COG", False)
+MOONS_ENABLE_RENT_COG = getattr(settings, "MOONS_ENABLE_RENT_COG", True)
+MOONS_LIMITED_FUTURE_REGIONS = getattr(
+    settings, "MOONS_LIMITED_FUTURE_REGIONS", [])
+MOONS_LIMITED_FUTURE_DAYS = getattr(settings, "MOONS_LIMITED_FUTURE_DAYS", 7)

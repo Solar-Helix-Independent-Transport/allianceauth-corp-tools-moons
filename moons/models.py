@@ -18,7 +18,7 @@ from .managers import MoonManager
 if app_settings.discord_bot_active():
     import aadiscordbot
     from aadiscordbot.tasks import send_message
-from django.forms import model_to_dict
+from django.forms import ValidationError, model_to_dict
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import Model
 
@@ -63,7 +63,8 @@ class MoonFrack(models.Model):
         permissions = (('view_available', 'Can View Configured Public Moons'),
                        ('view_corp', 'Can View Own Corps Moons'),
                        ('view_alliance', 'Can View Own Alliances Moons'),
-                       ('view_all', 'Can View All Moons'))
+                       ('view_all', 'Can View All Moons'),
+                       ('view_limited_future', 'Can View a configured limited subset of future moons'))
 
 
 class FrackOre(models.Model):

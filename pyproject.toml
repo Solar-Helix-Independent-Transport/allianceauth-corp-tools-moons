@@ -1,0 +1,45 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "allianceauth-corptools-moons"
+dynamic = ["version"]
+description = "Alliance Auth Plugin"
+readme = "README.md"
+license = "MIT"
+authors = [
+    { name = "AaronKable", email = "aaronkable@gmail.com" },
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Web Environment",
+    "Framework :: Django",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.6",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+]
+dependencies = [
+    "allianceauth-corptools>=2.5.5",
+    "allianceauth-invoices>=0.1.1",
+    "allianceauth>=3.0.0",
+    "django-ninja>=1.0.1,<2.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/The-Initiative-EvE/allianceauth-corp-tools-moons"
+
+[tool.hatch.version]
+path = "moons/__init__.py"
+
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/moons",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["moons"]

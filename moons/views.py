@@ -11,6 +11,8 @@ from .models import MoonFrack, MiningObservation, InvoiceRecord
 from corptools.models import EveLocation
 from django.core.exceptions import PermissionDenied
 
+from . import __version__
+
 
 @login_required
 def extractions(request):
@@ -51,7 +53,9 @@ def observers(request):
 @permission_required("moons.view_available")
 def react(request):
     context = {
-        "app_name": "moons"
+        "version": __version__,
+        "app_name": "moons",
+        "page_title": "Moons"
     }
 
     return render(request, 'moons/react_base.html', context=context)
