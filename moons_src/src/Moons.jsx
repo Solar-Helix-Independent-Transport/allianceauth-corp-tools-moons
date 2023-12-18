@@ -28,7 +28,11 @@ function Moons() {
   ) : (
     <Router>
       <br />
-      <MoonMenu futureExtractions={data.view_observations} admin={data.su} />
+      <MoonMenu
+        futureExtractions={data.view_observations}
+        limitedFutureExtractions={data.view_limited_future}
+        admin={data.su}
+      />
       <Switch>
         <Route exact path={"/"} component={() => <Redirect to="/active" />} />
         <Route path={"/active"} component={() => CorporateLedger()} />
