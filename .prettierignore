@@ -1,9 +1,10 @@
 # Ignore artifacts:
 build
+static
 coverage
 
 # Ignore all HTML files:
 *.html
 
 # ingnore assembled files
-corptools/static/*
+corptools/static/**/*

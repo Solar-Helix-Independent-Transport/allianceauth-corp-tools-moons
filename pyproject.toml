@@ -38,9 +38,10 @@ path = "moons/__init__.py"
 [tool.hatch.build.targets.sdist]
 include = [
     "/moons",
-    "/moon_src"
+    "/moons/static/**/*.*",
+    "/moons/templates/**/*.*"
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["moons"]
-only-packages = true
+packages = [ "moons" ]
+only-packages = false

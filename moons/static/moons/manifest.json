@@ -1,1 +1,16 @@
-../../../moons_src/build/static/.vite/manifest.json
+{
+  "_@libs-KHifEHW5.js": {
+    "file": "assets/@libs-KHifEHW5.js"
+  },
+  "_@react-router-EnUnxFeH.js": {
+    "file": "assets/@react-router-EnUnxFeH.js",
+    "imports": ["_@libs-KHifEHW5.js"]
+  },
+  "index.html": {
+    "css": ["assets/index-MCFaF6MD.css"],
+    "file": "assets/index-9WLTPqAL.js",
+    "imports": ["_@libs-KHifEHW5.js", "_@react-router-EnUnxFeH.js"],
+    "isEntry": true,
+    "src": "index.html"
+  }
+}
