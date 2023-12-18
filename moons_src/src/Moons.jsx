@@ -37,9 +37,13 @@ function Moons() {
         <Route exact path={"/"} component={() => <Redirect to="/active" />} />
         <Route path={"/active"} component={() => CorporateLedger()} />
         {data.su && <Route path={"/admin"} component={() => AdminList()} />}
-        {data.view_observations && (
+        {(data.view_limited_future || data.view_observations) && (
           <>
             <Route path={"/future"} component={() => FutureExtractions()} />
+          </>
+        )}
+        {data.view_observations && (
+          <>
             <Route path={"/past"} component={() => PastLedger()} />
           </>
         )}
