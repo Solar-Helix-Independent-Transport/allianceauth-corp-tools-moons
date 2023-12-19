@@ -65,6 +65,8 @@ const CorporateLedger = () => {
                 rowValue += row.original.ObserverName;
                 rowValue += " ";
                 rowValue += row.original.constellation;
+                rowValue += " ";
+                rowValue += row.original.region;
                 return rowValue
                   ? rowValue.toLowerCase().includes(filterValue.toLowerCase())
                   : false;
@@ -77,7 +79,10 @@ const CorporateLedger = () => {
             <h4>{props.value}</h4>
             <br />
             <h5>{props.cell.row.original.ObserverName}</h5>
-            <h5>{props.cell.row.original.constellation}</h5>
+            <h5>
+              {props.cell.row.original.constellation} -{" "}
+              {props.cell.row.original.region}
+            </h5>
             {props.cell.row.original.value > 0 && (
               <Label>
                 ${Number(props.cell.row.original.value / 1000000000).toFixed(2)}
