@@ -82,3 +82,12 @@ def what_frack_id(fracks: dict, observation: dict):
                 return id
 
     return False
+
+
+def calculate_split_value(prices):
+    """
+        Calculate Split price from Fuzz API Data
+    """
+    buy = prices["buy"]["max"]
+    sell = prices["buy"]["min"]
+    return ((buy + sell) / 2)

@@ -45,7 +45,8 @@ _valid_buckets = [
 MOONS_ORE_RATE_BUY_SELL = getattr(settings, "MOONS_ORE_RATE_BUY_SELL", "buy")
 _valid_buy_sell = [
     "buy",
-    "sell"
+    "sell",
+    "spit"
 ]
 
 MOONS_ENABLE_RENT_COG = getattr(settings, "MOONS_ENABLE_RENT_COG", True)

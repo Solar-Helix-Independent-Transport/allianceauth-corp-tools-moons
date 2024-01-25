@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from celery import shared_task, chain
 from django.utils import timezone
 from . import app_settings
-from .helpers import OreHelper
+from .helpers import OreHelper, calculate_split_value
 from .models import MiningObservation, MoonFrack, FrackOre, MoonRental, OrePrice, OreTaxRates, OreTax, InvoiceRecord
 from corptools.models import MapSystem, Notification, EveLocation, MapSystemMoon, EveItemType, CorporationAudit, EveName
 from corptools import providers
@@ -284,8 +284,12 @@ def update_ore_prices():
         name = name.name
         if name not in price_cache:
             price_cache[name] = {}
-        price_cache[name]['the_forge'] = float(
-            item[app_settings.MOONS_ORE_RATE_BUY_SELL][app_settings.MOONS_ORE_RATE_BUCKET])
+        if app_settings.MOONS_ORE_RATE_BUY_SELL == "split":
+            price_cache[name]['the_forge'] = float(calculate_split_value(item))
+        else:
+            price_cache[name]['the_forge'] = float(
+                item[app_settings.MOONS_ORE_RATE_BUY_SELL][app_settings.MOONS_ORE_RATE_BUCKET]
+            )
 
     OreHelper.set_prices(price_cache)
 

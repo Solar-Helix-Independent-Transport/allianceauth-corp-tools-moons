@@ -63,4 +63,32 @@ the structures included are:
 [system] - [name]
 ```
 
-8.  once you are happy, open admin and enable and then run the `Send Moon Invoices` task. This will now run every 14 days.
+8.  once you are happy, open admin and enable and then run the `Send Moon Invoices` task. This will now run every 14 days. You can freely edit the period of this task to match what your group requires.
+
+## Ore Price Sources
+
+### MOONS_ORE_RATE_BUY_SELL
+
+`MOONS_ORE_RATE_BUY_SELL="buy"`
+
+- Sets the ore prices to buy and uses the bucket defined in the `MOONS_ORE_RATE_BUCKET` option
+
+`MOONS_ORE_RATE_BUY_SELL="sell"`
+
+- Sets the ore prices to buy and uses the bucket defined in the `MOONS_ORE_RATE_BUCKET` option
+
+`MOONS_ORE_RATE_BUY_SELL="split"`
+
+- Sets the ore prices to a calculated split value and ignores bucket defined in the `MOONS_ORE_RATE_BUCKET` option
+- `(Max Buy + Min Sell) / 2`
+
+### MOONS_ORE_RATE_BUCKET
+
+Sets the bucket used in buy/sell ore calculations:
+
+- `MOONS_ORE_RATE_BUCKET="weightedAverage"`
+- `MOONS_ORE_RATE_BUCKET="max"`
+- `MOONS_ORE_RATE_BUCKET="min"`
+- `MOONS_ORE_RATE_BUCKET="stddev"`
+- `MOONS_ORE_RATE_BUCKET="median"`
+- `MOONS_ORE_RATE_BUCKET="percentile"`
