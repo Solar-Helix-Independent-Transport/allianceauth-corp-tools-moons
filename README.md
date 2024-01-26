@@ -28,7 +28,7 @@ moon frack monitoring and taxation, taxation is calculated ( default, but config
 4.  run the setup management task
 
 ```
-   python manage.py setup_moon_tool
+   python manage.py moons_setup_tool
 ```
 
 5.  wait for the tasks to finish.
@@ -40,7 +40,7 @@ moon frack monitoring and taxation, taxation is calculated ( default, but config
     check the settings in console
 
 ```
-   python manage.py current_tax_outstanding
+   python manage.py moons_tax_outstanding
 ```
 
 ```
