@@ -88,6 +88,6 @@ def calculate_split_value(prices):
     """
         Calculate Split price from Fuzz API Data
     """
-    buy = prices["buy"]["max"]
-    sell = prices["buy"]["min"]
+    buy = float(prices["buy"]["max"])
+    sell = float(prices["sell"]["min"])
     return ((buy + sell) / 2)
