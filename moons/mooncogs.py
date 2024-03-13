@@ -196,7 +196,7 @@ class MoonsCog(commands.Cog):
 
         @rental_commands.command(name='status', guild_ids=[int(settings.DISCORD_GUILD_ID)])
         @option("moon", description="Search for a Moon!", autocomplete=search_moons)
-        async def moon_rental_status(self, ctx: Interaction, moon: str):
+        async def moon_rental_status(self, ctx, moon: str):
             """
             Print Moons Status!
             """
@@ -220,7 +220,7 @@ class MoonsCog(commands.Cog):
 
         @rental_commands.command(name='character_status', guild_ids=[int(settings.DISCORD_GUILD_ID)])
         @option("character", description="Search for a Character!", autocomplete=search_characters)
-        async def moon_rental_character_status(self, ctx: Interaction, character: str):
+        async def moon_rental_character_status(self, ctx, character: str):
             """
             Print Moons Status!
             """
@@ -247,7 +247,7 @@ class MoonsCog(commands.Cog):
         @option("character", description="Search for a Character!", autocomplete=search_characters)
         @option("corporation", description="Search for a Corporation!", autocomplete=search_corp)
         @option("price", description="Price per month!")
-        async def moon_rental_rent(self, ctx: Interaction, moon: str, character: str, corporation: str, price: int = 100000000):
+        async def moon_rental_rent(self, ctx, moon: str, character: str, corporation: str, price: int = 100000000):
             """
             Rent a moon!
             """
@@ -272,7 +272,7 @@ class MoonsCog(commands.Cog):
         @rental_commands.command(name='unrent', guild_ids=[int(settings.DISCORD_GUILD_ID)])
         @option("moon", description="Search for a Moon!", autocomplete=search_moons)
         @option("character", description="Search for a Character!", autocomplete=search_characters)
-        async def moon_rental_unrent(self, ctx: Interaction, moon: str, character: str):
+        async def moon_rental_unrent(self, ctx, moon: str, character: str):
             """
             Rent a moon!
             """
