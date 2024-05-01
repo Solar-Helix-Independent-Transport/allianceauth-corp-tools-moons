@@ -40,9 +40,9 @@
                         <td >{{ frack.moon }}</td>
                         <td >{{ frack.end_date }}</td>
                         <td >{{ frack.ores }}</td>
-                        <td >{{ frack.total_value }}</td>
-                        <td >{{ frack.mined_value }}</td>
-                        <td >{{ frack.mined_ratio }}</td>
+                        <td >{{ frack.total_value|floatformat:0|intcomma }}</td>
+                        <td >{{ frack.mined_value|floatformat:0|intcomma }}</td>
+                        <td >{{ frack.mined_ratio|floatformat:0 }}</td>
                         <td >{{ frack.system }}</td>
                         <td >{{ frack.constellation }}</td>
                         <td >{{ frack.region }}</td>
