@@ -7,11 +7,13 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import render
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
+from moons.helpers import OreHelper
 from .models import MoonFrack, MiningObservation, InvoiceRecord
 from corptools.models import EveLocation
 from django.core.exceptions import PermissionDenied
 
 from . import __version__
+from .api import get_moons_and_extractions
 
 
 @login_required
@@ -59,3 +61,52 @@ def react(request):
     }
 
     return render(request, 'moons/react_base.html', context=context)
+
+
+@login_required
+def moon_report_use(request):
+    if not request.user.has_perm('moons.view_all'):
+        raise PermissionDenied("No perms to view")
+
+    ores = OreHelper.get_ore_array_with_value()
+    fracks = get_moons_and_extractions(request, 365*10)
+
+    output = []
+    for frack in fracks:
+        total_value_available = 0
+        total_value = 0
+        ores = []
+        rank = 0
+        for o in frack["mined_ore"]:
+            total_value_available += ores[o["type"]
+                                          ["id"]]["value"] * o["total_volume"]
+            total_value += o["value"]
+            ores.append(o["type"]["name"])
+            if o["type"]["cat_id"] > rank:
+                rank = o["type"]["cat_id"]
+        ratio = 0
+        if total_value > 0:
+            ratio = total_value/total_value_available*100
+        _o = {
+            "Corporation": frack["CorporationName"],
+            "moon": frack["moon"]["name"],
+            "end_date": frack["extraction_end"],
+            "system": frack["system"],
+            "constellation": frack["constellation"],
+            "region": frack["region"],
+            "total_value": total_value_available,
+            "mined_value": total_value,
+            "mined_ratio": ratio,
+            "ores": ", ".join(ores),
+            "rank": OreHelper.rank_ids[rank]
+        }
+        output.append(_o)
+    context = {
+        "fracks": output
+    }
+
+    return render(
+        request,
+        'moons/dashboards/moon_use_dash.html',
+        context=context
+    )

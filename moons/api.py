@@ -211,6 +211,7 @@ def get_moons_and_extractions(request, past_days):
 
     for e in current_fracks:
         output[e.id] = {
+            "CorporationName": e.corporation.corporation.corporation_name,
             "ObserverName": e.structure.location_name,
             "system": e.moon_name.system.name,
             "constellation": e.moon_name.system.constellation.name,

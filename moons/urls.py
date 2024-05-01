@@ -9,5 +9,6 @@ urlpatterns = [
     re_path(r'^data/', views.observers, name='data'),
     re_path(r'^r/', views.react, name='r'),
     re_path(r'^api/', api.urls),
+    re_path(r'^report/usage', views.moon_report_use, name='report_use'),
 
 ]

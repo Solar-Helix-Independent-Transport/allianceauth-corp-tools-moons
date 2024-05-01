@@ -1,0 +1,146 @@
+{% extends 'allianceauth/base-bs5.html' %}
+{% load i18n %}
+{% load static %}
+{% load humanize %}
+{% block content %}
+
+    {% if structures %}
+        <h2 class="text-center">Moon Usage Stats</h2>
+        <hr>
+        <div id="chart_info" class="mx-auto">
+            <div class="text-center">
+                <h4 class="text-center">Filtered Stats</h4>
+                <p>Moons Matching Filter <span id="total_str" class="badge bg-primary"></span></p>
+                <!-- <p>Average Use per all fracks <span id="average_fracks" class="badge bg-primary"></span></p> -->
+                <p>Filtered System Count <span id="total_system" class="badge bg-primary"></span></p>
+                <p>Filtered Constelation Count <span id="total_const" class="badge bg-primary"></span></p>
+                <p>Filtered Region Count <span id="total_region" class="badge bg-primary"></span></p>
+            </div>
+        </div>
+        <hr>
+        <div class="table-responsive">
+            <table id="table-structs" class="table table-responsive ">
+                <thead>
+                    <tr>
+                        <th class="">Moon</th>
+                        <th class="">Date</th>
+                        <th class="">Details</th>
+                        <th class="">Value</th>
+                        <th class="">Mined</th>
+                        <th class="">Ratio</th>
+                        <th>System</th>
+                        <th>Constellation</th>
+                        <th>Region</th>
+                        <th>Corporation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for frack in fracks %}
+                    <tr>
+                        <td >{{ frack.moon }}</td>
+                        <td >{{ frack.end_date }}</td>
+                        <td >{{ frack.ores }}</td>
+                        <td >{{ frack.total_value }}</td>
+                        <td >{{ frack.mined_value }}</td>
+                        <td >{{ frack.mined_ratio }}</td>
+                        <td >{{ frack.system }}</td>
+                        <td >{{ frack.constellation }}</td>
+                        <td >{{ frack.region }}</td>
+                        <td >{{ frack.corporation }}</td>
+                        <td >{{ frack.rank }}</td>
+                    </tr>
+                {% empty %}
+
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+    <div class="alert alert-warning text-center">{% trans "No Fracks Available" %}</div>
+    {% endif %}
+{% endblock %}
+{% block extra_javascript %}
+    {% include 'bundles/datatables-js-bs5.html' %}
+    <script src="{% static 'allianceauth/js/filterDropDown/filterDropDown.min.js' %}"></script>
+
+{% endblock %}
+{% block extra_script %}
+    function numberWithCommas(x) {
+        return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+    let moon_col = 0;
+    let sys_col = 6;
+    let const_col = 7;
+    let region_col = 8;
+
+    $(document).ready(function() {
+        $('#table-structs').DataTable({
+            filterDropDown: {
+                columns: [
+                    {
+                        idx: 10
+                    },
+                    {
+                        idx: 9
+                    },
+                    {
+                        idx: region_col
+                    },
+                    {
+                        idx: const_col
+                    },
+                    {
+                        idx: sys_col
+                    }
+                ],
+            },
+            columnDefs: [
+                { "sortable": false, "targets": [2] },
+                { "visible": false, "targets": [10, 9, 8, 7, 6] }
+            ],
+            order: [
+                [2, "desc"]
+            ],
+            paging: false,
+            responsive: true,
+            pageLength: -1,
+            footerCallback: function ( row, data, start, end, display ) {
+                var api = this.api(), data;
+
+                var pageTotal = api
+                .column(2, { page: 'current'})
+                .data()
+                .reduce( function (a, b) {
+                    return Number(a) + Number(b);
+                }, 0 );
+
+                pageTotal_req = api
+                .column(4, { page: 'current'})
+                .data()
+                .reduce( function (a, b) {
+                    return Number(a) + Number(b);
+                }, 0 );
+
+                var total_count = api.column(moon_col, { page: 'current'}).data().unique().count();
+                var systems = api.column(sys_col, { page: 'current'}).data().unique().count();
+                var constel = api.column(const_col, { page: 'current'}).data().unique().count();
+                var region = api.column(region_col, { page: 'current'}).data().unique().count();
+
+                $('#total_fuel').html(numberWithCommas(pageTotal))
+                $('#total_fuel_90d').html(numberWithCommas(pageTotal_req))
+                $('#total_str').html(numberWithCommas(total_count))
+                $('#total_system').html(numberWithCommas(systems))
+                $('#total_const').html(numberWithCommas(constel))
+                $('#total_region').html(numberWithCommas(region))
+            }
+        });
+    });
+{% endblock %}
+{% block extra_css %}
+    <style>
+        body {
+            table-layout: fixed;
+        }
+    </style>
+    {% include 'bundles/datatables-css-bs5.html' %}
+{% endblock %}
