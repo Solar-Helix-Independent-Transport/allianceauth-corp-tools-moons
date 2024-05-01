@@ -86,7 +86,7 @@ def moon_report_use(request):
                 rank = o["type"]["cat_id"]
         ratio = 0
         if total_value > 0:
-            ratio = total_value/total_value_available*100
+            ratio = float(total_value)/float(total_value_available)*100
         _o = {
             "Corporation": frack["CorporationName"],
             "moon": frack["moon"]["name"],
