@@ -78,15 +78,16 @@ def moon_report_use(request):
         ores = []
         rank = 0
         for o in frack["mined_ore"]:
-            total_value_available += _ores[o["type"]
-                                           ["id"]]["value"] * o["total_volume"]
+            total_value_available += _ores[
+                o["type"]["id"]
+            ]["value"] * o["total_volume"]
             total_value += o["value"]
             ores.append(o["type"]["name"])
             if o["type"]["cat_id"] > rank:
                 rank = o["type"]["cat_id"]
         ratio = 0
         if total_value > 0:
-            ratio = float(total_value)/float(total_value_available)*100
+            ratio = float(total_value)/float(total_value_available)*100*10
         _o = {
             "Corporation": frack["CorporationName"],
             "moon": frack["moon"]["name"],
@@ -101,6 +102,7 @@ def moon_report_use(request):
             "rank": OreHelper.rank_ids[rank]
         }
         output.append(_o)
+
     context = {
         "fracks": output
     }
