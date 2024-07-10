@@ -1,0 +1,78 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# 
+# Translators:
+# Peter Pfeufer, 2024
+# 
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-10-08 22:21+1000\n"
+"PO-Revision-Date: 2023-10-13 08:58+0000\n"
+"Last-Translator: Peter Pfeufer, 2024\n"
+"Language-Team: German (https://app.transifex.com/alliance-auth/teams/107430/de/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: de\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: moons/auth_hooks.py:10
+msgid "Moon Board"
+msgstr "Mond Board"
+
+#: moons/templates/moons/base.html:3
+msgid "Alliance Toolbox!"
+msgstr "Allianz Toolbox!"
+
+#: moons/templates/moons/base.html:45
+msgid "Add All Token"
+msgstr "Alle Token hinzufügen"
+
+#: moons/templates/moons/base.html:46
+msgid "Add Poco Token"
+msgstr "Poco Token hinzufügen"
+
+#: moons/templates/moons/base.html:47
+msgid "Add Moon Token"
+msgstr "Mond Token hinzufügen"
+
+#: moons/templates/moons/base.html:48
+msgid "Add Contacts Token"
+msgstr "Kontakte Token hinzufügen"
+
+#: moons/templates/moons/base.html:49
+msgid "Add Structure Token"
+msgstr "Struktur Token hinzufügen"
+
+#: moons/templates/moons/base.html:50
+msgid "Add Asset Token"
+msgstr "Asset Token hinzufügen"
+
+#: moons/templates/moons/base.html:57
+msgid "Fuel Calcs"
+msgstr "Treibstoffberechnungen"
+
+#: moons/templates/moons/base.html:58
+msgid "Moon Observers"
+msgstr "Mondbeobachter"
+
+#: moons/templates/moons/base.html:59
+msgid "Public Contracts"
+msgstr "Öffentliche Verträge"
+
+#: moons/templates/moons/base.html:60
+msgid "Structure Txfrs"
+msgstr ""
+
+#: moons/templates/moons/base.html:61
+msgid "DotLan Links"
+msgstr "DotLan Links"
+
+#: moons/templates/moons/list.html:41 moons/templates/moons/list.html:70
+msgid "No Structures Available"
+msgstr "Keine Strukturen verfügbar"
