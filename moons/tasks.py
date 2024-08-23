@@ -292,22 +292,28 @@ def update_ore_prices():
             )
 
     OreHelper.set_prices(price_cache)
+    OreHelper.set_prices(price_cache, goo_only=True)
 
     update_tax_prices()
 
-    return json.dumps(price_cache)
+    return json.dumps(price_cache, indent=2)
 
 
 @shared_task
 def update_tax_prices():
-    taxs = OreTaxRates.objects.all()
-
+    taxes = OreTaxRates.objects.all()
     ores = OreHelper.get_ore_array_with_value()
 
-    for tax in taxs:
+    for tax in taxes:
+        print(tax)
         for id, o in ores.items():
             rate = getattr(tax, o['rarity'])
-            price = float(o['value']) * (float(rate)/100) * \
+            _o_price = 0.0
+            if tax.ignore_ores_in_refine:
+                _o_price = float(o['value_goo'])
+            else:
+                _o_price = float(o['value'])
+            price = _o_price * (float(rate)/100) * \
                 (float(tax.refine_rate)/100)
             OreTax.objects.update_or_create(
                 item=o['model'],

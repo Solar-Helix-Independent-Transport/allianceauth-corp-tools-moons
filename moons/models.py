@@ -49,9 +49,9 @@ class MoonFrack(models.Model):
     arrival_time = models.DateTimeField()
     auto_time = models.DateTimeField()
 
-    #frack_pinged = models.BooleanField(default=False)
-    #finish_notification = models.ForeignKey(Notification, on_delete=models.SET_NULL, null=True, default=None)
-    #frack_notification = models.ForeignKey(Notification, on_delete=models.SET_NULL, null=True, default=None)
+    # frack_pinged = models.BooleanField(default=False)
+    # finish_notification = models.ForeignKey(Notification, on_delete=models.SET_NULL, null=True, default=None)
+    # frack_notification = models.ForeignKey(Notification, on_delete=models.SET_NULL, null=True, default=None)
 
     class Meta:
         unique_together = (('arrival_time', 'moon_id'),)
@@ -278,6 +278,7 @@ class OreTaxRates(models.Model):
     rare_rate = models.DecimalField(max_digits=5, decimal_places=2)  # rare
     exceptional_rate = models.DecimalField(
         max_digits=5, decimal_places=2)  # best
+    ignore_ores_in_refine = models.BooleanField(default=False)
 
     def __str__(self):
         try:
@@ -291,6 +292,7 @@ class OrePrice(models.Model):
     item = models.ForeignKey(
         EveItemType, on_delete=models.DO_NOTHING, related_name='ore_price')
     price = models.DecimalField(max_digits=20, decimal_places=2)
+    goo_only = models.BooleanField(default=False)
     last_update = models.DateTimeField(auto_now=True)
 
 
