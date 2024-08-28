@@ -184,8 +184,12 @@ class MiningObservation(models.Model):
         taxes = MiningTax.objects.all().order_by('-rank')
 
         for tax in taxes:
+            goo_only = False
+            if tax.use_variable_tax:
+                goo_only = tax.tax_rate.ignore_ores_in_refine
 
-            type_price = OrePrice.objects.filter(item_id=OuterRef('type_id'))
+            type_price = OrePrice.objects.filter(
+                item_id=OuterRef('type_id'), goo_only=goo_only)
 
             observed = MiningObservation.objects.select_related('structure', 'type_name', 'structure__system', 'structure__system__constellation', 'character_name').all() \
                 .annotate(isk_value=ExpressionWrapper(
