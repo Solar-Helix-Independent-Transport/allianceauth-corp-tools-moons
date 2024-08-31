@@ -4,21 +4,33 @@ build-backend = "hatchling.build"
 
 [project]
 name = "allianceauth-corptools-moons"
-dynamic = ["version"]
-description = "Alliance Auth Plugin"
+dynamic = [
+    "description",
+    "version",
+]
 readme = "README.md"
-license = "MIT"
+license = { file = "LICENSE" }
 authors = [
     { name = "AaronKable", email = "aaronkable@gmail.com" },
 ]
+requires-python = ">=3.8"
 classifiers = [
-    "Development Status :: 4 - Beta",
     "Environment :: Web Environment",
+    "Framework :: Celery",
     "Framework :: Django",
+    "Framework :: Django :: 4.0",
+    "Framework :: Django :: 4.2",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: Implementation :: CPython",
     "Topic :: Internet :: WWW/HTTP",
     "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
 ]
@@ -30,7 +42,9 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/The-Initiative-EvE/allianceauth-corp-tools-moons"
+Homepage = "https://github.com/Solar-Helix-Independent-Transport/allianceauth-corp-tools-moons"
+Source = "https://github.com/Solar-Helix-Independent-Transport/allianceauth-corp-tools-moons"
+Tracker = "https://github.com/Solar-Helix-Independent-Transport/allianceauth-corp-tools-moons/issues"
 
 [tool.hatch.version]
 path = "moons/__init__.py"
@@ -45,3 +59,32 @@ include = [
 [tool.hatch.build.targets.wheel]
 packages = [ "moons" ]
 only-packages = false
+
+[tool.flit.module]
+name = "moons"
+
+[tool.isort]
+profile = "django"
+sections = [
+    "FUTURE",
+    "STDLIB",
+    "THIRDPARTY",
+    "DJANGO",
+    "ALLIANCEAUTH",
+    "FIRSTPARTY",
+    "LOCALFOLDER",
+]
+known_allianceauth = [ "allianceauth", "esi" ]
+known_django = [ "django" ]
+skip_gitignore = true
+
+[tool.flake8]
+exclude = [ ".git", "*migrations*", ".tox", "dist", "htmlcov" ]
+max-line-length = 119
+select = [ "C", "E", "F", "W", "B", "B950" ]
+ignore = [ 'E203', 'E231', 'E501', 'W503', 'W291', 'W293' ]
+
+[tool.djlint]
+max_attribute_length = 119
+max_line_length = 119
+max_blank_lines = 1
