@@ -204,7 +204,8 @@ def get_moons_and_extractions(request, past_days):
                        "frack__ore__group"
                        )
 
-    type_price = models.OrePrice.objects.filter(item_id=OuterRef('type_id'))
+    type_price = models.OrePrice.objects.filter(
+        item_id=OuterRef('type_id'), goo_only=False)
 
     output = {}
     str_ob_dict = {}
