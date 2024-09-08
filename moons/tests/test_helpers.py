@@ -232,22 +232,22 @@ class TestInvoicesAccessPerms(TestCase):
 
     def test_ore_builder(self):
         ores = OreHelper.get_ore_array()
-        self.assertEquals(len(ores), 5)
+        self.assertEqual(len(ores), 5)
 
-        self.assertEquals(len(ores[46319]['minerals']), 4)
-        self.assertEquals(sum(list(ores[46319]['minerals'].values())), 144)
+        self.assertEqual(len(ores[46319]['minerals']), 4)
+        self.assertEqual(sum(list(ores[46319]['minerals'].values())), 144)
 
-        self.assertEquals(len(ores[46309]['minerals']), 3)
-        self.assertEquals(sum(list(ores[46309]['minerals'].values())), 150)
+        self.assertEqual(len(ores[46309]['minerals']), 3)
+        self.assertEqual(sum(list(ores[46309]['minerals'].values())), 150)
 
-        self.assertEquals(len(ores[46301]['minerals']), 2)
-        self.assertEquals(sum(list(ores[46301]['minerals'].values())), 70)
+        self.assertEqual(len(ores[46301]['minerals']), 2)
+        self.assertEqual(sum(list(ores[46301]['minerals'].values())), 70)
 
-        self.assertEquals(len(ores[46295]['minerals']), 1)
-        self.assertEquals(sum(list(ores[46295]['minerals'].values())), 500)
+        self.assertEqual(len(ores[46295]['minerals']), 1)
+        self.assertEqual(sum(list(ores[46295]['minerals'].values())), 500)
 
-        self.assertEquals(len(ores[46285]['minerals']), 2)
-        self.assertEquals(sum(list(ores[46285]['minerals'].values())), 75)
+        self.assertEqual(len(ores[46285]['minerals']), 2)
+        self.assertEqual(sum(list(ores[46285]['minerals'].values())), 75)
 
     def test_full_prices(self):
         price_cache = {
@@ -263,26 +263,26 @@ class TestInvoicesAccessPerms(TestCase):
 
         ores = OreHelper.get_ore_array_with_value_and_taxes()
 
-        self.assertEquals(len(ores), 5)
-        self.assertEquals(float(ores[46319]['value']), 356)
-        self.assertEquals(float(ores[46309]['value']), 700)
-        self.assertEquals(float(ores[46301]['value']), 95)
-        self.assertEquals(float(ores[46295]['value']), 2500)
-        self.assertEquals(float(ores[46285]['value']), 300)
+        self.assertEqual(len(ores), 5)
+        self.assertEqual(float(ores[46319]['value']), 356)
+        self.assertEqual(float(ores[46309]['value']), 700)
+        self.assertEqual(float(ores[46301]['value']), 95)
+        self.assertEqual(float(ores[46295]['value']), 2500)
+        self.assertEqual(float(ores[46285]['value']), 300)
 
-        self.assertEquals(float(ores[46319]['tax']['test_50']), 89)
-        self.assertEquals(float(ores[46309]['tax']['test_50']), 175)
-        self.assertEquals(float(ores[46301]['tax']['test_50']), 23.75)
-        self.assertEquals(float(ores[46295]['tax']['test_50']), 625)
-        self.assertEquals(float(ores[46285]['tax']['test_50']), 75)
+        self.assertEqual(float(ores[46319]['tax']['test_50']), 89)
+        self.assertEqual(float(ores[46309]['tax']['test_50']), 175)
+        self.assertEqual(float(ores[46301]['tax']['test_50']), 23.75)
+        self.assertEqual(float(ores[46295]['tax']['test_50']), 625)
+        self.assertEqual(float(ores[46285]['tax']['test_50']), 75)
 
-        self.assertEquals(float(ores[46319]['tax']['test_cascade']), 149.52)
-        self.assertEquals(float(ores[46309]['tax']['test_cascade']), 245)
-        self.assertEquals(float(ores[46301]['tax']['test_cascade']), 26.60)
-        self.assertEquals(float(ores[46295]['tax']['test_cascade']), 525)
-        self.assertEquals(float(ores[46285]['tax']['test_cascade']), 42)
+        self.assertEqual(float(ores[46319]['tax']['test_cascade']), 149.52)
+        self.assertEqual(float(ores[46309]['tax']['test_cascade']), 245)
+        self.assertEqual(float(ores[46301]['tax']['test_cascade']), 26.60)
+        self.assertEqual(float(ores[46295]['tax']['test_cascade']), 525)
+        self.assertEqual(float(ores[46285]['tax']['test_cascade']), 42)
 
     def test_minerals(self):
         ores = OreHelper.get_mineral_array()
-        self.assertEquals(len(ores), 6)
-        self.assertEquals(sum(ores), 21)
+        self.assertEqual(len(ores), 6)
+        self.assertEqual(sum(ores), 21)

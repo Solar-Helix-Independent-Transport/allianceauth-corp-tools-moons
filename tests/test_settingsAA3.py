@@ -2,8 +2,7 @@
 Alliance Auth Test Suite Django settings.
 """
 
-from allianceauth.project_template.project_name.settings.base import *
-
+from allianceauth.project_template.project_name.settings.base import *  # noqa
 
 # Celery configuration
 CELERY_ALWAYS_EAGER = True  # Forces celery to run locally for testing
@@ -22,11 +21,12 @@ NOSE_ARGS = [
     # '--exe',  # If your tests need this to be found/run, check they py files are not chmodded +x
 ]
 
+
 PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.MD5PasswordHasher',
 ]
 
-LOGGING = None  # Comment out to enable logging for debugging
+# LOGGING = None  # Comment out to enable logging for debugging
 
 # Register an application at https://developers.eveonline.com for Authentication
 # & API Access and fill out these settings. Be sure to set the callback URL
