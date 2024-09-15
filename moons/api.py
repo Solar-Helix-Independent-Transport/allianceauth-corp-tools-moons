@@ -1,34 +1,24 @@
-from allianceauth.eveonline.models import EveCharacter
+import logging
 from datetime import timedelta
-
 from typing import List
-from django.utils import timezone
-from django.utils.timezone import activate
-from moons.helpers import OreHelper, what_frack_id
 
-from ninja import NinjaAPI, Form, main
+from corptools.models import CharacterAudit, CorporationAudit, MapSystemMoon
+# from invoices.models import Invoice
+from ninja import Form, NinjaAPI
 from ninja.security import django_auth
-from ninja.responses import codes_4xx
 
-from django.core.exceptions import PermissionDenied
-from django.db.models import F, Sum, Q, Max, Min
-from django.db.models import Subquery, OuterRef
-from django.db.models import FloatField, F, ExpressionWrapper
+from django.conf import settings
+from django.db.models import (
+    ExpressionWrapper, F, FloatField, Max, OuterRef, Subquery, Sum,
+)
+from django.utils import timezone
 
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
-from django.conf import settings
 from esi.models import Token
 
-from . import models
-from corptools.models import CharacterAudit, CorporationAudit, MapSystemMoon
-from . import schema
-from . import app_settings
+from moons.helpers import OreHelper, what_frack_id
 
-from invoices.models import Invoice
-
-from django.db.models import Sum
-
-import logging
+from . import app_settings, models, schema
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +33,7 @@ api = NinjaAPI(title="MoonTool API", version="0.0.1",
     response={200: schema.MoonPermisions},
     tags=["User"]
 )
-def get_user_permisions(request):
+def get_user_permissions(request):
     return {
         "view_public_extractions": request.user.has_perm('moons.view_available'),
         "view_corp_extractions": request.user.has_perm('moons.view_corp'),
@@ -93,86 +83,6 @@ def get_moons_and_obs(request):
     return get_moons_and_extractions(request, past_days)
 
 
-"""
-    start_date = timezone.now() - timedelta(days=past_days)
-    time_from = timezone.now() - timedelta(days=past_days+1)
-
-    events = models.MoonFrack.objects.visible_to(request.user)
-    current_fracks = events.filter(
-        arrival_time__gte=start_date,
-        arrival_time__lt=timezone.now()).select_related(
-            "moon_name",
-            "moon_name__system",
-            "moon_name__system__constellation",
-            "moon_name__system__constellation__region",
-    ).prefetch_related('frack',
-                       "frack__ore",
-                       "frack__ore__group"
-                       )
-
-    type_price = models.OrePrice.objects.filter(item_id=OuterRef('type_id'))
-
-    output = {}
-    str_ob_dict = {}
-
-    for e in current_fracks:
-        output[e.structure_id] = {
-            "ObserverName": e.structure.location_name,
-            "system": e.moon_name.system.name,
-            "constellation": e.moon_name.system.constellation.name,
-            "region": e.moon_name.system.constellation.region.name,
-            "moon": {
-                "name": e.moon_name.name,
-                "id": e.moon_id
-            },
-            "extraction_end": e.arrival_time,
-            "mined_ore": [],
-            "total_m3": 0,
-            "value": 0
-
-        }
-        for o in e.frack.all():
-            if e.structure_id not in str_ob_dict:
-                str_ob_dict[e.structure_id] = {}
-            output[e.structure_id]['total_m3'] += o.total_m3
-            str_ob_dict[e.structure_id][o.ore.name] = {
-                "type": {
-                    "id": o.ore_id,
-                    "name": o.ore.name,
-                    "cat": o.ore.group.name,
-                    "cat_id": o.ore.group_id
-                },
-                "volume": 0,
-                "total_volume": o.total_m3,
-                "value": 0
-            }
-
-    observations = models.MiningObservation.objects \
-        .filter(last_updated__gte=time_from) \
-        .filter(observing_id__in=current_fracks.values_list("structure_id", flat=True)) \
-        .values('structure', 'type_id') \
-        .annotate(mined=(Sum('quantity') * F('type_name__volume'))) \
-        .annotate(ore_value=ExpressionWrapper(
-            Subquery(type_price.values('price')) * Sum('quantity'),
-            output_field=FloatField())) \
-        .annotate(name=F('type_name__name'))
-
-    for o in observations:
-        nme = o["name"].split(" ")[-1]
-        if request.user.has_perm("moons.view_all"):
-            str_ob_dict[o["structure"]][nme]["value"] += o["ore_value"]
-        str_ob_dict[o["structure"]][nme]["volume"] += o['mined']
-
-        if o['type_id'] in JACKPOT_IDS:
-            output[o["structure"]]["jackpot"] = True
-
-    for s, o in str_ob_dict.items():
-        output[s]["mined_ore"] = list(o.values())
-
-    return list(output.values())
-"""
-
-
 @api.get(
     "/extractions/past",
     response={200: List[schema.ExtractionEvent]},
@@ -182,30 +92,34 @@ def get_moons_and_obs_past(request):
     if not request.user.has_perm("moons.view_all"):
         return []
 
-    past_days = 30*12  # 12 months = max pull 6 events per moon
+    past_days = 30 * 12  # 12 months = max pull 6 events per moon
 
     return get_moons_and_extractions(request, past_days)
 
 
 def get_moons_and_extractions(request, past_days):
     start_date = timezone.now() - timedelta(days=past_days)
-    time_from = timezone.now() - timedelta(days=past_days+1)
+    time_from = timezone.now() - timedelta(days=past_days + 1)
 
     events = models.MoonFrack.objects.visible_to(request.user)
     current_fracks = events.filter(
         arrival_time__gte=start_date,
-        arrival_time__lt=timezone.now()).select_related(
-            "moon_name",
-            "moon_name__system",
-            "moon_name__system__constellation",
-            "moon_name__system__constellation__region",
-    ).prefetch_related('frack',
-                       "frack__ore",
-                       "frack__ore__group"
-                       )
+        arrival_time__lt=timezone.now()
+    ).select_related(
+        "moon_name",
+        "moon_name__system",
+        "moon_name__system__constellation",
+        "moon_name__system__constellation__region",
+    ).prefetch_related(
+        'frack',
+        "frack__ore",
+        "frack__ore__group"
+    )
 
     type_price = models.OrePrice.objects.filter(
-        item_id=OuterRef('type_id'), goo_only=False)
+        item_id=OuterRef('type_id'),
+        goo_only=False
+    )
 
     output = {}
     str_ob_dict = {}
@@ -221,7 +135,6 @@ def get_moons_and_extractions(request, past_days):
                 "name": e.moon_name.name,
                 "id": e.moon_id
             },
-            "extraction_end": e.arrival_time,
             "extraction_end": e.arrival_time,
             "mined_ore": [],
             "total_m3": 0,
@@ -257,7 +170,7 @@ def get_moons_and_extractions(request, past_days):
 
     for o in observations:
         frack = what_frack_id(output, o)
-        if frack == False:
+        if frack is False:
             continue
         nme = o["name"].split(" ")[-1]
         if frack in str_ob_dict:
@@ -413,36 +326,36 @@ def get_moon_rentals(request):
     return out
 
 
-@api.get(
-    "/rental/payments",
-    response={200: List[schema.MoonRental]},
-    tags=["Rentals"]
-)
-def get_moon_rental_payments(request):
-    if not request.user.has_perm("moons.add_moonrental"):
-        return []
+# @api.get(
+#     "/rental/payments",
+#     response={200: List[schema.MoonRental]},
+#     tags=["Rentals"]
+# )
+# def get_moon_rental_payments(request):
+#     if not request.user.has_perm("moons.add_moonrental"):
+#         return []
 
-    payments = Invoice.objects.filter(paid=False).select_related(
-        "moon", "moon__system", "contact", "corporation")
-    out = []
-    for r in rentals:
-        out.append(
-            {"moon": {
-                "id": r.moon.moon_id,
-                "name": r.moon.name
-            },
-                "system": {
-                "id": r.moon.system.system_id,
-                "name": r.moon.system.name
-            },
-                "contact": r.contact,
-                "corporation": r.corporation,
-                "price": r.price,
-                "start_date": r.start_date
-            }
-        )
+#     payments = Invoice.objects.filter(paid=False).select_related(
+#         "moon", "moon__system", "contact", "corporation")
+#     out = []
+#     for r in rentals:
+#         out.append(
+#             {"moon": {
+#                 "id": r.moon.moon_id,
+#                 "name": r.moon.name
+#             },
+#                 "system": {
+#                 "id": r.moon.system.system_id,
+#                 "name": r.moon.system.name
+#             },
+#                 "contact": r.contact,
+#                 "corporation": r.corporation,
+#                 "price": r.price,
+#                 "start_date": r.start_date
+#             }
+#         )
 
-    return out
+#     return out
 
 
 @api.post(
@@ -563,8 +476,8 @@ def get_outstanding_tax(request):
         try:
             total_mined += d['total_value']
             total_taxed += d['tax_value']
-            for l in d['locations']:
-                locations.add(l)
+            for loc in d['locations']:
+                locations.add(loc)
         except KeyError:
             pass  # probably wanna ping admin about it.
 
@@ -572,18 +485,26 @@ def get_outstanding_tax(request):
         try:
             total_mined += d['totals_isk']
             total_taxed += d['tax_isk']
-            for l in d['seen_at']:
-                locations.add(l)
+            for loc in d['seen_at']:
+                locations.add(loc)
         except KeyError:
             pass  # probably wanna ping admin about it.
 
-    output.append(f"We've seen {len(data['knowns'])} known members!")
     output.append(
-        f"We've seen { len(data['unknowns']) } unknown characters!")
-    output.append(f"Who have mined ${total_mined:,} worth of ore!")
+        f"We've seen {len(data['knowns'])} known members!"
+    )
     output.append(
-        f"Current Tax puts this at ${total_taxed:,} in taxes!\n")
-    output.append(f"the structures included are:")
+        f"We've seen { len(data['unknowns']) } unknown characters!"
+    )
+    output.append(
+        f"Who have mined ${total_mined:,} worth of ore!"
+    )
+    output.append(
+        f"Current Tax puts this at ${total_taxed:,} in taxes!\n"
+    )
+    output.append(
+        "the structures included are:"
+    )
 
     for s in locations:
         output.append(f"  - {s}")
