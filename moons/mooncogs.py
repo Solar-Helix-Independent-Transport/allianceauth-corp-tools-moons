@@ -40,39 +40,24 @@ class MoonsCog(commands.Cog):
         "moons", "Moon Module Commands", guild_ids=get_all_servers())
 
     def sender_has_moon_perm(self, ctx):
-        id = ctx.author.id
-        try:
-            has_perm = has_any_perm(ctx.author.id, "moons.view_all", guild=ctx.guild)
-            if has_perm:
-                return True
-            else:
-                return False
-        except Exception as e:
-            logger.error(f"MOONS: sender_has_moon_perm {e}")
+        has_perm = has_any_perm(ctx.author.id, ["moons.view_all"], guild=ctx.guild)
+        if has_perm:
+            return True
+        else:
             return False
 
     def sender_has_corp_moon_perm(self, ctx):
-        id = ctx.author.id
-        try:
-            has_perm = has_any_perm(ctx.author.id, "moons.view_corp", guild=ctx.guild)
-            if has_perm:
-                return True
-            else:
-                return False
-        except Exception as e:
-            logger.error(f"MOONS: sender_has_corp_moon_perm {e}")
+        has_perm = has_any_perm(ctx.author.id, ["moons.view_corp"], guild=ctx.guild)
+        if has_perm:
+            return True
+        else:
             return False
 
     def sender_has_moon_rental_create_perm(self, ctx):
-        id = ctx.author.id
-        try:
-            has_perm = has_any_perm(ctx.author.id, "moons.change_moonrental", guild=ctx.guild)
-            if has_perm:
-                return True
-            else:
-                return False
-        except Exception as e:
-            logger.error(f"MOONS: sender_has_moon_rental_create_perm {e}")
+        has_perm = has_any_perm(ctx.author.id, ["moons.change_moonrental"], guild=ctx.guild)
+        if has_perm:
+            return True
+        else:
             return False
 
     @pinger_commands.command(name='print_stats', guild_ids=get_all_servers())
