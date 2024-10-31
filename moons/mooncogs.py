@@ -1,21 +1,22 @@
 # Cog Stuff
 from typing import Optional
+from aadiscordbot.utils.auth import get_auth_user
 from corptools.models import CorporationAudit, Structure
 from discord import AutocompleteContext, Interaction, option
 from discord.embeds import Embed
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
-from allianceauth.services.modules.discord.models import DiscordUser
 from discord.ext import commands
 from discord.commands import SlashCommandGroup
 
 # AA Contexts
 import pprint
-from django.conf import settings
 from django.utils import timezone
 from moons.models import InvoiceRecord, MoonFrack, MoonRental
 from corptools.models import MapSystemMoon
 
 from moons import app_settings
+from aadiscordbot.app_settings import get_all_servers
+from aadiscordbot.cogs.utils.decorators import has_any_perm
 
 import logging
 
@@ -36,13 +37,12 @@ class MoonsCog(commands.Cog):
         self.bot = bot
 
     pinger_commands = SlashCommandGroup(
-        "moons", "Moon Module Commands", guild_ids=[int(settings.DISCORD_GUILD_ID)])
+        "moons", "Moon Module Commands", guild_ids=get_all_servers())
 
     def sender_has_moon_perm(self, ctx):
         id = ctx.author.id
         try:
-            has_perm = DiscordUser.objects.get(
-                uid=id).user.has_perm("moons.view_all")
+            has_perm = has_any_perm(ctx.author.id, "moons.view_all", guild=ctx.guild)
             if has_perm:
                 return True
             else:
@@ -53,8 +53,7 @@ class MoonsCog(commands.Cog):
     def sender_has_corp_moon_perm(self, ctx):
         id = ctx.author.id
         try:
-            has_perm = DiscordUser.objects.get(
-                uid=id).user.has_perm("moons.view_corp")
+            has_perm = has_any_perm(ctx.author.id, "moons.view_corp", guild=ctx.guild)
             if has_perm:
                 return True
             else:
@@ -65,8 +64,7 @@ class MoonsCog(commands.Cog):
     def sender_has_moon_rental_create_perm(self, ctx):
         id = ctx.author.id
         try:
-            has_perm = DiscordUser.objects.get(
-                uid=id).user.has_perm("moons.change_moonrental")
+            has_perm = has_any_perm(ctx.author.id, "moons.change_moonrental", guild=ctx.guild)
             if has_perm:
                 return True
             else:
@@ -74,7 +72,7 @@ class MoonsCog(commands.Cog):
         except Exception as e:
             return False
 
-    @pinger_commands.command(name='print_stats', guild_ids=[int(settings.DISCORD_GUILD_ID)])
+    @pinger_commands.command(name='print_stats', guild_ids=get_all_servers())
     async def info_slash(self, ctx):
         """
         Print the Uninvocied Mining Stats!
@@ -126,7 +124,7 @@ class MoonsCog(commands.Cog):
 
         await ctx.channel.send(embed=e)
 
-    @pinger_commands.command(name='inactive', guild_ids=[int(settings.DISCORD_GUILD_ID)])
+    @pinger_commands.command(name='inactive', guild_ids=get_all_servers())
     async def inactive_moons(self, ctx, own_corp: Optional[bool] = False):
         """
         Print inactive Moons!
@@ -134,8 +132,7 @@ class MoonsCog(commands.Cog):
         if own_corp:
             if not self.sender_has_corp_moon_perm(ctx):
                 return await ctx.respond(f"You do not have permission to use this command.", ephemeral=True)
-            user = DiscordUser.objects.get(
-                uid=ctx.author.id).user.profile.main_character
+            user = get_auth_user(ctx.user, ctx.guild).profile.main_character
             corps = CorporationAudit.objects.filter(
                 corporation__corporation_id=user.corporation_id)
             corp_names = [f"{c.corporation.corporation_name}" for c in corps]
@@ -174,7 +171,7 @@ class MoonsCog(commands.Cog):
 
     if app_settings.MOONS_ENABLE_RENT_COG:
         rental_commands = SlashCommandGroup(
-            "moon_rentals", "Moon Rental Commands", guild_ids=[int(settings.DISCORD_GUILD_ID)])
+            "moon_rentals", "Moon Rental Commands", guild_ids=get_all_servers())
 
         async def search_moons(ctx: AutocompleteContext):
             """Returns a list of moons that begin with the characters entered so far."""
@@ -194,7 +191,7 @@ class MoonsCog(commands.Cog):
                 corporation_name__icontains=ctx.value).values_list('corporation_name', flat=True)[:10])
             return resp
 
-        @rental_commands.command(name='status', guild_ids=[int(settings.DISCORD_GUILD_ID)])
+        @rental_commands.command(name='status', guild_ids=get_all_servers())
         @option("moon", description="Search for a Moon!", autocomplete=search_moons)
         async def moon_rental_status(self, ctx, moon: str):
             """
@@ -218,7 +215,7 @@ class MoonsCog(commands.Cog):
             else:
                 return await ctx.respond(f"{moon} is rented!\n```\n{msgs}\n```")
 
-        @rental_commands.command(name='character_status', guild_ids=[int(settings.DISCORD_GUILD_ID)])
+        @rental_commands.command(name='character_status', guild_ids=get_all_servers())
         @option("character", description="Search for a Character!", autocomplete=search_characters)
         async def moon_rental_character_status(self, ctx, character: str):
             """
@@ -242,7 +239,7 @@ class MoonsCog(commands.Cog):
             else:
                 return await ctx.respond(f"{character} has rented!\n```\n{msgs}\n```")
 
-        @rental_commands.command(name='rent', guild_ids=[int(settings.DISCORD_GUILD_ID)])
+        @rental_commands.command(name='rent', guild_ids=get_all_servers())
         @option("moon", description="Search for a Moon!", autocomplete=search_moons)
         @option("character", description="Search for a Character!", autocomplete=search_characters)
         @option("corporation", description="Search for a Corporation!", autocomplete=search_corp)
@@ -269,7 +266,7 @@ class MoonsCog(commands.Cog):
             else:
                 return await ctx.respond(f"**Unable to rent** `{moon}` to `{character}` Already rented!")
 
-        @rental_commands.command(name='unrent', guild_ids=[int(settings.DISCORD_GUILD_ID)])
+        @rental_commands.command(name='unrent', guild_ids=get_all_servers())
         @option("moon", description="Search for a Moon!", autocomplete=search_moons)
         @option("character", description="Search for a Character!", autocomplete=search_characters)
         async def moon_rental_unrent(self, ctx, moon: str, character: str):
