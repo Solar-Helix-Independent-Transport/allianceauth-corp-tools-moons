@@ -48,6 +48,7 @@ class MoonsCog(commands.Cog):
             else:
                 return False
         except Exception as e:
+            logger.error(f"MOONS: sender_has_moon_perm {e}")
             return False
 
     def sender_has_corp_moon_perm(self, ctx):
@@ -59,6 +60,7 @@ class MoonsCog(commands.Cog):
             else:
                 return False
         except Exception as e:
+            logger.error(f"MOONS: sender_has_corp_moon_perm {e}")
             return False
 
     def sender_has_moon_rental_create_perm(self, ctx):
@@ -70,6 +72,7 @@ class MoonsCog(commands.Cog):
             else:
                 return False
         except Exception as e:
+            logger.error(f"MOONS: sender_has_moon_rental_create_perm {e}")
             return False
 
     @pinger_commands.command(name='print_stats', guild_ids=get_all_servers())
