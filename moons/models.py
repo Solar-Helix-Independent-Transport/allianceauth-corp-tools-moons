@@ -584,7 +584,7 @@ class MoonRental(models.Model):
                                       "moons": [],
                                       "amount": 0,
                                       "characters": set()}
-                users[user_id]["moons"].append(m.moon.name)
+                users[user_id]["moons"].append(f"{m.moon.name} (Ƶ{m.price:,})")
                 users[user_id]["amount"] += m.price
                 users[user_id]["characters"].add(m.contact.character_name)
                 total_known += m.price
