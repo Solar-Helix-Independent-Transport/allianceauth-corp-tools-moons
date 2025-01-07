@@ -1,4 +1,5 @@
 import BaseTable from "../components/BaseTable/BaseTable";
+import { seachOre } from "../components/ColumnFilter";
 import ErrorBoundary from "../components/ErrorBoundary";
 import { OreColourKey } from "../components/OreColourKey";
 import { OreProgress } from "../components/OreProgress";
@@ -74,6 +75,7 @@ const FutureExtractions = () => {
         ) : (
           <></>
         ),
+      filterFn: seachOre,
     }),
   ];
 
