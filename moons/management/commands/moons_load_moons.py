@@ -1,8 +1,9 @@
+from corptools.models import MapRegion
+
 from django.core.management.base import BaseCommand, CommandError
 
 from moons.models import InvoiceRecord
 from moons.tasks import process_moons_from_esi
-from corptools.models import MapRegion
 
 
 class Command(BaseCommand):

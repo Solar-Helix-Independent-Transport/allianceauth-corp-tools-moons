@@ -1,5 +1,9 @@
+from corptools.models import (
+    EveItemCategory, EveItemGroup, EveItemType, InvTypeMaterials,
+)
+
 from django.test import TestCase
-from corptools.models import EveItemType, InvTypeMaterials, EveItemCategory, EveItemGroup
+
 from moons.helpers import OreHelper
 from moons.models import OreTaxRates
 from moons.tasks import update_tax_prices

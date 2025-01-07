@@ -1,12 +1,12 @@
-import { Card } from "react-bootstrap";
-import { useQuery } from "react-query";
-import { getAdminList } from "../helpers/Api";
 import BaseTable from "../components/BaseTable/BaseTable";
 import ErrorBoundary from "../components/ErrorBoundary";
 import { ExplainPre } from "../components/ExplainTax";
 import { OutstandingTax } from "../components/OutstandingTax";
-import { createColumnHelper } from "@tanstack/react-table";
+import { getAdminList } from "../helpers/Api";
 import { corps } from "../types";
+import { createColumnHelper } from "@tanstack/react-table";
+import { Card } from "react-bootstrap";
+import { useQuery } from "react-query";
 
 const AdminList = () => {
   const { isLoading, isFetching, data } = useQuery(["admin-corps"], () => getAdminList(), {
@@ -36,7 +36,7 @@ const AdminList = () => {
   return (
     <ErrorBoundary>
       <BaseTable {...{ isLoading, isFetching, data, columns }} />
-      <br/>
+      <br />
       <Card>
         <Card.Body>
           <ErrorBoundary>
@@ -44,7 +44,7 @@ const AdminList = () => {
           </ErrorBoundary>
         </Card.Body>
       </Card>
-      <br/>
+      <br />
       <Card>
         <Card.Body>
           <ErrorBoundary>

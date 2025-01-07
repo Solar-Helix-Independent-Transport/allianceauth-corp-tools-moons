@@ -1,6 +1,6 @@
 import { getAdmimOutstanding } from "../helpers/Api";
-import { useQuery } from "react-query";
 import { ProgressBar } from "react-bootstrap";
+import { useQuery } from "react-query";
 
 export const OutstandingTax = () => {
   const { isLoading, isFetching, error, data } = useQuery(

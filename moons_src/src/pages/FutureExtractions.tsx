@@ -1,13 +1,13 @@
-import { Badge } from "react-bootstrap";
-import { useQuery } from "react-query";
-import { getFutureExtractions } from "../helpers/Api";
 import BaseTable from "../components/BaseTable/BaseTable";
 import ErrorBoundary from "../components/ErrorBoundary";
 import { OreColourKey } from "../components/OreColourKey";
-import { createColumnHelper } from "@tanstack/react-table";
-import { TimeAndSince } from "../components/TimeAndSince";
 import { OreProgress } from "../components/OreProgress";
+import { TimeAndSince } from "../components/TimeAndSince";
+import { getFutureExtractions } from "../helpers/Api";
 import { mining } from "../types";
+import { createColumnHelper } from "@tanstack/react-table";
+import { Badge } from "react-bootstrap";
+import { useQuery } from "react-query";
 
 const FutureExtractions = () => {
   const { isLoading, data } = useQuery(["future-extractions"], () => getFutureExtractions(), {
@@ -19,9 +19,7 @@ const FutureExtractions = () => {
   const columns = [
     columnHelper.accessor("extraction_end", {
       header: "Frack Arrival",
-      cell: (props: any) => (
-        <TimeAndSince stringDate={props.getValue()} />     
-      ),
+      cell: (props: any) => <TimeAndSince stringDate={props.getValue()} />,
       enableColumnFilter: false,
     }),
     columnHelper.accessor("moon.name", {
@@ -60,12 +58,12 @@ const FutureExtractions = () => {
           <>
             <div className="align-items-center">
               {props.getValue()?.map((ore) => {
-                let percent = ((ore.total_volume / props.cell.row.original.total_m3) * 100)
+                let percent = (ore.total_volume / props.cell.row.original.total_m3) * 100;
                 return (
                   <OreProgress
                     ore={ore}
                     percent={percent}
-                    badgePercent={((ore.total_volume / props.cell.row.original.total_m3) * 100)}
+                    badgePercent={(ore.total_volume / props.cell.row.original.total_m3) * 100}
                     value={ore.value}
                     valueMessage="Estimated"
                   />

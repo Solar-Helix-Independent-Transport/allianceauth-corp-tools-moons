@@ -4,7 +4,5 @@ export default {
   namespaceSeparator: "::",
   resetDefaultValueLocale: "en",
   defaultValue: (locale, namespace, key) => key,
-  input: [
-    "src/**/*.{js,jsx,ts,tsx}",
-  ],
+  input: ["src/**/*.{js,jsx,ts,tsx}"],
 };

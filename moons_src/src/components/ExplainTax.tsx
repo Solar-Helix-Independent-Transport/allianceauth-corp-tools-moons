@@ -1,15 +1,11 @@
 import { getAdminExpliain } from "../helpers/Api";
-import { useQuery } from "react-query";
 import { ProgressBar } from "react-bootstrap";
+import { useQuery } from "react-query";
 
 export const ExplainPre = () => {
-  const { isLoading, isFetching, error, data } = useQuery(
-    ["explain"],
-    () => getAdminExpliain(),
-    {
-      refetchOnWindowFocus: true,
-    }
-  );
+  const { isLoading, isFetching, error, data } = useQuery(["explain"], () => getAdminExpliain(), {
+    refetchOnWindowFocus: true,
+  });
   return (
     <>
       <ProgressBar

@@ -1,31 +1,38 @@
 from datetime import datetime, timedelta
-from django.core.exceptions import ObjectDoesNotExist
-from django.contrib.auth.models import User
-from django.db import models
-from allianceauth.authentication.models import CharacterOwnership
-from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
-from corptools.models import CorporationAudit, EveItemType, MapConstellation, MapRegion, MapSystem, MapSystemMoon, EveLocation, Notification, EveName
-from django.db.models import Subquery, OuterRef
-from django.db.models import FloatField, F, ExpressionWrapper
-from django.db.models.deletion import DO_NOTHING, SET_NULL
 
-from . import app_settings
+from corptools.models import (
+    CorporationAudit, EveItemType, EveLocation, EveName, MapConstellation,
+    MapRegion, MapSystem, MapSystemMoon, Notification,
+)
+from invoices.models import Invoice
+
+from django.contrib.auth.models import User
+from django.core.exceptions import ObjectDoesNotExist
+from django.db import models
+from django.db.models import (
+    ExpressionWrapper, F, FloatField, OuterRef, Subquery,
+)
+from django.db.models.deletion import DO_NOTHING, SET_NULL
 from django.utils import timezone
 
-from invoices.models import Invoice
+from allianceauth.authentication.models import CharacterOwnership
+from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
+
+from . import app_settings
 from .managers import MoonManager
 
 if app_settings.discord_bot_active():
     import aadiscordbot
     from aadiscordbot.tasks import send_message
-from django.forms import ValidationError, model_to_dict
+
+import copy
+import hashlib
+import json
+import logging
+
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import Model
-
-import logging
-import copy
-import json
-import hashlib
+from django.forms import ValidationError, model_to_dict
 
 logger = logging.getLogger(__name__)
 
@@ -376,7 +383,7 @@ class InvoiceRecord(models.Model):
     def get_last_invoice_date(cls):
         try:
             return InvoiceRecord.objects.all().order_by('-end_date').first().end_date
-        except (ObjectDoesNotExist, AttributeError) as e:
+        except (ObjectDoesNotExist, AttributeError):
             return datetime.min
 
     @classmethod

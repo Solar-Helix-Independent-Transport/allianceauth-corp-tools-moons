@@ -1,19 +1,14 @@
+import { PanelLoader } from "./components/Loaders/Loaders";
+import MoonMenu from "./components/MoonMenu";
+import { getPerms } from "./helpers/Api";
+import AdminList from "./pages/Admin";
 import CorporateLedger from "./pages/CorporateLedger";
 import FutureExtractions from "./pages/FutureExtractions";
-import en from "javascript-time-ago/locale/en";
-import TimeAgo from "javascript-time-ago";
-import { getPerms } from "./helpers/Api";
-import { PanelLoader } from "./components/Loaders/Loaders";
-import { useQuery } from "react-query";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
-import MoonMenu from "./components/MoonMenu";
-import AdminList from "./pages/Admin";
 import PastLedger from "./pages/PastLedger";
+import TimeAgo from "javascript-time-ago";
+import en from "javascript-time-ago/locale/en";
+import { useQuery } from "react-query";
+import { Navigate, Route, BrowserRouter as Router, Routes } from "react-router-dom";
 
 TimeAgo.addDefaultLocale(en);
 
@@ -33,11 +28,11 @@ function Moons() {
         admin={data.su}
       />
       <Routes>
-        <Route path={"/"} element={<Navigate to="/active" replace/>} />
-        <Route path={"/active"} element={<CorporateLedger/>} />
-        <Route path={"/admin"} element={<AdminList/>} />
-        <Route path={"/future"} element={<FutureExtractions/>} />
-        <Route path={"/past"} element={<PastLedger/>} />
+        <Route path={"/"} element={<Navigate to="/active" replace />} />
+        <Route path={"/active"} element={<CorporateLedger />} />
+        <Route path={"/admin"} element={<AdminList />} />
+        <Route path={"/future"} element={<FutureExtractions />} />
+        <Route path={"/past"} element={<PastLedger />} />
       </Routes>
     </Router>
   );

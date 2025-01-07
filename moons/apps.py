@@ -1,8 +1,7 @@
 from django.apps import AppConfig
 from django.core.checks import Error, register
 
-from . import __version__
-from . import app_settings
+from . import __version__, app_settings
 
 
 class MoonsConfig(AppConfig):

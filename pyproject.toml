@@ -1,13 +1,10 @@
 [build-system]
-requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+requires = [ "hatchling" ]
 
 [project]
 name = "allianceauth-corptools-moons"
-dynamic = [
-    "description",
-    "version",
-]
 readme = "README.md"
 license = { file = "LICENSE" }
 authors = [
@@ -34,17 +31,20 @@ classifiers = [
     "Topic :: Internet :: WWW/HTTP",
     "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
 ]
+dynamic = [
+    "description",
+    "version",
+]
 dependencies = [
+    "allianceauth>=3",
     "allianceauth-corptools>=2.5.5",
     "allianceauth-invoices>=0.1.1",
-    "allianceauth>=3.0.0",
-    "django-ninja>=1.0.1,<2.0.0",
+    "django-ninja>=1.0.1,<2",
 ]
 
-[project.urls]
-Homepage = "https://github.com/Solar-Helix-Independent-Transport/allianceauth-corp-tools-moons"
-Source = "https://github.com/Solar-Helix-Independent-Transport/allianceauth-corp-tools-moons"
-Tracker = "https://github.com/Solar-Helix-Independent-Transport/allianceauth-corp-tools-moons/issues"
+urls.Homepage = "https://github.com/Solar-Helix-Independent-Transport/allianceauth-corp-tools-moons"
+urls.Source = "https://github.com/Solar-Helix-Independent-Transport/allianceauth-corp-tools-moons"
+urls.Tracker = "https://github.com/Solar-Helix-Independent-Transport/allianceauth-corp-tools-moons/issues"
 
 [tool.hatch.version]
 path = "moons/__init__.py"
@@ -53,7 +53,7 @@ path = "moons/__init__.py"
 include = [
     "/moons",
     "/moons/static/**/*.*",
-    "/moons/templates/**/*.*"
+    "/moons/templates/**/*.*",
 ]
 
 [tool.hatch.build.targets.wheel]

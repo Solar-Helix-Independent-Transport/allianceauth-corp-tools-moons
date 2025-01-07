@@ -1,8 +1,11 @@
 from typing import Dict
-from .models import MiningObservation, OrePrice, OreTax, MiningTax
+
 from corptools.models import EveItemType, InvTypeMaterials, OreTaxRates
-from django.db.models import Subquery, OuterRef
+
+from django.db.models import OuterRef, Subquery
 from django.utils import timezone
+
+from .models import MiningObservation, MiningTax, OrePrice, OreTax
 
 
 class OreHelper:

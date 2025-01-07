@@ -24,7 +24,7 @@ const MoonMenu = ({
         </NavLink>
       )}
       {futureExtractions && (
-        <NavLink to={`/past`} className={`nav-link`}> 
+        <NavLink to={`/past`} className={`nav-link`}>
           Past Extractions
         </NavLink>
       )}

@@ -1,9 +1,9 @@
+import PropTypes from "prop-types";
 import { useEffect } from "react";
 import { NavItem } from "react-bootstrap";
 import { useLocation } from "react-router-dom";
-import PropTypes from "prop-types";
 
-const NavLink = (props:any) => {
+const NavLink = (props: any) => {
   const location = useLocation();
 
   useEffect(() => {}, [location]);

@@ -1,7 +1,8 @@
+from corptools.models import EveLocation
+
 from django.core.management.base import BaseCommand
 
 from moons.models import MiningObservation, MoonFrack
-from corptools.models import EveLocation
 
 
 class Command(BaseCommand):

@@ -1,22 +1,31 @@
-import logging
-import json
 import calendar
-from datetime import timedelta, datetime
-import yaml
-import requests
-
+import json
+import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from celery import shared_task, chain
-from django.utils import timezone
-from . import app_settings
-from .helpers import OreHelper, calculate_split_value
-from .models import MiningObservation, MoonFrack, FrackOre, MoonRental, OrePrice, OreTaxRates, OreTax, InvoiceRecord
-from corptools.models import MapSystem, Notification, EveLocation, MapSystemMoon, EveItemType, CorporationAudit, EveName
+from datetime import datetime, timedelta
+
+import requests
+import yaml
+from celery import chain, shared_task
 from corptools import providers
+from corptools.models import (
+    CorporationAudit, EveItemType, EveLocation, EveName, MapSystem,
+    MapSystemMoon, Notification,
+)
 from corptools.task_helpers.corp_helpers import get_corp_token
 from corptools.task_helpers.update_tasks import fetch_location_name
+
+from django.utils import timezone
+
 from allianceauth.services.tasks import QueueOnce
+
+from . import app_settings
 from .app_settings import PUBLIC_MOON_CORPS
+from .helpers import OreHelper, calculate_split_value
+from .models import (
+    FrackOre, InvoiceRecord, MiningObservation, MoonFrack, MoonRental,
+    OrePrice, OreTax, OreTaxRates,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -133,9 +142,8 @@ def process_moon_pulls():
                                               ore_id=ore,
                                               total_m3=volume
                                               ))
-        except Exception as e:
-            logger.warn("Failed to process moon", exc_info=1)
-            pass
+        except Exception:
+            logger.warning("Failed to process moon", exc_info=1)
 
     EveItemType.objects.create_bulk_from_esi(_type_list)
     FrackOre.objects.bulk_create(_ores, batch_size=500)
@@ -352,7 +360,7 @@ def process_moons_from_esi(regions):
     _current_systems = MapSystem.objects.filter(
         constellation__region_id__in=regions).values_list('system_id', flat=True)
 
-    status = providers.esi.client.Status.get_status().result()
+    providers.esi.client.Status.get_status().result()
 
     with ThreadPoolExecutor(max_workers=50) as executor:
         for system in _current_systems:

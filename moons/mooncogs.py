@@ -1,24 +1,23 @@
 # Cog Stuff
-from typing import Optional
-from aadiscordbot.utils.auth import get_auth_user
-from corptools.models import CorporationAudit, Structure
-from discord import AutocompleteContext, Interaction, option
-from discord.embeds import Embed
-from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
-from discord.ext import commands
-from discord.commands import SlashCommandGroup
-
+import logging
 # AA Contexts
-import pprint
-from django.utils import timezone
-from moons.models import InvoiceRecord, MoonFrack, MoonRental
-from corptools.models import MapSystemMoon
+from typing import Optional
 
-from moons import app_settings
 from aadiscordbot.app_settings import get_all_servers
 from aadiscordbot.cogs.utils.decorators import has_any_perm
+from aadiscordbot.utils.auth import get_auth_user
+from corptools.models import CorporationAudit, MapSystemMoon, Structure
+from discord import AutocompleteContext, Interaction, option
+from discord.commands import SlashCommandGroup
+from discord.embeds import Embed
+from discord.ext import commands
 
-import logging
+from django.utils import timezone
+
+from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
+
+from moons import app_settings
+from moons.models import InvoiceRecord, MoonFrack, MoonRental
 
 logger = logging.getLogger(__name__)
 

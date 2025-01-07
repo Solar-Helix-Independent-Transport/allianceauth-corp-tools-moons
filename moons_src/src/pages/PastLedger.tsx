@@ -1,32 +1,25 @@
-import { Badge } from "react-bootstrap";
-import { useQuery } from "react-query";
-import { getPastExtractions } from "../helpers/Api";
 import BaseTable from "../components/BaseTable/BaseTable";
 import ErrorBoundary from "../components/ErrorBoundary";
 import { OreColourKey } from "../components/OreColourKey";
-import { createColumnHelper } from "@tanstack/react-table";
-import { TimeAndSince } from "../components/TimeAndSince";
 import { OreProgress } from "../components/OreProgress";
+import { TimeAndSince } from "../components/TimeAndSince";
+import { getPastExtractions } from "../helpers/Api";
 import { mining } from "../types";
-
+import { createColumnHelper } from "@tanstack/react-table";
+import { Badge } from "react-bootstrap";
+import { useQuery } from "react-query";
 
 const PastLedger = () => {
-  const { isLoading, data } = useQuery(
-    ["extractions", "Past"],
-    () => getPastExtractions(),
-    {
-      initialData: [],
-      refetchOnWindowFocus: false,
-    }
-  );
+  const { isLoading, data } = useQuery(["extractions", "Past"], () => getPastExtractions(), {
+    initialData: [],
+    refetchOnWindowFocus: false,
+  });
   const columnHelper = createColumnHelper<mining>();
 
   const columns = [
     columnHelper.accessor("extraction_end", {
       header: "Frack Arrival",
-      cell: (props: any) => (
-        <TimeAndSince stringDate={props.getValue()} />     
-      ),
+      cell: (props: any) => <TimeAndSince stringDate={props.getValue()} />,
       enableColumnFilter: false,
     }),
     columnHelper.accessor("moon.name", {
@@ -40,7 +33,9 @@ const PastLedger = () => {
             {props.cell.row.original.constellation} - {props.cell.row.original.region}
           </p>
           {props.cell.row.original.value > 0 && (
-            <Badge>Total Mined Value ${Number(props.cell.row.original.value / 1000000000).toFixed(2)}B</Badge>
+            <Badge>
+              Total Mined Value ${Number(props.cell.row.original.value / 1000000000).toFixed(2)}B
+            </Badge>
           )}
         </div>
       ),
@@ -68,7 +63,7 @@ const PastLedger = () => {
                   <OreProgress
                     ore={ore}
                     percent={mined}
-                    badgePercent={((ore.total_volume / props.cell.row.original.total_m3) * 100)}
+                    badgePercent={(ore.total_volume / props.cell.row.original.total_m3) * 100}
                     value={ore.value}
                     valueMessage="Mined"
                   />

@@ -1,10 +1,13 @@
 from django.contrib import admin
 
 # Register your models here.
-from .models import MoonFrack, MiningTax, OreTaxRates, InvoiceRecord, MoonRental
+from .models import (
+    InvoiceRecord, MiningTax, MoonFrack, MoonRental, OreTaxRates,
+)
 from .tasks import invoice_single_moon
 
 
+@admin.register(MoonFrack)
 class MoonAdmin(admin.ModelAdmin):
     list_select_related = True
     list_display = ['corporation', 'moon_name', 'arrival_time', 'notification']
@@ -12,9 +15,9 @@ class MoonAdmin(admin.ModelAdmin):
     raw_id_fields = ('corporation', 'moon_name', 'structure', 'notification')
 
 
-admin.site.register(MoonFrack, MoonAdmin)
 
 
+@admin.register(MiningTax)
 class TaxAdmin(admin.ModelAdmin):
     list_display = ('rank', 'corp', 'use_variable_tax', 'tax_rate', '__str__')
     search_fields = ['region', 'constellation', 'system', 'moon', 'corp']
@@ -22,17 +25,17 @@ class TaxAdmin(admin.ModelAdmin):
     raw_id_fields = ('region', 'constellation', 'system', 'moon')
 
 
-admin.site.register(MiningTax, TaxAdmin)
 
 
+@admin.register(OreTaxRates)
 class OreTaxRatesAdmin(admin.ModelAdmin):
     list_display = ('tag', 'refine_rate', 'exceptional_rate', 'rare_rate',
                     'uncommon_rate', 'common_rate', 'ubiquitous_rate', 'ore_rate')
 
 
-admin.site.register(OreTaxRates, OreTaxRatesAdmin)
 
 
+@admin.register(InvoiceRecord)
 class InvoiceAdmin(admin.ModelAdmin):
     list_select_related = True
 
@@ -66,6 +69,7 @@ def invoice_send_action(RentalAdmin, request, queryset):
         invoice_single_moon.delay(i.id)
 
 
+@admin.register(MoonRental)
 class RentalAdmin(admin.ModelAdmin):
     list_select_related = True
     raw_id_fields = ('corporation', 'contact', 'moon')
@@ -93,8 +97,3 @@ class RentalAdmin(admin.ModelAdmin):
 
     list_display = ['moon', 'contact',
                     'start_date', 'end_date', ('price', "{:,}")]
-
-
-admin.site.register(InvoiceRecord, InvoiceAdmin)
-
-admin.site.register(MoonRental, RentalAdmin)

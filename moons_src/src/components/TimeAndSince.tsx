@@ -12,12 +12,11 @@ const timeFormat = Intl.DateTimeFormat("default", {
   hour12: false,
 });
 
-export const TimeAndSince = ({stringDate}:{stringDate: string}) => {
-  const dateOb = Date.parse(stringDate)
+export const TimeAndSince = ({ stringDate }: { stringDate: string }) => {
+  const dateOb = Date.parse(stringDate);
   return (
     <div className="text-center">
-      {dateFormat.format(dateOb)}{" "}
-      {timeFormat.format(dateOb)}
+      {dateFormat.format(dateOb)} {timeFormat.format(dateOb)}
       <br />
       <Badge className="">
         <ReactTimeAgo date={dateOb} />

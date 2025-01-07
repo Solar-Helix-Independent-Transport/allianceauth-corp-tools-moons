@@ -1,5 +1,5 @@
-import { Badge } from "react-bootstrap";
 import { OreColourMap } from "./OreColourKey";
+import { Badge } from "react-bootstrap";
 
 export const OreProgress = ({
   ore,
@@ -52,7 +52,6 @@ export const OreProgress = ({
           >
             {ore.type.cat}
           </Badge>
-
         </div>
         <div className="progress my-1">
           <div

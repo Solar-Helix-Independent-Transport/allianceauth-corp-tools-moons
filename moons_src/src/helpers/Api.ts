@@ -1,14 +1,12 @@
 import axios from "axios";
+
 axios.defaults.xsrfHeaderName = "X-CSRFToken";
 
 function fetchFromObject(obj: any, prop: any) {
   if (typeof obj === "undefined") return "Error";
   var _index = prop.indexOf(".");
   if (_index > -1) {
-    return fetchFromObject(
-      obj[prop.substring(0, _index)],
-      prop.substr(_index + 1)
-    );
+    return fetchFromObject(obj[prop.substring(0, _index)], prop.substr(_index + 1));
   }
   return obj[prop];
 }
@@ -33,11 +31,7 @@ export async function searchChars(search_str: any) {
   const api = await axios.get(`/m/api/characters/search`, {
     params: { search_text: search_str },
   });
-  const characters = return_key_pair(
-    "character_name",
-    "character_id",
-    api.data
-  );
+  const characters = return_key_pair("character_name", "character_id", api.data);
   characters.sort();
   return characters;
 }

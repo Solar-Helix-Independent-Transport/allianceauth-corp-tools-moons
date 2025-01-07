@@ -1,5 +1,6 @@
-from django.db import models
 import logging
+
+from django.db import models
 
 from moons import app_settings
 
