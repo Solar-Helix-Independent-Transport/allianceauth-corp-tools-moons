@@ -1,41 +1,31 @@
-import { PanelLoader } from "./components/Loaders/Loaders";
-import MoonMenu from "./components/MoonMenu";
-import { getPerms } from "./helpers/Api";
 import AdminList from "./pages/Admin";
 import CorporateLedger from "./pages/CorporateLedger";
 import FutureExtractions from "./pages/FutureExtractions";
+import MoonsPage from "./pages/MoonsPage";
 import PastLedger from "./pages/PastLedger";
 import TimeAgo from "javascript-time-ago";
 import en from "javascript-time-ago/locale/en";
-import { useQuery } from "react-query";
 import { Navigate, Route, BrowserRouter as Router, Routes } from "react-router-dom";
 
 TimeAgo.addDefaultLocale(en);
 
-function Moons() {
-  const { isLoading, data } = useQuery(["perms"], () => getPerms(), {
-    refetchOnWindowFocus: false,
-  });
-
-  return isLoading ? (
-    <PanelLoader></PanelLoader>
-  ) : (
-    <Router>
-      <br />
-      <MoonMenu
-        futureExtractions={data.view_observations}
-        limitedFutureExtractions={data.view_limited_future}
-        admin={data.su}
-      />
-      <Routes>
-        <Route path={"/"} element={<Navigate to="/active" replace />} />
-        <Route path={"/active"} element={<CorporateLedger />} />
-        <Route path={"/admin"} element={<AdminList />} />
-        <Route path={"/future"} element={<FutureExtractions />} />
-        <Route path={"/past"} element={<PastLedger />} />
-      </Routes>
-    </Router>
+const Moons = () => {
+  return (
+    <>
+      <Router>
+        <Routes>
+          <Route index element={<Navigate to="m/r/" replace />} />
+          <Route path={"m/r/"} element={<MoonsPage />}>
+            <Route index element={<Navigate to="active" replace />} />
+            <Route path={"active"} element={<CorporateLedger />} />
+            <Route path={"admin"} element={<AdminList />} />
+            <Route path={"future"} element={<FutureExtractions />} />
+            <Route path={"past"} element={<PastLedger />} />
+          </Route>
+        </Routes>
+      </Router>
+    </>
   );
-}
+};
 
 export default Moons;

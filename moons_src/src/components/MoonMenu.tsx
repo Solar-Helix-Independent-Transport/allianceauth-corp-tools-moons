@@ -15,21 +15,21 @@ const MoonMenu = ({
 
   return ReactDOM.createPortal(
     <>
-      <NavLink to={`/active`} className={`nav-link`}>
+      <NavLink to={`active`} className={`nav-link`}>
         Active Moons
       </NavLink>
       {(futureExtractions || limitedFutureExtractions) && (
-        <NavLink to={`/future`} className={`nav-link`}>
+        <NavLink to={`future`} className={`nav-link`}>
           Future Extractions
         </NavLink>
       )}
       {futureExtractions && (
-        <NavLink to={`/past`} className={`nav-link`}>
+        <NavLink to={`past`} className={`nav-link`}>
           Past Extractions
         </NavLink>
       )}
       {admin && (
-        <NavLink to={`/admin`} className={`nav-link`}>
+        <NavLink to={`admin`} className={`nav-link`}>
           Admin
         </NavLink>
       )}
