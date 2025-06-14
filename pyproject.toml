@@ -10,7 +10,7 @@ license = { file = "LICENSE" }
 authors = [
     { name = "AaronKable", email = "aaronkable@gmail.com" },
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 classifiers = [
     "Environment :: Web Environment",
     "Framework :: Celery",
@@ -22,8 +22,6 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -36,7 +34,7 @@ dynamic = [
     "version",
 ]
 dependencies = [
-    "allianceauth>=3",
+    "allianceauth>=4",
     "allianceauth-corptools>=2.5.5",
     "allianceauth-invoices>=0.1.1",
     "django-ninja>=1.0.1,<2",

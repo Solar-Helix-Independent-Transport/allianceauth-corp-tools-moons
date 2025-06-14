@@ -538,11 +538,14 @@ class MoonRental(models.Model):
     corporation = models.ForeignKey(
         EveCorporationInfo, on_delete=models.CASCADE)
     moon = models.ForeignKey(MapSystemMoon, on_delete=models.CASCADE)
-    price = models.IntegerField(default=100000000)
+    price = models.BigIntegerField(default=100000000)
     start_date = models.DateTimeField()
     end_date = models.DateTimeField(default=None, null=True, blank=True)
     last_invoice = models.ForeignKey(
         Invoice, on_delete=SET_NULL, default=None, null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.moon.name} - {self.contact}"
 
     @classmethod
     def generate_inv_ref(cls, char_id, inv_date, single=False):
