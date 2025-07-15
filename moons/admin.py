@@ -73,6 +73,8 @@ def invoice_send_action(RentalAdmin, request, queryset):
 class RentalAdmin(admin.ModelAdmin):
     list_select_related = True
     raw_id_fields = ('corporation', 'contact', 'moon')
+    search_fields = ('corporation__corporation_name', 'contact__character_name', 'moon__name')
+
     actions = [invoice_send_action]
 
     # generate a custom formater cause i am lazy...
@@ -95,5 +97,5 @@ class RentalAdmin(admin.ModelAdmin):
 
         super().__init__(*args, **kwargs)
 
-    list_display = ['moon', 'contact',
+    list_display = ['moon', 'contact', 'corporation',
                     'start_date', 'end_date', ('price', "{:,}")]
