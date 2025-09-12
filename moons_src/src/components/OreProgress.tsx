@@ -53,7 +53,7 @@ export const OreProgress = ({
             {ore.type.cat}
           </Badge>
         </div>
-        <div className="progress my-1">
+        <div className="progress my-1 w-100">
           <div
             className={`progress-bar progress-bar-striped bg-info fw-bold ${
               OreColourMap[ore.type.cat_id as keyof typeof OreColourMap]
