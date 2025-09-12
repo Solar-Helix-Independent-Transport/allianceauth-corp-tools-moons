@@ -19,7 +19,7 @@ const PastLedger = () => {
 
   const columns = [
     columnHelper.accessor("extraction_end", {
-      header: "Frack Arrival",
+      header: "Frack Arrival (local time)",
       cell: (props: any) => <TimeAndSince stringDate={props.getValue()} />,
       enableColumnFilter: false,
     }),
