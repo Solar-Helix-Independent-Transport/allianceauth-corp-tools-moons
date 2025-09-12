@@ -23,8 +23,11 @@ import {
   Button,
   ButtonGroup,
   ButtonToolbar,
+  Col,
+  Container,
   Dropdown,
   OverlayTrigger,
+  Row,
   SplitButton,
   Table,
   Tooltip,
@@ -165,74 +168,81 @@ function _baseTable({
     typeof exportFileName !== "undefined" ? exportFileName : `ExportedData_${location.pathname}`;
   return (
     <>
-      <Table {...{ striped, hover }}>
-        <thead>
+      <div {...{ striped, hover }}>
+        <Col className="">
           {table.getHeaderGroups().map((headerGroup: HeaderGroup<any>) => (
             <>
-              <tr key={`name-${headerGroup.id}`}>
-                {headerGroup.headers.map((header: Header<any, any>) => {
+              <Row key={`name-${headerGroup.id}`}>
+                {headerGroup.headers.map((header: Header<any, any> | any) => {
                   return (
-                    <th key={header.id} colSpan={header.colSpan}>
+                    <Col
+                      key={header.id}
+                      xs={12}
+                      className={`col-sm-12 col-md-12 col-lg-12 col-xl mt-4 ${header.column.columnDef.width}`}
+                    >
                       {header.isPlaceholder ? null : (
-                        <div
+                        <Row
                           {...{
                             className: header.column.getCanSort()
-                              ? "d-flex align-items-center cursor-pointer select-none"
-                              : "d-flex align-items-center",
-                            onClick: header.column.getToggleSortingHandler(),
+                              ? "d-dlex cursor-pointer select-none"
+                              : "d-flex",
                           }}
                         >
-                          {header.column.getCanSort() ? (
-                            <div>
-                              {{
-                                asc: <i className="fas fa-sort-down fa-fw"></i>,
-                                desc: <i className="fas fa-sort-up fa-fw"></i>,
-                              }[header.column.getIsSorted() as string] ?? (
-                                <i className="fas fa-sort fa-fw"></i>
-                              )}
+                          <Row {...{ onClick: header.column.getToggleSortingHandler() }}>
+                            <div className="d-flex">
+                              {header.column.getCanSort() ? (
+                                <div>
+                                  {{
+                                    asc: <i className="fas fa-sort-down fa-fw"></i>,
+                                    desc: <i className="fas fa-sort-up fa-fw"></i>,
+                                  }[header.column.getIsSorted() as string] ?? (
+                                    <i className="fas fa-sort fa-fw"></i>
+                                  )}
+                                </div>
+                              ) : null}
+                              {flexRender(header.column.columnDef.header, header.getContext())}
                             </div>
-                          ) : null}
-                          <div>
-                            {flexRender(header.column.columnDef.header, header.getContext())}
-                          </div>
-                        </div>
+                          </Row>
+                          <Row>
+                            {header.column.getCanFilter() && rows.length >= 0 ? (
+                              <Filter column={header.column} table={table} />
+                            ) : (
+                              <></>
+                            )}
+                          </Row>
+                        </Row>
                       )}
-                    </th>
+                    </Col>
                   );
                 })}
-              </tr>
-              <tr key={`filter-${headerGroup.id}`}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <th key={header.id} colSpan={header.colSpan}>
-                      {header.column.getCanFilter() && rows.length >= 0 ? (
-                        <Filter column={header.column} table={table} />
-                      ) : (
-                        <></>
-                      )}
-                    </th>
-                  );
-                })}
-              </tr>
+              </Row>
+              <hr />
             </>
           ))}
-        </thead>
-        <tbody>
+        </Col>
+        <Col>
           {rows.map((row) => {
             return (
-              <tr key={row.id}>
-                {row.getVisibleCells().map((cell) => {
-                  return (
-                    <td key={cell.id} style={{ verticalAlign: "middle" }}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
-                  );
-                })}
-              </tr>
+              <>
+                <Row key={row.id} className="">
+                  {row.getVisibleCells().map((cell: any) => {
+                    return (
+                      <Col
+                        key={cell.id}
+                        xs={12}
+                        className={`col-sm-12 col-md-12 col-lg-12 col-xl mt-2 ${cell.column.columnDef.width}`}
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </Col>
+                    );
+                  })}
+                </Row>
+                <hr />
+              </>
             );
           })}
-        </tbody>
-      </Table>
+        </Col>
+      </div>
       <div className="d-flex justify-content-between">
         <ButtonGroup>
           <Button active variant="info">

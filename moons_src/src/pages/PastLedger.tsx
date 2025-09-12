@@ -54,10 +54,11 @@ const PastLedger = () => {
     }),
     columnHelper.accessor("mined_ore", {
       header: "Ore Composition",
+      width: "col-lg-6 col-xl-6",
       cell: (props) =>
         props.getValue() ? (
           <>
-            <div className="">
+            <div>
               {props.getValue()?.map((ore) => {
                 let mined = Number((ore.volume / ore.total_volume) * 100);
                 return (

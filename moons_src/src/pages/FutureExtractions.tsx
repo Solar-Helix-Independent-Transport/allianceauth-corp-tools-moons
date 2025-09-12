@@ -54,6 +54,7 @@ const FutureExtractions = () => {
     }),
     columnHelper.accessor("mined_ore", {
       header: "Ore Composition",
+      width: "col-lg-6 col-xl-6",
       cell: (props) =>
         props.getValue() ? (
           <>
