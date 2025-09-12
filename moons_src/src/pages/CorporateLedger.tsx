@@ -17,7 +17,7 @@ const CorporateLedger = () => {
     initialData: [],
     refetchOnWindowFocus: false,
   });
-  const columnHelper = createColumnHelper<mining>();
+  const columnHelper: any = createColumnHelper<mining>();
 
   const columns = [
     columnHelper.accessor("extraction_end", {
@@ -27,7 +27,7 @@ const CorporateLedger = () => {
     }),
     columnHelper.accessor("moon.name", {
       header: "Moon",
-      cell: (props) => (
+      cell: (props: any) => (
         <div className="text-center">
           <h6>{props.getValue()}</h6>
           <br />
@@ -45,7 +45,7 @@ const CorporateLedger = () => {
     }),
     columnHelper.accessor("jackpot", {
       header: "Jackpot",
-      cell: (props) =>
+      cell: (props: any) =>
         props.getValue() ? (
           <div className="text-center jackpot">
             <i className="fas fa-award" style={{ fontSize: "64px" }}></i>
@@ -57,11 +57,11 @@ const CorporateLedger = () => {
     columnHelper.accessor("mined_ore", {
       header: "Ore Composition",
       width: "col-lg-6 col-xl-6",
-      cell: (props) =>
+      cell: (props: any) =>
         props.getValue() ? (
           <>
             <div className="">
-              {props.getValue()?.map((ore) => {
+              {props.getValue()?.map((ore: any) => {
                 let mined = Number((ore.volume / ore.total_volume) * 100);
                 return (
                   <OreProgress
