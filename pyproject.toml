@@ -36,8 +36,8 @@ dynamic = [
 dependencies = [
     "allianceauth>=4",
     "allianceauth-corptools>=2.5.5",
-    "allianceauth-invoices>=0.1.1",
-    "django-ninja>=1.0.1,<2",
+    "allianceauth-invoices>=0.1.7",
+    "django-ninja>=1.5,<2",
 ]
 
 urls.Homepage = "https://github.com/Solar-Helix-Independent-Transport/allianceauth-corp-tools-moons"
