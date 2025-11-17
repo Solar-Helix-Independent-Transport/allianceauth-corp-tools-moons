@@ -37,7 +37,7 @@ dependencies = [
     "allianceauth>=4",
     "allianceauth-corptools>=2.5.5",
     "allianceauth-invoices>=0.1.7",
-    "django-ninja>=1.5,<2",
+    "django-ninja>=1.1,<2",
 ]
 
 urls.Homepage = "https://github.com/Solar-Helix-Independent-Transport/allianceauth-corp-tools-moons"
