@@ -9,15 +9,16 @@ import yaml
 from celery import chain, shared_task
 from corptools import providers
 from corptools.models import (
-    CorporationAudit, EveItemType, EveLocation, EveName, MapSystem,
-    MapSystemMoon, Notification,
+    CorporationAudit, EveLocation, EveName, Notification,
 )
-from corptools.task_helpers.corp_helpers import get_corp_token
 from corptools.task_helpers.update_tasks import fetch_location_name
+from corptools.tasks.corporation.utils import get_corp_token
+from eve_sde.models import ItemType, Moon, SolarSystem
 
 from django.utils import timezone
 
 from allianceauth.services.tasks import QueueOnce
+from esi.exceptions import HTTPNotModified
 
 from . import app_settings
 from .app_settings import PUBLIC_MOON_CORPS
@@ -81,9 +82,11 @@ def process_moon_pulls():
     #    structureName: CCCCCCCCC
     #    structureTypeID: ####
 
-    notifications = Notification.objects.filter(character__character__corporation_id__in=PUBLIC_MOON_CORPS,
-                                                timestamp__gte=start_time,
-                                                notification_type__in=notification_type_filter).select_related('notification_text')
+    notifications = Notification.objects.filter(
+        character__character__corporation_id__in=PUBLIC_MOON_CORPS,
+        timestamp__gte=start_time,
+        notification_type__in=notification_type_filter
+    ).select_related('notification_text')
 
     fracks = MoonFrack.objects.filter(start_time__gte=start_time)
     notification_ids = set(fracks.values_list(
@@ -114,38 +117,41 @@ def process_moon_pulls():
                     new_frack = True
 
                 if new_frack:
-                    _structure, _c = EveLocation.objects.update_or_create(location_id=notification_data['structureID'],
-                                                                          defaults={
-                        "location_name": notification_data['structureName'],
-                        "system_id": notification_data['solarSystemID']
-                    })
-                    _moon, _c = MapSystemMoon.objects.get_or_create_from_esi(
+                    _structure, _c = EveLocation.objects.update_or_create(
+                        location_id=notification_data['structureID'],
+                        defaults={
+                            "location_name": notification_data['structureName'],
+                            "system_id": notification_data['solarSystemID']
+                        }
+                    )
+                    _moon, _c = Moon.objects.get_or_create_from_esi(
                         moon_id=moon_id)
                     _corp_audit = CorporationAudit.objects.get(
                         corporation__corporation_id=notification.character.character.corporation_id)
-                    _frack = MoonFrack.objects.create(corporation=_corp_audit,
-                                                      moon_name=_moon,
-                                                      moon_id=moon_id,
-                                                      notification=notification,
-                                                      structure=_structure,
-                                                      start_time=start_time,
-                                                      arrival_time=filetime_to_dt(
-                                                          notification_data['readyTime']),
-                                                      auto_time=filetime_to_dt(
-                                                          notification_data['autoTime'])
-                                                      )
+                    _frack = MoonFrack.objects.create(
+                        corporation=_corp_audit,
+                        moon_name=_moon,
+                        moon_id=moon_id,
+                        notification=notification,
+                        structure=_structure,
+                        start_time=start_time,
+                        arrival_time=filetime_to_dt(notification_data['readyTime']),
+                        auto_time=filetime_to_dt(notification_data['autoTime'])
+                    )
 
                     for ore, volume in notification_data['oreVolumeByType'].items():
                         if ore not in _type_list:
                             _type_list.append(ore)
-                        _ores.append(FrackOre(frack=_frack,
-                                              ore_id=ore,
-                                              total_m3=volume
-                                              ))
+                        _ores.append(
+                            FrackOre(
+                                frack=_frack,
+                                ore_id=ore,
+                                total_m3=volume
+                            )
+                        )
         except Exception:
             logger.warning("Failed to process moon", exc_info=1)
 
-    EveItemType.objects.create_bulk_from_esi(_type_list)
     FrackOre.objects.bulk_create(_ores, batch_size=500)
 
     return "fetched!"
@@ -165,11 +171,21 @@ def queue_moon_obs(corp_id, force=False):
 
     token = get_corp_token(
         corp_id, ['esi-industry.read_corporation_mining.v1'], ['Accountant', 'Director'])
-    obs = providers.esi.client.Industry.get_corporation_corporation_id_mining_observers(corporation_id=corp_id,
-                                                                                        token=token.valid_access_token()).results()
+    obs = providers.esi_openapi.client.Industry.GetCorporationCorporationIdMiningObservers(
+        corporation_id=corp_id,
+        token=token
+    ).results(
+        use_etag=False
+    )
+
     task_queue = []
     for ob in obs:
-        task_queue.append(process_moon_obs.si(ob.get('observer_id'), corp_id))
+        task_queue.append(
+            process_moon_obs.si(
+                ob.observer_id,
+                corp_id
+            )
+        )
     chain(task_queue).apply_async(priority=8)
 
 
@@ -177,13 +193,29 @@ def queue_moon_obs(corp_id, force=False):
 def process_moon_obs(self, observer_id, corporation_id):
     logger.debug("Started Mining Ob Sync for {}".format(observer_id))
 
-    token = get_corp_token(corporation_id, [
-                           'esi-industry.read_corporation_mining.v1', 'esi-universe.read_structures.v1'], ['Accountant', 'Director'])
-    obs = providers.esi.client.Industry.get_corporation_corporation_id_mining_observers_observer_id(corporation_id=corporation_id,
-                                                                                                    observer_id=observer_id,
-                                                                                                    token=token.valid_access_token()).results()
+    token = get_corp_token(
+        corporation_id,
+        [
+            'esi-industry.read_corporation_mining.v1',
+            'esi-universe.read_structures.v1'
+        ],
+        [
+            'Accountant',
+            'Director'
+        ]
+    )
+
+    try:
+        obs = providers.esi_openapi.client.Industry.GetCorporationCorporationIdMiningObserversObserverId(
+            corporation_id=corporation_id,
+            observer_id=observer_id,
+            token=token
+        ).results()
+    except HTTPNotModified:
+        return f"Corp:{corporation_id} Moon:{observer_id} Not Modified"
+
     eve_names = set(EveName.objects.all().values_list('eve_id', flat=True))
-    type_names = set(EveItemType.objects.all(
+    type_names = set(ItemType.objects.all(
     ).values_list('type_id', flat=True))
     corp = CorporationAudit.objects.get(
         corporation__corporation_id=corporation_id)
@@ -198,48 +230,65 @@ def process_moon_obs(self, observer_id, corporation_id):
 
     except EveLocation.DoesNotExist:
         _ob = fetch_location_name(
-            observer_id, "solar_system", token.character_id)
+            observer_id,
+            "solar_system",
+            token.character_id
+        )
         if _ob:
             _ob.save()
             observer = _ob
             structure_exists = True
 
     _moon = MoonFrack.objects.filter(
-        structure_id=observer_id, moon_name__isnull=False)
+        structure_id=observer_id,
+        moon_name__isnull=False
+    )
     if _moon.exists():
         moon = _moon.last().moon_name
 
-    ob_pks = set(MiningObservation.objects.filter(
-        observing_id=observer_id).values_list('ob_pk', flat=True))
+    ob_pks = set(
+        MiningObservation.objects.filter(
+            observing_id=observer_id
+        ).values_list(
+            'ob_pk',
+            flat=True
+        )
+    )
     mining_ob_updates = []
     mining_ob_creates = []
     new_eve_names = []
     new_item_types = []
     new_ob_pks = set()
     for ob in obs:
-        pk = MiningObservation.build_pk(corporation_id, observer_id, ob.get(
-            'character_id'), ob.get('last_updated'), ob.get('type_id'))
+        pk = MiningObservation.build_pk(
+            corporation_id,
+            observer_id,
+            ob.character_id,
+            ob.last_updated,
+            ob.type_id
+        )
 
-        if ob.get('character_id') not in eve_names:
-            new_eve_names.append(ob.get('character_id'))
-            eve_names.add(ob.get('character_id'))
+        if ob.character_id not in eve_names:
+            new_eve_names.append(ob.character_id)
+            eve_names.add(ob.character_id)
 
-        if ob.get('type_id') not in type_names:
-            new_item_types.append(ob.get('type_id'))
-            type_names.add(ob.get('type_id'))
+        if ob.type_id not in type_names:
+            new_item_types.append(ob.type_id)
+            type_names.add(ob.type_id)
 
-        _ob = MiningObservation(ob_pk=pk,
-                                observing_id=observer_id,
-                                observing_corporation=corp,
-                                character_name_id=ob.get('character_id'),
-                                character_id=ob.get('character_id'),
-                                last_updated=ob.get('last_updated'),
-                                quantity=ob.get('quantity'),
-                                recorded_corporation_id=ob.get(
-                                    'recorded_corporation_id'),
-                                type_id=ob.get('type_id'),
-                                type_name_id=ob.get('type_id'),
-                                moon=moon)
+        _ob = MiningObservation(
+            ob_pk=pk,
+            observing_id=observer_id,
+            observing_corporation=corp,
+            character_name_id=ob.character_id,
+            character_id=ob.character_id,
+            last_updated=ob.last_updated,
+            quantity=ob.quantity,
+            recorded_corporation_id=ob.recorded_corporation_id,
+            type_id=ob.type_id,
+            type_name_id=ob.type_id,
+            moon=moon
+        )
 
         if structure_exists:
             _ob.structure = observer
@@ -257,14 +306,20 @@ def process_moon_obs(self, observer_id, corporation_id):
                 new_ob_pks.add(pk)
 
     EveName.objects.create_bulk_from_esi(new_eve_names)
-    EveItemType.objects.create_bulk_from_esi(new_item_types)
 
     if len(mining_ob_creates) > 0:
         MiningObservation.objects.bulk_create(mining_ob_creates)
 
     if len(mining_ob_updates) > 0:
-        MiningObservation.objects.bulk_update(mining_ob_updates, [
-                                              'quantity', 'last_updated', 'structure', 'observing_corporation'])
+        MiningObservation.objects.bulk_update(
+            mining_ob_updates,
+            [
+                'quantity',
+                'last_updated',
+                'structure',
+                'observing_corporation'
+            ]
+        )
 
     msg = f"Corp:{corporation_id} Moon:{observer_id} Updated:{len(mining_ob_updates)} Created:{len(mining_ob_creates)}"
 
@@ -278,17 +333,21 @@ def process_moon_obs(self, observer_id, corporation_id):
 @shared_task
 def update_ore_prices():
     logger.info(
-        f"Pulling Ore values from Jita @`{app_settings.MOONS_ORE_RATE_BUY_SELL}`-`{app_settings.MOONS_ORE_RATE_BUCKET}`")
+        f"Pulling Ore values from Jita @`{app_settings.MOONS_ORE_RATE_BUY_SELL}`-`{app_settings.MOONS_ORE_RATE_BUCKET}`"
+    )
     mins = OreHelper.get_mineral_array()
     minstr = str(mins.pop())
+
     for i in mins:
         minstr += f",{i}"
+
     url = f"https://market.fuzzwork.co.uk/aggregates/?station=60003760&types={minstr}"
     response = requests.get(url)
     price_data = response.json()
     price_cache = {}
+
     for key, item in price_data.items():
-        name, created = EveItemType.objects.get_or_create_from_esi(key)
+        name, created = ItemType.objects.get_or_create_from_esi(key)
         name = name.name
         if name not in price_cache:
             price_cache[name] = {}
@@ -311,9 +370,8 @@ def update_ore_prices():
 def update_tax_prices():
     taxes = OreTaxRates.objects.all()
     ores = OreHelper.get_ore_array_with_value()
-
     for tax in taxes:
-        print(tax)
+        # print(tax)
         for id, o in ores.items():
             rate = getattr(tax, o['rarity'])
             _o_price = 0.0
@@ -339,33 +397,42 @@ def generate_taxes():
 
 
 def _get_system_planet_moons(system_id):
-    system = providers.esi.client.Universe.get_universe_systems_system_id(
-        system_id=system_id).result()
+    system = providers.esi_openapi.client.Universe.GetUniverseSystemsSystemId(
+        system_id=system_id
+    ).result()
     out = []
-    if system.get('planets', False):
-        for p in system.get('planets'):
-            if p.get('moons'):
-                out += p.get('moons', [])
+    if system.planets:
+        for p in system.planets:
+            if p.moons:
+                out += p.moons
     return out
 
 
 @shared_task
 def process_moons_from_esi(regions):
-
     _moons = []
     _moon_models_updates = []
     _moon_models_creates = []
 
     _processes = []
-    _current_systems = MapSystem.objects.filter(
-        constellation__region_id__in=regions).values_list('system_id', flat=True)
 
-    providers.esi.client.Status.get_status().result()
+    _current_systems = SolarSystem.objects.filter(
+        constellation__region_id__in=regions
+    ).values_list(
+        'system_id',
+        flat=True
+    )
+
+    providers.esi_openapi.client.Status.GetStatus().result()
 
     with ThreadPoolExecutor(max_workers=50) as executor:
         for system in _current_systems:
-            _processes.append(executor.submit(
-                _get_system_planet_moons, system))
+            _processes.append(
+                executor.submit(
+                    _get_system_planet_moons,
+                    system
+                )
+            )
 
     for task in as_completed(_processes):
         _moons += task.result()
@@ -377,7 +444,11 @@ def process_moons_from_esi(regions):
                 providers.esi._get_moon, moon, False))
 
     _moon_ids = set(
-        list(MapSystemMoon.objects.all().values_list('moon_id', flat=True)))
+        list(
+            Moon.objects.all().values_list('moon_id', flat=True)
+        )
+    )
+
     for task in as_completed(_processes):
         _moon_ob = task.result()
         if _moon_ob.moon_id in _moon_ids:
@@ -386,12 +457,15 @@ def process_moons_from_esi(regions):
             _moon_models_creates.append(_moon_ob)
 
     if len(_moon_models_creates) > 0:
-        MapSystemMoon.objects.bulk_create(
+        Moon.objects.bulk_create(
             _moon_models_creates, batch_size=1000)
 
     if len(_moon_models_updates) > 0:
-        MapSystemMoon.objects.bulk_update(
-            _moon_models_updates, ['name', 'x', 'y', 'z'], batch_size=1000)
+        Moon.objects.bulk_update(
+            _moon_models_updates,
+            ['name', 'x', 'y', 'z'],
+            batch_size=1000
+        )
 
     # sample_mem()
     output = "Moons: (Updated:{}, Created:{}) " \

@@ -1,9 +1,9 @@
 from datetime import datetime, timedelta
 
 from corptools.models import (
-    CorporationAudit, EveItemType, EveLocation, EveName, MapConstellation,
-    MapRegion, MapSystem, MapSystemMoon, Notification,
+    CorporationAudit, EveLocation, EveName, Notification,
 )
+from eve_sde.models import Constellation, ItemType, Moon, Region, SolarSystem
 from invoices.models import Invoice
 
 from django.contrib.auth.models import User
@@ -32,7 +32,7 @@ import logging
 
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import Model
-from django.forms import ValidationError, model_to_dict
+from django.forms import model_to_dict
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ class MoonFrack(models.Model):
         CorporationAudit, on_delete=models.CASCADE, related_name='moon')
 
     moon_name = models.ForeignKey(
-        MapSystemMoon, on_delete=models.SET_NULL, null=True, default=None)
+        Moon, on_delete=models.SET_NULL, null=True, default=None)
     moon_id = models.IntegerField()
 
     notification = models.ForeignKey(
@@ -67,17 +67,19 @@ class MoonFrack(models.Model):
         return "{} - {}".format(self.moon_name.name, self.arrival_time)
 
     class Meta:
-        permissions = (('view_available', 'Can View Configured Public Moons'),
-                       ('view_corp', 'Can View Own Corps Moons'),
-                       ('view_alliance', 'Can View Own Alliances Moons'),
-                       ('view_all', 'Can View All Moons'),
-                       ('view_limited_future', 'Can View a configured limited subset of future moons'))
+        permissions = (
+            ('view_available', 'Can View Configured Public Moons'),
+            ('view_corp', 'Can View Own Corps Moons'),
+            ('view_alliance', 'Can View Own Alliances Moons'),
+            ('view_all', 'Can View All Moons'),
+            ('view_limited_future', 'Can View a configured limited subset of future moons')
+        )
 
 
 class FrackOre(models.Model):
     frack = models.ForeignKey(
         MoonFrack, on_delete=models.CASCADE, related_name='frack')
-    ore = models.ForeignKey(EveItemType, on_delete=models.CASCADE)
+    ore = models.ForeignKey(ItemType, on_delete=models.CASCADE)
     total_m3 = models.DecimalField(max_digits=20, decimal_places=2)
 
 
@@ -92,7 +94,7 @@ class MiningObservation(models.Model):
     structure = models.ForeignKey(
         EveLocation, on_delete=models.CASCADE, null=True, default=None, blank=True)
     moon = models.ForeignKey(
-        MapSystemMoon, on_delete=models.SET_NULL, null=True, default=None, blank=True)
+        Moon, on_delete=models.SET_NULL, null=True, default=None, blank=True)
 
     character_name = models.ForeignKey(
         EveName, on_delete=models.SET_NULL, null=True, default=None)
@@ -103,7 +105,7 @@ class MiningObservation(models.Model):
     recorded_corporation_id = models.IntegerField()
 
     type_name = models.ForeignKey(
-        EveItemType, on_delete=models.SET_NULL, null=True, default=None)
+        ItemType, on_delete=models.SET_NULL, null=True, default=None)
     type_id = models.IntegerField()
 
     @classmethod
@@ -205,10 +207,17 @@ class MiningObservation(models.Model):
 
             if tax.use_variable_tax:
                 tax_price = OreTax.objects.filter(
-                    item_id=OuterRef('type_id'), tax=tax.tax_rate)
-                observed = observed.annotate(tax_value=ExpressionWrapper(
-                    Subquery(tax_price.values('price')) * F('quantity'),
-                    output_field=FloatField()))
+                    item_id=OuterRef('type_id'),
+                    tax=tax.tax_rate
+                )
+                observed = observed.annotate(
+                    tax_value=ExpressionWrapper(
+                        Subquery(
+                            tax_price.values('price')
+                        ) * F('quantity'),
+                        output_field=FloatField()
+                    )
+                )
 
             observed = observed.filter(
                 last_updated__gte=start).filter(last_updated__lt=end)
@@ -301,7 +310,7 @@ class OreTaxRates(models.Model):
 # Market History ( GMetrics )
 class OrePrice(models.Model):
     item = models.ForeignKey(
-        EveItemType, on_delete=models.DO_NOTHING, related_name='ore_price')
+        ItemType, on_delete=models.DO_NOTHING, related_name='ore_price')
     price = models.DecimalField(max_digits=20, decimal_places=2)
     goo_only = models.BooleanField(default=False)
     last_update = models.DateTimeField(auto_now=True)
@@ -310,7 +319,7 @@ class OrePrice(models.Model):
 # tax rates History
 class OreTax(models.Model):
     item = models.ForeignKey(
-        EveItemType, on_delete=models.DO_NOTHING, related_name='ore_tax')
+        ItemType, on_delete=models.DO_NOTHING, related_name='ore_tax')
     price = models.DecimalField(max_digits=20, decimal_places=2)
     last_update = models.DateTimeField(auto_now=True)
     tax = models.ForeignKey(
@@ -326,13 +335,13 @@ class MiningTax(models.Model):
     flat_tax_rate = models.DecimalField(
         max_digits=5, decimal_places=2, default=0.0)  # best
     region = models.ForeignKey(
-        MapRegion, on_delete=models.CASCADE, related_name='tax_region', null=True, default=None, blank=True)
+        Region, on_delete=models.CASCADE, related_name='tax_region', null=True, default=None, blank=True)
     constellation = models.ForeignKey(
-        MapConstellation, on_delete=models.CASCADE, related_name='tax_constellation', null=True, default=None, blank=True)
+        Constellation, on_delete=models.CASCADE, related_name='tax_constellation', null=True, default=None, blank=True)
     system = models.ForeignKey(
-        MapSystem, on_delete=models.CASCADE, related_name='tax_system', null=True, default=None, blank=True)
+        SolarSystem, on_delete=models.CASCADE, related_name='tax_system', null=True, default=None, blank=True)
     moon = models.ForeignKey(
-        MapSystemMoon, on_delete=models.CASCADE, related_name='tax_moon', null=True, default=None, blank=True)
+        Moon, on_delete=models.CASCADE, related_name='tax_moon', null=True, default=None, blank=True)
     rank = models.IntegerField(default=0, null=True, blank=True)
 
     def __str__(self):
@@ -537,7 +546,7 @@ class MoonRental(models.Model):
     contact = models.ForeignKey(EveCharacter, on_delete=models.CASCADE)
     corporation = models.ForeignKey(
         EveCorporationInfo, on_delete=models.CASCADE)
-    moon = models.ForeignKey(MapSystemMoon, on_delete=models.CASCADE)
+    moon = models.ForeignKey(Moon, on_delete=models.CASCADE)
     price = models.BigIntegerField(default=100000000)
     start_date = models.DateTimeField()
     end_date = models.DateTimeField(default=None, null=True, blank=True)

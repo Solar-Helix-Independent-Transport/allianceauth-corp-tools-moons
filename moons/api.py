@@ -2,7 +2,8 @@ import logging
 from datetime import timedelta
 from typing import List
 
-from corptools.models import CharacterAudit, CorporationAudit, MapSystemMoon
+from corptools.models import CharacterAudit, CorporationAudit
+from eve_sde.models import Moon
 # from invoices.models import Invoice
 from ninja import Form, NinjaAPI
 from ninja.security import django_auth
@@ -107,9 +108,9 @@ def get_moons_and_extractions(request, past_days):
         arrival_time__lt=timezone.now()
     ).select_related(
         "moon_name",
-        "moon_name__system",
-        "moon_name__system__constellation",
-        "moon_name__system__constellation__region",
+        "moon_name__solar_system",
+        "moon_name__solar_system__constellation",
+        "moon_name__solar_system__constellation__region",
     ).prefetch_related(
         'frack',
         "frack__ore",
@@ -128,9 +129,9 @@ def get_moons_and_extractions(request, past_days):
         output[e.id] = {
             "CorporationName": e.corporation.corporation.corporation_name,
             "ObserverName": e.structure.location_name,
-            "system": e.moon_name.system.name,
-            "constellation": e.moon_name.system.constellation.name,
-            "region": e.moon_name.system.constellation.region.name,
+            "system": e.moon_name.solar_system.name,
+            "constellation": e.moon_name.solar_system.constellation.name,
+            "region": e.moon_name.solar_system.constellation.region.name,
             "moon": {
                 "name": e.moon_name.name,
                 "id": e.moon_id
@@ -158,15 +159,22 @@ def get_moons_and_extractions(request, past_days):
                 "value": 0
             }
 
-    observations = models.MiningObservation.objects \
-        .filter(last_updated__gte=time_from) \
-        .filter(observing_id__in=current_fracks.values_list("structure_id", flat=True)) \
-        .values('structure', 'type_id', "last_updated") \
-        .annotate(mined=(Sum('quantity') * F('type_name__volume'))) \
-        .annotate(ore_value=ExpressionWrapper(
+    observations = models.MiningObservation.objects.filter(
+        last_updated__gte=time_from
+    ).filter(
+        observing_id__in=current_fracks.values_list("structure_id", flat=True)
+    ).values(
+        'structure',
+        'type_id',
+        "last_updated"
+    ).annotate(
+        mined=(Sum('quantity') * F('type_name__volume'))
+    ).annotate(
+        ore_value=ExpressionWrapper(
             Subquery(type_price.values('price')) * Sum('quantity'),
-            output_field=FloatField())) \
-        .annotate(name=F('type_name__name'))
+            output_field=FloatField()
+        )
+    ).annotate(name=F('type_name__name'))
 
     for o in observations:
         frack = what_frack_id(output, o)
@@ -211,15 +219,17 @@ def get_future_extractions(request):
         )
 
     current_fracks = events.filter(
-        arrival_time__gte=start_date).select_related(
+        arrival_time__gte=start_date
+    ).select_related(
             "moon_name",
-            "moon_name__system",
-            "moon_name__system__constellation",
-            "moon_name__system__constellation__region",
-    ).prefetch_related('frack',
-                       "frack__ore",
-                       "frack__ore__group"
-                       )
+            "moon_name__solar_system",
+            "moon_name__solar_system__constellation",
+            "moon_name__solar_system__constellation__region",
+    ).prefetch_related(
+        'frack',
+        "frack__ore",
+        "frack__ore__group"
+    )
 
     type_prices = OreHelper.get_ore_array_with_value()
 
@@ -273,7 +283,7 @@ def get_future_extractions(request):
     tags=["Search"]
 )
 def get_moon_search(request, search_text: str, limit: int = 10):
-    return MapSystemMoon.objects.filter(name__icontains=search_text).values("name", id=F("moon_id"))[:limit]
+    return Moon.objects.filter(name__icontains=search_text).values("name", id=F("moon_id"))[:limit]
 
 
 @api.get(
@@ -309,12 +319,12 @@ def get_moon_rentals(request):
     for r in rentals:
         out.append(
             {"moon": {
-                "id": r.moon.moon_id,
+                "id": r.moon.id,
                 "name": r.moon.name
             },
                 "system": {
-                "id": r.moon.system.system_id,
-                "name": r.moon.system.name
+                "id": r.moon.solar_system.id,
+                "name": r.moon.solar_system.name
             },
                 "contact": r.contact,
                 "corporation": r.corporation,
@@ -386,12 +396,12 @@ def post_moon_rental_new(request, rental: schema.NewMoonRental = Form(...)):
         start_date=timezone.now()
     )
     return 200, {"moon": {
-        "id": new_rental.moon.moon_id,
+        "id": new_rental.moon.id,
         "name": new_rental.moon.name
     },
         "system": {
-        "id": new_rental.moon.system.system_id,
-        "name": new_rental.moon.system.name
+        "id": new_rental.moon.solar_system.id,
+        "name": new_rental.moon.solar_system.name
     },
         "contact": new_rental.contact,
         "corporation": new_rental.corporation,
@@ -422,9 +432,11 @@ def get_corp_stats(request):
             "frack": "Never"
         }
 
-        chars = CharacterAudit.objects.filter(character__corporation_id=c.corporation.corporation_id,
-                                              characterroles__accountant=True,
-                                              active=True)
+        chars = CharacterAudit.objects.filter(
+            character__corporation_id=c.corporation.corporation_id,
+            characterroles__accountant=True,
+            active=True
+        )
 
         _c["char_tokens"] = chars.count()
         dt = chars.aggregate(Max("last_update_notif"))

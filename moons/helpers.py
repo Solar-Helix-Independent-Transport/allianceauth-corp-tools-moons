@@ -1,11 +1,8 @@
 from typing import Dict
 
-from corptools.models import EveItemType, InvTypeMaterials, OreTaxRates
+from eve_sde.models import ItemTypeMaterials
 
-from django.db.models import OuterRef, Subquery
-from django.utils import timezone
-
-from .models import MiningObservation, MiningTax, OrePrice, OreTax
+from .models import OrePrice, OreTax
 
 
 class OreHelper:
@@ -23,66 +20,66 @@ class OreHelper:
     def get_mineral_array():
         return list(
             set(
-                InvTypeMaterials.objects.filter(
-                    eve_type__group__category_id=OreHelper.asteroids
+                ItemTypeMaterials.objects.filter(
+                    item_type__group__category_id=OreHelper.asteroids
                 ).values_list(
-                    'met_type_id',
+                    'material_item_type_id',
                     flat=True
                 )
             )
         )
 
     def get_ore_array():
-        inv_types = InvTypeMaterials.objects.filter(
-            eve_type__group__category_id=OreHelper.asteroids
+        inv_types = ItemTypeMaterials.objects.filter(
+            item_type__group__category_id=OreHelper.asteroids
         ).select_related(
-            'eve_type',
-            'eve_type__group',
-            'met_type'
+            'item_type',
+            'item_type__group',
+            'material_item_type'
         )
 
         ore_infos = {}
         for comp in inv_types:
-            if comp.eve_type.pk not in ore_infos:
+            if comp.item_type.pk not in ore_infos:
                 rarity = OreHelper.rank_ids[
-                    comp.eve_type.group_id
-                ] if comp.eve_type.group_id in OreHelper.rank_ids else "ore_rate"
-                ore_infos[comp.eve_type.pk] = {
+                    comp.item_type.group_id
+                ] if comp.item_type.group_id in OreHelper.rank_ids else "ore_rate"
+                ore_infos[comp.item_type.pk] = {
                     "minerals": {},
-                    "volume": comp.eve_type.packaged_volume,
-                    "model": comp.eve_type,
+                    "volume": comp.item_type.packaged_volume,
+                    "model": comp.item_type,
                     "rarity": rarity,
-                    "portion": comp.eve_type.portion_size
+                    "portion": comp.item_type.portion_size
                 }
-            ore_infos[comp.eve_type.pk]['minerals'][comp.met_type.name] = comp.qty
+            ore_infos[comp.item_type.pk]['minerals'][comp.material_item_type.name] = comp.quantity
 
         return ore_infos
 
     def get_detailed_ore_array():
-        inv_types = InvTypeMaterials.objects.filter(
-            eve_type__group__category_id=OreHelper.asteroids
+        inv_types = ItemTypeMaterials.objects.filter(
+            item_type__group__category_id=OreHelper.asteroids
         ).select_related(
-            'eve_type',
-            'eve_type__group',
-            'met_type'
+            'item_type',
+            'item_type__group',
+            'material_item_type'
         )
 
         ore_infos = {}
         for comp in inv_types:
-            if comp.eve_type.pk not in ore_infos:
+            if comp.item_type.pk not in ore_infos:
                 rarity = OreHelper.rank_ids[
-                    comp.eve_type.group_id
-                ] if comp.eve_type.group_id in OreHelper.rank_ids else "ore_rate"
-                ore_infos[comp.eve_type.pk] = {
+                    comp.item_type.group_id
+                ] if comp.item_type.group_id in OreHelper.rank_ids else "ore_rate"
+                ore_infos[comp.item_type.pk] = {
                     "minerals": {},
-                    "volume": comp.eve_type.packaged_volume,
-                    "model": comp.eve_type,
+                    "volume": comp.item_type.packaged_volume,
+                    "model": comp.item_type,
                     "rarity": rarity,
-                    "portion": comp.eve_type.portion_size
+                    "portion": comp.item_type.portion_size
                 }
-            ore_infos[comp.eve_type.pk]['minerals'][comp.met_type.name] = {
-                "grp": comp.met_type.group_id,
-                "qty": comp.qty
+            ore_infos[comp.item_type.pk]['minerals'][comp.material_item_type.name] = {
+                "grp": comp.material_item_type.group_id,
+                "qty": comp.quantity
             }
 
         return ore_infos
@@ -106,16 +103,16 @@ class OreHelper:
 
     def set_prices(price_cache: Dict, price_source="the_forge", goo_only=False):
         ores = OreHelper.get_detailed_ore_array()
-        print("Goo", goo_only)
         for ore, minerals in ores.items():
             price = 0
             for mineral, detail in minerals["minerals"].items():
                 if detail["grp"] == 18 and goo_only:
                     continue
                 else:
-                    price = price + (detail["qty"] *
-                                     price_cache[mineral][price_source])
-
+                    price = price + (
+                        detail["qty"] *
+                        price_cache[mineral][price_source]
+                    )
             OrePrice.objects.update_or_create(
                 item=minerals['model'],
                 goo_only=goo_only,
