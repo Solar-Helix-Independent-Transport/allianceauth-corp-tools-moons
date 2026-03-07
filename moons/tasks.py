@@ -124,8 +124,7 @@ def process_moon_pulls():
                             "system_id": notification_data['solarSystemID']
                         }
                     )
-                    _moon, _c = Moon.objects.get_or_create_from_esi(
-                        moon_id=moon_id)
+                    _moon = Moon.objects.get(id=moon_id)
                     _corp_audit = CorporationAudit.objects.get(
                         corporation__corporation_id=notification.character.character.corporation_id)
                     _frack = MoonFrack.objects.create(
@@ -170,23 +169,29 @@ def queue_moon_obs(corp_id, force=False):
     logger.debug("Started Mining Ob Sync for {}".format(corp_id))
 
     token = get_corp_token(
-        corp_id, ['esi-industry.read_corporation_mining.v1'], ['Accountant', 'Director'])
-    obs = providers.esi_openapi.client.Industry.GetCorporationCorporationIdMiningObservers(
-        corporation_id=corp_id,
-        token=token
-    ).results(
-        use_etag=False
+        corp_id,
+        ['esi-industry.read_corporation_mining.v1'],
+        ['Accountant', 'Director']
     )
-
-    task_queue = []
-    for ob in obs:
-        task_queue.append(
-            process_moon_obs.si(
-                ob.observer_id,
-                corp_id
-            )
+    if token:
+        obs = providers.esi_openapi.client.Industry.GetCorporationCorporationIdMiningObservers(
+            corporation_id=corp_id,
+            token=token
+        ).results(
+            use_etag=False
         )
-    chain(task_queue).apply_async(priority=8)
+
+        task_queue = []
+        for ob in obs:
+            task_queue.append(
+                process_moon_obs.si(
+                    ob.observer_id,
+                    corp_id
+                )
+            )
+        chain(task_queue).apply_async(priority=8)
+    else:
+        return "NO TOKENS"
 
 
 @shared_task(bind=True, base=QueueOnce)
@@ -215,8 +220,7 @@ def process_moon_obs(self, observer_id, corporation_id):
         return f"Corp:{corporation_id} Moon:{observer_id} Not Modified"
 
     eve_names = set(EveName.objects.all().values_list('eve_id', flat=True))
-    type_names = set(ItemType.objects.all(
-    ).values_list('type_id', flat=True))
+    type_names = set(ItemType.objects.all().values_list('id', flat=True))
     corp = CorporationAudit.objects.get(
         corporation__corporation_id=corporation_id)
 
@@ -347,7 +351,7 @@ def update_ore_prices():
     price_cache = {}
 
     for key, item in price_data.items():
-        name, created = ItemType.objects.get_or_create_from_esi(key)
+        name = ItemType.objects.get(key)
         name = name.name
         if name not in price_cache:
             price_cache[name] = {}

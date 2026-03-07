@@ -46,7 +46,7 @@ class OreHelper:
                 ] if comp.item_type.group_id in OreHelper.rank_ids else "ore_rate"
                 ore_infos[comp.item_type.pk] = {
                     "minerals": {},
-                    "volume": comp.item_type.packaged_volume,
+                    "volume": comp.item_type.packaged_volume if comp.item_type.packaged_volume else comp.item_type.volume,
                     "model": comp.item_type,
                     "rarity": rarity,
                     "portion": comp.item_type.portion_size

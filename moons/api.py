@@ -239,9 +239,9 @@ def get_future_extractions(request):
     for e in current_fracks:
         output[e.structure_id] = {
             "ObserverName": e.structure.location_name,
-            "system": e.moon_name.system.name,
-            "constellation": e.moon_name.system.constellation.name,
-            "region": e.moon_name.system.constellation.region.name,
+            "system": e.moon_name.solar_system.name,
+            "constellation": e.moon_name.solar_system.constellation.name,
+            "region": e.moon_name.solar_system.constellation.region.name,
             "moon": {
                 "name": e.moon_name.name,
                 "id": e.moon_id
@@ -252,8 +252,15 @@ def get_future_extractions(request):
             "value": 0
         }
         for o in e.frack.all():
-            value = int(float(
-                o.total_m3) / float(type_prices[o.ore_id]["volume"]) * float(type_prices[o.ore_id]["value"]))
+            value = int(
+                float(
+                    o.total_m3
+                ) / float(
+                    type_prices[o.ore_id]["volume"]
+                ) * float(
+                    type_prices[o.ore_id]["value"]
+                )
+            )
             if e.structure_id not in str_ob_dict:
                 str_ob_dict[e.structure_id] = {}
             output[e.structure_id]['total_m3'] += o.total_m3
