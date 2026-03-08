@@ -4,6 +4,7 @@ import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
 
+import pytz
 import requests
 import yaml
 from celery import chain, shared_task
@@ -286,7 +287,8 @@ def process_moon_obs(self, observer_id, corporation_id):
             observing_corporation=corp,
             character_name_id=ob.character_id,
             character_id=ob.character_id,
-            last_updated=ob.last_updated,
+            ## TODO Maybe change this to a date field
+            last_updated=datetime.combine(date=ob.last_updated, time=datetime.min.time(), tzinfo=pytz.UTC),
             quantity=ob.quantity,
             recorded_corporation_id=ob.recorded_corporation_id,
             type_id=ob.type_id,
