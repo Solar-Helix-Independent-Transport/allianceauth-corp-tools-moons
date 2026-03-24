@@ -299,7 +299,10 @@ class OreTaxRates(models.Model):
     exceptional_rate = models.DecimalField(
         max_digits=5, decimal_places=2)  # best
     ignore_ores_in_refine = models.BooleanField(default=False)
-
+    tax_on_base_ore_value = models.BooleanField(
+        default=False,
+        help_text="Calculate Tax on the base ore value for all variants of an ore."
+    )
     def __str__(self):
         try:
             return self.tag

@@ -31,6 +31,17 @@ class TestInvoicesAccessPerms(TestCase):
             rare_rate=50,
             exceptional_rate=60,
         )
+        OreTaxRates.objects.create(
+            tag="test_base_only",
+            refine_rate=70,
+            ore_rate=10,
+            ubiquitous_rate=20,
+            common_rate=30,
+            uncommon_rate=40,
+            rare_rate=50,
+            exceptional_rate=60,
+            tax_on_base_ore_value=True
+        )
         price_cache = {
             "Silicates": {"the_forge": 100},
             "Titanium": {"the_forge": 200},
@@ -49,7 +60,7 @@ class TestInvoicesAccessPerms(TestCase):
 
     def test_ore_builder(self):
         ores = OreHelper.get_ore_array()
-        self.assertEqual(len(ores), 5)
+        self.assertEqual(len(ores), 8)
 
         self.assertEqual(len(ores[46319]['minerals']), 4)
         self.assertEqual(sum(list(ores[46319]['minerals'].values())), 144)
@@ -69,7 +80,7 @@ class TestInvoicesAccessPerms(TestCase):
     def test_full_prices(self):
 
         ores = OreHelper.get_ore_array_with_value_and_taxes()
-        self.assertEqual(len(ores), 5)
+        self.assertEqual(len(ores), 8)
         self.assertEqual(float(ores[46319]['value']), 356)
         self.assertEqual(float(ores[46309]['value']), 1450)
         self.assertEqual(float(ores[46301]['value']), 980)
@@ -87,6 +98,15 @@ class TestInvoicesAccessPerms(TestCase):
         self.assertEqual(float(ores[46301]['tax']['test_cascade']), 274.40)
         self.assertEqual(float(ores[46295]['tax']['test_cascade']), 218.40)
         self.assertEqual(float(ores[46285]['tax']['test_cascade']), 25291)
+
+        self.assertEqual(
+            float(ores[46319]['tax']['test_base_only']),
+            float(ores[45513]['tax']['test_base_only'])
+        )
+        self.assertEqual(
+            float(ores[46318]['tax']['test_base_only']),
+            float(ores[45513]['tax']['test_base_only'])
+        )
 
     def test_minerals(self):
         ores = OreHelper.get_mineral_array()

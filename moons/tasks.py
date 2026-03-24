@@ -377,16 +377,27 @@ def update_tax_prices():
     taxes = OreTaxRates.objects.all()
     ores = OreHelper.get_ore_array_with_value()
     for tax in taxes:
-        # print(tax)
         for id, o in ores.items():
             rate = getattr(tax, o['rarity'])
+
+            _ore = o
+
+            if tax.tax_on_base_ore_value:
+                _ore = ores.get(o["base_ore_id"], o)
+
             _o_price = 0.0
+
             if tax.ignore_ores_in_refine:
-                _o_price = float(o['value_goo'])
+                _o_price = float(_ore.get('value_goo', 0))
             else:
-                _o_price = float(o['value'])
-            price = _o_price * (float(rate)/100) * \
-                (float(tax.refine_rate)/100)
+                _o_price = float(_ore.get('value', 0))
+
+            price = _o_price * (
+                float(rate)/100
+            ) * (
+                float(tax.refine_rate)/100
+            )
+
             OreTax.objects.update_or_create(
                 item=o['model'],
                 tax=tax,

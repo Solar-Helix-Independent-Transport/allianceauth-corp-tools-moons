@@ -467,6 +467,55 @@
   },
   {
     "model": "eve_sde.itemtype",
+    "pk": 45513,
+    "fields": {
+      "name": "Ytterbite",
+      "name_en": "Ytterbite",
+      "name_de": "Ytterbite",
+      "name_es": "Gadolinita",
+      "name_it_it": null,
+      "name_ja": "\u30a4\u30c3\u30bf\u30fc\u30d0\u30a4\u30c8",
+      "name_ko_kr": "\uc774\ud14c\ub974\ubc14\uc774\ud2b8",
+      "name_fr_fr": "Ytterbite",
+      "name_nl_nl": null,
+      "name_pl_pl": null,
+      "name_ru": "Ytterbite",
+      "name_uk": null,
+      "name_zh_hans": "\u7845\u94cd\u9487\u77ff",
+      "base_price": 10000.0,
+      "capacity": null,
+      "description": "An exceptional ore commercially mined from moons, Ytterbite is highly valuable as it yields good quantities of <a href=showinfo:16653>Thulium</a>, a vital element of many advanced materials. Ytterbite ores will also yield <a href=showinfo:16643>Cadmium</a>, <a href=showinfo:16638>Titanium</a> and <a href=showinfo:16636>Silicates</a>.",
+      "description_en": "An exceptional ore commercially mined from moons, Ytterbite is highly valuable as it yields good quantities of <a href=showinfo:16653>Thulium</a>, a vital element of many advanced materials. Ytterbite ores will also yield <a href=showinfo:16643>Cadmium</a>, <a href=showinfo:16638>Titanium</a> and <a href=showinfo:16636>Silicates</a>.",
+      "description_de": "Gadolinit ist ein besonderes Erz, das auf Monden kommerziell abgebaut wird. Es ist \u00e4u\u00dferst wertvoll, da es reich an <a href=showinfo:16653>Thulium</a> ist, welches f\u00fcr die Herstellung vieler fortschrittlicher Materialien gebraucht wird. Gadolinit-Erze enthalten au\u00dferdem <a href=showinfo:16643>Cadmium</a>, <a href=showinfo:16638>Titan</a> und <a href=showinfo:16636>Silikate</a>.",
+      "description_es": "La gadolinita, una excepcional mena lunar explotada comercialmente, es muy valiosa porque produce grandes cantidades de <a href=showinfo:16653>tulio</a>, un elemento vital en muchos materiales avanzados. De las menas de gadolinita tambi\u00e9n se obtiene <a href=showinfo:16643>cadmio</a>, <a href=showinfo:16638>titanio</a> y <a href=showinfo:16636>silicatos</a>.",
+      "description_it_it": null,
+      "description_ja": "\u30a4\u30c3\u30bf\u30fc\u30d0\u30a4\u30c8\u306f\u885b\u661f\u304b\u3089\u5546\u696d\u7684\u306b\u63a1\u6398\u3055\u308c\u308b\u5e0c\u5c11\u306a\u9271\u77f3\u3067\u3042\u308b\u3002\u591a\u304f\u306e\u5148\u7aef\u6750\u6599\u306e\u91cd\u8981\u306a\u8981\u7d20\u3067\u3042\u308b<a href=showinfo:16653>\u30c4\u30ea\u30a6\u30e0</a>\u3092\u5927\u91cf\u306b\u7523\u51fa\u3059\u308b\u305f\u3081\u975e\u5e38\u306b\u6709\u7528\u3060\u3002\u307e\u305f\u30a4\u30c3\u30bf\u30fc\u30d0\u30a4\u30c8\u9271\u77f3\u304b\u3089\u306f<a href=showinfo:16643>\u30ab\u30c9\u30df\u30a6\u30e0</a>\u304a\u3088\u3073<a href=showinfo:16638>\u30c1\u30bf\u30f3</a>\u3001<a href=showinfo:16636>\u30b1\u30a4\u9178\u5869</a>\u3082\u56de\u53ce\u3067\u304d\u308b\u3002",
+      "description_ko_kr": "\uc774\ud14c\ub974\ubc14\uc774\ud2b8\ub294 \uc704\uc131\uc5d0\uc11c \ucc44\uad74\ub418\ub294 \ud2b9\ubcc4\ud55c \uad11\uc11d\uc73c\ub85c, \uc0c1\uae09 \uc7ac\ub8cc\ub97c \uc81c\uc791\ud558\ub294\ub370 \uc0ac\uc6a9\ub418\ub294 \ubb3c\uc9c8\uc778 <a href=showinfo:16653>\ud234\ub968</a>\uc744 \ub2e4\ub7c9 \ud568\uc720\ud558\uace0 \uc788\uc2b5\ub2c8\ub2e4. \uc815\uc81c \uacfc\uc815\uc5d0\uc11c <a href=showinfo:16643>\uce74\ub4dc\ubbb4</a>, <a href=showinfo:16638>\ud2f0\ud0c0\ub284</a>, \uadf8\ub9ac\uace0 <a href=showinfo:16636>\uaddc\uc0b0\uc5fc</a> \ub610\ud55c \ud568\uaed8 \uc0b0\ucd9c\ub429\ub2c8\ub2e4.",
+      "description_fr_fr": "L'ytterbite est un minerai d'une grande raret\u00e9, extrait sur les lunes \u00e0 des fins commerciales, et dont l'utilit\u00e9 r\u00e9side dans sa richesse en <a href=showinfo:16653>thulium</a>, un composant crucial \u00e0 la fabrication de mat\u00e9riaux avanc\u00e9s. Le minerai d'ytterbite g\u00e9n\u00e8re aussi du <a href=showinfo:16643>cadmium</a>, du <a href=showinfo:16638>titanium</a> et des <a href=showinfo:16636>silicates</a>.",
+      "description_nl_nl": null,
+      "description_pl_pl": null,
+      "description_ru": "\u0418\u0442\u0442\u0435\u0440\u0431\u0438\u0442\u00a0\u2014 \u0438\u0441\u043a\u043b\u044e\u0447\u0438\u0442\u0435\u043b\u044c\u043d\u044b\u0439 \u0432\u0438\u0434 \u0440\u0443\u0434\u044b, \u0434\u043e\u0431\u044b\u0432\u0430\u0435\u043c\u044b\u0439 \u0432 \u043f\u0440\u043e\u043c\u044b\u0448\u043b\u0435\u043d\u043d\u044b\u0445 \u043a\u043e\u043b\u0438\u0447\u0435\u0441\u0442\u0432\u0430\u0445 \u043d\u0430 \u0441\u043f\u0443\u0442\u043d\u0438\u043a\u0430\u0445. \u0415\u0433\u043e \u0446\u0435\u043d\u043d\u043e\u0441\u0442\u044c \u0437\u0430\u043a\u043b\u044e\u0447\u0430\u0435\u0442\u0441\u044f \u0432 \u0432\u044b\u0441\u043e\u043a\u043e\u043c \u0441\u043e\u0434\u0435\u0440\u0436\u0430\u043d\u0438\u0438 <a href=showinfo:16653>\u0442\u0443\u043b\u0438\u044f</a>, \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u0443\u0435\u043c\u043e\u0433\u043e \u0432 \u043a\u0430\u0447\u0435\u0441\u0442\u0432\u0435 \u0446\u0435\u043d\u0442\u0440\u0430\u043b\u044c\u043d\u043e\u0433\u043e \u044d\u043b\u0435\u043c\u0435\u043d\u0442\u0430 \u0434\u043b\u044f \u043c\u043d\u043e\u0433\u0438\u0445 \u0441\u043b\u043e\u0436\u043d\u044b\u0445 \u043c\u0430\u0442\u0435\u0440\u0438\u0430\u043b\u043e\u0432. \u0418\u0442\u0442\u0435\u0440\u0431\u0438\u0442\u043e\u0432\u044b\u0435 \u0440\u0443\u0434\u044b \u0442\u0430\u043a\u0436\u0435 \u0441\u043e\u0434\u0435\u0440\u0436\u0430\u0442 <a href=showinfo:16643>\u043a\u0430\u0434\u043c\u0438\u0439</a>, <a href=showinfo:16638>\u0442\u0438\u0442\u0430\u043d</a> \u0438 <a href=showinfo:16636>\u0441\u0438\u043b\u0438\u043a\u0430\u0442\u044b</a>.",
+      "description_uk": null,
+      "description_zh_hans": "\u7845\u94cd\u9487\u77ff\u662f\u536b\u661f\u4e2d\u5f00\u91c7\u51fa\u7684\u4e00\u79cd\u7279\u6b8a\u77ff\u77f3\uff0c\u4ef7\u503c\u6781\u9ad8\uff0c\u80fd\u591f\u4ea7\u51fa\u4e30\u5bcc\u7684<a href=showinfo:16653>\u94e5</a>\uff0c\u53ef\u4f5c\u4e3a\u8bb8\u591a\u9ad8\u7ea7\u77ff\u7269\u7684\u91cd\u8981\u5143\u7d20\u3002\u7845\u94cd\u9487\u77ff\u77f3\u8fd8\u4f1a\u4ea7\u51fa<a href=showinfo:16643>\u9549</a>\u3001<a href=showinfo:16638>\u949b\u5408\u91d1</a>\u548c<a href=showinfo:16636>\u7845\u9178\u76d0</a>\u3002",
+      "faction_id_raw": null,
+      "graphic_id": null,
+      "group": 1923,
+      "icon_id": 21796,
+      "market_group": 2401,
+      "mass": 4000.0,
+      "meta_group_id_raw": null,
+      "portion_size": 100,
+      "published": true,
+      "race_id": null,
+      "radius": null,
+      "sound_id": null,
+      "variation_parent_type_id": null,
+      "volume": 10.0,
+      "packaged_volume": null
+    }
+  },
+  {
+    "model": "eve_sde.itemtype",
     "pk": 46285,
     "fields": {
       "name": "Glistening Bitumens",
@@ -502,6 +551,55 @@
       "group": 1884,
       "icon_id": 21797,
       "market_group": 2396,
+      "mass": 4000.0,
+      "meta_group_id_raw": null,
+      "portion_size": 100,
+      "published": true,
+      "race_id": null,
+      "radius": null,
+      "sound_id": null,
+      "variation_parent_type_id": null,
+      "volume": 10.0,
+      "packaged_volume": null
+    }
+  },
+  {
+    "model": "eve_sde.itemtype",
+    "pk": 46290,
+    "fields": {
+      "name": "Copious Euxenite",
+      "name_en": "Copious Euxenite",
+      "name_de": "Copious Euxenite",
+      "name_es": "Euxenita copiosa",
+      "name_it_it": null,
+      "name_ja": "\u9ad8\u5bc6\u5ea6\u30e6\u30fc\u30af\u30bb\u30ca\u30a4\u30c8",
+      "name_ko_kr": "\uc6b0\uc6d4\ud55c \uc720\ud06c\uc138\ub098\uc774\ud2b8",
+      "name_fr_fr": "Copious Euxenite",
+      "name_nl_nl": null,
+      "name_pl_pl": null,
+      "name_ru": "Copious Euxenite",
+      "name_uk": null,
+      "name_zh_hans": "\u591a\u9ed1\u7a00\u91d1\u77ff",
+      "base_price": 2000.0,
+      "capacity": null,
+      "description": "When chunks of ore mined out of moons yield above-average densities of Euxenite, the ore is called Copious Euxenite and reprocessing returns approximately 15% higher quantities of useful material.\n\nA common ore commercially mined from moons, Euxenite is very useful as it yields good quantities of <a href=showinfo:16639>Scandium</a>, a significant element of many advanced materials.",
+      "description_en": "When chunks of ore mined out of moons yield above-average densities of Euxenite, the ore is called Copious Euxenite and reprocessing returns approximately 15% higher quantities of useful material.\n\nA common ore commercially mined from moons, Euxenite is very useful as it yields good quantities of <a href=showinfo:16639>Scandium</a>, a significant element of many advanced materials.",
+      "description_de": "Wenn aus Monden gef\u00f6rderte Erzbrocken \u00fcberdurchschnittlich viel Euxenit enthalten, spricht man von \u00fcppigem Euxenit. Bei der Aufbereitung wird etwa 15\u00a0% mehr brauchbares Material gewonnen. Euxenit ist ein gew\u00f6hnliches Erz, das auf Monden kommerziell abgebaut wird. Es ist sehr n\u00fctzlich, da es reich an <a href=showinfo:16639>Scandium</a> ist, einem wichtigen Element bei der Herstellung vieler fortschrittlicher Materialien.",
+      "description_es": "Cuando los trozos de mena extra\u00eddos de las lunas presentan densidades de euxenita superiores a la media, la mena se denomina euxenita copiosa y su reprocesamiento genera aproximadamente un 15\u00a0% m\u00e1s de material \u00fatil.\n\nLa euxenita, un tipo de mena com\u00fan extra\u00edda de las lunas, es muy \u00fatil, ya que produce grandes cantidades de <a href=showinfo:16639>escandio</a>, un elemento importante para muchos materiales avanzados.",
+      "description_it_it": null,
+      "description_ja": "\u5e73\u5747\u4ee5\u4e0a\u306e\u5bc6\u5ea6\u306e\u30e6\u30fc\u30af\u30bb\u30ca\u30a4\u30c8\u3092\u6301\u3063\u305f\u9271\u77f3\u306e\u584a\u3092\u885b\u661f\u304b\u3089\u63a1\u6398\u3057\u305f\u5834\u5408\u3001\u305d\u306e\u9271\u77f3\u306f\u9ad8\u5bc6\u5ea6\u30e6\u30fc\u30af\u30bb\u30ca\u30a4\u30c8\u3068\u547c\u3070\u308c\u3001\u518d\u51e6\u7406\u3092\u884c\u3046\u3053\u3068\u3067\u6709\u7528\u8cc7\u6e90\u3092\u7d0415%\u591a\u304f\u5165\u624b\u3067\u304d\u308b\u3002\n\n\u30e6\u30fc\u30af\u30bb\u30ca\u30a4\u30c8\u306f\u885b\u661f\u304b\u3089\u5546\u696d\u7684\u306b\u63a1\u6398\u3055\u308c\u308b\u4e00\u822c\u7684\u306a\u9271\u77f3\u3067\u3042\u308b\u3002\u591a\u304f\u306e\u5148\u7aef\u6750\u6599\u306e\u91cd\u8981\u306a\u8981\u7d20\u3067\u3042\u308b<a href=showinfo:16639>\u30b9\u30ab\u30f3\u30b8\u30a6\u30e0</a>\u3092\u5927\u91cf\u306b\u7523\u51fa\u3059\u308b\u305f\u3081\u306b\u975e\u5e38\u306b\u6709\u7528\u3060\u3002",
+      "description_ko_kr": "\uc704\uc131 \ucc44\uad74 \uc2dc \uc720\ud06c\uc138\ub098\uc774\ud2b8 \ud568\ub7c9\uc774 \ub192\uc740 \uad11\uc11d\uc744 \uc6b0\uc6d4\ud55c \uc720\ud06c\uc138\ub098\uc774\ud2b8\ub77c \ubd80\ub985\ub2c8\ub2e4. \uc77c\ubc18 \uc720\ud06c\uc138\ub098\uc774\ud2b8\uc5d0 \ube44\ud574 \uc815\uc81c \uc0b0\ucd9c\ub7c9\uc774 \uc57d 15% \uac00\ub7c9 \ub192\uc2b5\ub2c8\ub2e4. <br><br>\uc720\ud06c\uc138\ub098\uc774\ud2b8\ub294 \uc704\uc131\uc5d0\uc11c \ucc44\uad74\ub418\ub294 \uc77c\ubc18\uc801\uc778 \uad11\uc11d\uc73c\ub85c, \uc0c1\uae09 \uc7ac\ub8cc\ub97c \uc81c\uc791\ud558\ub294\ub370 \uc0ac\uc6a9\ub418\ub294 \ubb3c\uc9c8\uc778 <a href=showinfo:16639>\uc2a4\uce78\ub4d0</a>\uc744 \ub2e4\ub7c9 \ud568\uc720\ud558\uace0 \uc788\uc2b5\ub2c8\ub2e4.",
+      "description_fr_fr": "Lorsque des morceaux de minerai extraits sur des lunes pr\u00e9sentent une densit\u00e9 d'eux\u00e9nite sup\u00e9rieure \u00e0 la moyenne, ce minerai est appel\u00e9 \u00ab\u00a0eux\u00e9nite copieuse\u00a0\u00bb et son retraitement permet un rendement en mat\u00e9riaux utiles environ 15\u00a0% plus \u00e9lev\u00e9. L'eux\u00e9nite est un minerai commun, extrait sur les lunes \u00e0 des fins commerciales, et dont l'utilit\u00e9 r\u00e9side dans sa richesse en <a href=showinfo:16639>scandium</a> pouvant servir \u00e0 la fabrication de mat\u00e9riaux avanc\u00e9s.",
+      "description_nl_nl": null,
+      "description_pl_pl": null,
+      "description_ru": "\u0415\u0441\u043b\u0438 \u0441\u043e\u0434\u0435\u0440\u0436\u0430\u043d\u0438\u0435 \u044d\u0432\u043a\u0441\u0435\u043d\u0438\u0442\u0430 \u0432 \u043f\u043e\u0440\u043e\u0434\u0435 \u0432\u044b\u0448\u0435 \u0441\u0440\u0435\u0434\u043d\u0435\u0433\u043e, \u0442\u0430\u043a\u0430\u044f \u0440\u0443\u0434\u0430 \u043d\u0430\u0437\u044b\u0432\u0430\u0435\u0442\u0441\u044f \u043e\u0431\u043e\u0433\u0430\u0449\u0451\u043d\u043d\u044b\u043c \u044d\u0432\u043a\u0441\u0435\u043d\u0438\u0442\u043e\u043c. \u0418\u0437 \u043d\u0435\u0451 \u043c\u043e\u0436\u043d\u043e \u0438\u0437\u0432\u043b\u0435\u0447\u044c \u043d\u0430 15% \u0431\u043e\u043b\u044c\u0448\u0435 \u043f\u043e\u043b\u0435\u0437\u043d\u043e\u0433\u043e \u043c\u0430\u0442\u0435\u0440\u0438\u0430\u043b\u0430. \u042d\u0432\u043a\u0441\u0435\u043d\u0438\u0442\u00a0\u2014 \u0447\u0430\u0441\u0442\u043e \u0432\u0441\u0442\u0440\u0435\u0447\u0430\u044e\u0449\u0430\u044f\u0441\u044f \u0440\u0443\u0434\u0430, \u0434\u043e\u0431\u044b\u0432\u0430\u0435\u043c\u0430\u044f \u0432 \u043f\u0440\u043e\u043c\u044b\u0448\u043b\u0435\u043d\u043d\u044b\u0445 \u043a\u043e\u043b\u0438\u0447\u0435\u0441\u0442\u0432\u0430\u0445 \u043d\u0430 \u0441\u043f\u0443\u0442\u043d\u0438\u043a\u0430\u0445. \u0415\u0451 \u0446\u0435\u043d\u043d\u043e\u0441\u0442\u044c \u0437\u0430\u043a\u043b\u044e\u0447\u0430\u0435\u0442\u0441\u044f \u0432 \u0432\u044b\u0441\u043e\u043a\u043e\u043c \u0441\u043e\u0434\u0435\u0440\u0436\u0430\u043d\u0438\u0438 <a href=showinfo:16639>\u0441\u043a\u0430\u043d\u0434\u0438\u044f</a>, \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u0443\u0435\u043c\u043e\u0433\u043e \u0432 \u043a\u0430\u0447\u0435\u0441\u0442\u0432\u0435 \u0437\u043d\u0430\u0447\u0438\u043c\u043e\u0433\u043e \u044d\u043b\u0435\u043c\u0435\u043d\u0442\u0430 \u0434\u043b\u044f \u043c\u043d\u043e\u0433\u0438\u0445 \u0441\u043b\u043e\u0436\u043d\u044b\u0445 \u043c\u0430\u0442\u0435\u0440\u0438\u0430\u043b\u043e\u0432.",
+      "description_uk": null,
+      "description_zh_hans": "\u5982\u679c\u536b\u661f\u5f00\u91c7\u51fa\u7684\u77ff\u77f3\u7684\u4ea7\u51fa\u9ad8\u4e8e\u9ed1\u7a00\u91d1\u77ff\u7684\u5e73\u5747\u5bc6\u5ea6\uff0c\u5219\u79f0\u4e3a\u591a\u9ed1\u7a00\u91d1\u77ff\uff0c\u63d0\u70bc\u51fa\u7684\u6709\u7528\u77ff\u7269\u4f1a\u591a\u51fa\u5927\u698215%\u3002\n\n\n\n\u9ed1\u7a00\u91d1\u77ff\u662f\u536b\u661f\u4e2d\u5f00\u91c7\u51fa\u7684\u4e00\u79cd\u666e\u901a\u77ff\u77f3\uff0c\u7528\u5904\u5f88\u5927\uff0c\u80fd\u591f\u4ea7\u51fa\u4e30\u5bcc\u7684<a href=showinfo:16639>\u94aa</a>\uff0c\u53ef\u4f5c\u4e3a\u8bb8\u591a\u9ad8\u7ea7\u77ff\u7269\u7684\u91cd\u8981\u5143\u7d20\u3002",
+      "faction_id_raw": null,
+      "graphic_id": null,
+      "group": 1920,
+      "icon_id": 21793,
+      "market_group": 2397,
       "mass": 4000.0,
       "meta_group_id_raw": null,
       "portion_size": 100,
@@ -649,6 +747,55 @@
       "group": 1922,
       "icon_id": 21800,
       "market_group": 2400,
+      "mass": 4000.0,
+      "meta_group_id_raw": null,
+      "portion_size": 100,
+      "published": true,
+      "race_id": null,
+      "radius": null,
+      "sound_id": null,
+      "variation_parent_type_id": null,
+      "volume": 10.0,
+      "packaged_volume": null
+    }
+  },
+  {
+    "model": "eve_sde.itemtype",
+    "pk": 46318,
+    "fields": {
+      "name": "Bountiful Ytterbite",
+      "name_en": "Bountiful Ytterbite",
+      "name_de": "Bountiful Ytterbite",
+      "name_es": "Gadolinita abundante",
+      "name_it_it": null,
+      "name_ja": "\u9ad8\u5bc6\u5ea6\u30a4\u30c3\u30bf\u30fc\u30d0\u30a4\u30c8",
+      "name_ko_kr": "\ubbf8\uad11 \uc774\ud14c\ub974\ubc14\uc774\ud2b8",
+      "name_fr_fr": "Bountiful Ytterbite",
+      "name_nl_nl": null,
+      "name_pl_pl": null,
+      "name_ru": "Bountiful Ytterbite",
+      "name_uk": null,
+      "name_zh_hans": "\u88d5\u7845\u94cd\u9487\u77ff",
+      "base_price": 10000.0,
+      "capacity": null,
+      "description": "When chunks of ore mined out of moons yield above-average densities of Ytterbite, the ore is called Bountiful Ytterbite and reprocessing returns approximately 15% higher quantities of useful material.\n\nAn exceptional ore commercially mined from moons, Ytterbite is highly valuable as it yields good quantities of <a href=showinfo:16653>Thulium</a>, a vital element of many advanced materials. Ytterbite ores will also yield <a href=showinfo:16643>Cadmium</a>, <a href=showinfo:16638>Titanium</a> and <a href=showinfo:16636>Silicates</a>.",
+      "description_en": "When chunks of ore mined out of moons yield above-average densities of Ytterbite, the ore is called Bountiful Ytterbite and reprocessing returns approximately 15% higher quantities of useful material.\n\nAn exceptional ore commercially mined from moons, Ytterbite is highly valuable as it yields good quantities of <a href=showinfo:16653>Thulium</a>, a vital element of many advanced materials. Ytterbite ores will also yield <a href=showinfo:16643>Cadmium</a>, <a href=showinfo:16638>Titanium</a> and <a href=showinfo:16636>Silicates</a>.",
+      "description_de": "Wenn aus Monden gef\u00f6rderte Erzbrocken \u00fcberdurchschnittlich viel Gadolinit enthalten, spricht man von reichlichem Gadolinit. Bei der Aufbereitung wird etwa 15\u00a0% mehr brauchbares Material gewonnen. Gadolinit ist ein besonderes Erz, das auf Monden kommerziell abgebaut wird. Es ist \u00e4u\u00dferst wertvoll, da es reich an <a href=showinfo:16653>Thulium</a> ist, welches f\u00fcr die Herstellung vieler fortschrittlicher Materialien gebraucht wird. Gadolinit-Erze enthalten au\u00dferdem <a href=showinfo:16643>Cadmium</a>, <a href=showinfo:16638>Titan</a> und <a href=showinfo:16636>Silikate</a>.",
+      "description_es": "Cuando los trozos de mena extra\u00eddos de las lunas presentan densidades de gadolinita superiores a la media, la mena se denomina gadolinita desbordante y el reprocesamiento genera aproximadamente un 15\u00a0% m\u00e1s de material \u00fatil.\n\n\n\nLa gadolinita, una excepcional mena lunar explotada comercialmente, es muy valiosa porque produce grandes cantidades de <a href=showinfo:16653>tulio</a>, un elemento vital en muchos materiales avanzados. De las menas de gadolinita tambi\u00e9n se obtiene <a href=showinfo:16643>cadmio</a>, <a href=showinfo:16638>titanio</a> y <a href=showinfo:16636>silicatos</a>.",
+      "description_it_it": null,
+      "description_ja": "\u5e73\u5747\u4ee5\u4e0a\u306e\u5bc6\u5ea6\u306e\u30a4\u30c3\u30c6\u30eb\u30d0\u30a4\u30c8\u3092\u6301\u3063\u305f\u9271\u77f3\u306e\u584a\u3092\u885b\u661f\u304b\u3089\u63a1\u6398\u3057\u305f\u5834\u5408\u3001\u305d\u306e\u9271\u77f3\u306f\u9ad8\u5bc6\u5ea6\u30a4\u30c3\u30c6\u30eb\u30d0\u30a4\u30c8\u3068\u547c\u3070\u308c\u3001\u518d\u51e6\u7406\u3092\u884c\u3046\u3053\u3068\u3067\u7d0415%\u591a\u3044\u6709\u7528\u8cc7\u6e90\u3092\u5165\u624b\u3067\u304d\u308b\u3002\n\n\u30a4\u30c3\u30bf\u30fc\u30d0\u30a4\u30c8\u306f\u885b\u661f\u304b\u3089\u5546\u696d\u7684\u306b\u63a1\u6398\u3055\u308c\u308b\u5e0c\u5c11\u306a\u9271\u77f3\u3067\u3042\u308b\u3002\u591a\u304f\u306e\u5148\u7aef\u6750\u6599\u306e\u91cd\u8981\u306a\u8981\u7d20\u3067\u3042\u308b<a href=showinfo:16653>\u30c4\u30ea\u30a6\u30e0</a>\u3092\u5927\u91cf\u306b\u7523\u51fa\u3059\u308b\u305f\u3081\u975e\u5e38\u306b\u6709\u7528\u3002\u307e\u305f\u30a4\u30c3\u30bf\u30fc\u30d0\u30a4\u30c8\u9271\u77f3\u304b\u3089\u306f<a href=showinfo:16643>\u30ab\u30c9\u30df\u30a6\u30e0</a>\u304a\u3088\u3073<a href=showinfo:16638>\u30c1\u30bf\u30f3</a>\u3001<a href=showinfo:16636>\u30b1\u30a4\u9178\u5869</a>\u3082\u56de\u53ce\u3067\u304d\u308b\u3002",
+      "description_ko_kr": "\uc704\uc131 \ucc44\uad74 \uc2dc \uc774\ud14c\ub974\ubc14\uc774\ud2b8 \ud568\ub7c9\uc774 \ub192\uc740 \uad11\uc11d\uc744 \ud754\ud788 \ubbf8\uad11 \uc774\ud14c\ub974\ubc14\uc774\ud2b8\ub77c \ubd80\ub985\ub2c8\ub2e4. \uc77c\ubc18 \ub85c\ud30c\ub77c\uc774\ud2b8\uc5d0 \ube44\ud574 \uc815\uc81c \uc0b0\ucd9c\ub7c9\uc774 \uc57d 15% \uac00\ub7c9 \ub192\uc2b5\ub2c8\ub2e4. <br><br>\uc774\ud14c\ub974\ubc14\uc774\ud2b8\ub294 \uc704\uc131\uc5d0\uc11c \ucc44\uad74\ub418\ub294 \ud2b9\ubcc4\ud55c \uad11\uc11d\uc73c\ub85c, \uc0c1\uae09 \uc7ac\ub8cc\ub97c \uc81c\uc791\ud558\ub294\ub370 \uc0ac\uc6a9\ub418\ub294 \ubb3c\uc9c8\uc778 <a href=showinfo:16653>\ud234\ub968</a>\uc744 \ub2e4\ub7c9 \ud568\uc720\ud558\uace0 \uc788\uc2b5\ub2c8\ub2e4. \uc815\uc81c \uacfc\uc815\uc5d0\uc11c <a href=showinfo:16643>\uce74\ub4dc\ubbb4</a>, <a href=showinfo:16638>\ud2f0\ud0c0\ub284</a>, \uadf8\ub9ac\uace0 <a href=showinfo:16636>\uaddc\uc0b0\uc5fc</a> \ub610\ud55c \ud568\uaed8 \uc0b0\ucd9c\ub429\ub2c8\ub2e4.",
+      "description_fr_fr": "Lorsque des morceaux de minerai extraits sur des lunes pr\u00e9sentent une densit\u00e9 d'ytterbite sup\u00e9rieure \u00e0 la moyenne, ce minerai est appel\u00e9 \u00ab\u00a0ytterbite g\u00e9n\u00e9reuse\u00a0\u00bb et son retraitement permet un rendement en mat\u00e9riaux utiles environ 15\u00a0% plus \u00e9lev\u00e9. L'ytterbite est un minerai d'une grande raret\u00e9, extrait sur les lunes \u00e0 des fins commerciales, et dont l'utilit\u00e9 r\u00e9side dans sa richesse en <a href=showinfo:16653>thulium</a>, un composant crucial \u00e0 la fabrication de mat\u00e9riaux avanc\u00e9s. Le minerai d'ytterbite g\u00e9n\u00e8re aussi du <a href=showinfo:16643>cadmium</a>, du <a href=showinfo:16638>titanium</a> et des <a href=showinfo:16636>silicates</a>.",
+      "description_nl_nl": null,
+      "description_pl_pl": null,
+      "description_ru": "\u0415\u0441\u043b\u0438 \u0441\u043e\u0434\u0435\u0440\u0436\u0430\u043d\u0438\u0435 \u0438\u0442\u0442\u0435\u0440\u0431\u0438\u0442\u0430 \u0432 \u043f\u043e\u0440\u043e\u0434\u0435 \u0432\u044b\u0448\u0435 \u0441\u0440\u0435\u0434\u043d\u0435\u0433\u043e, \u0442\u0430\u043a\u0430\u044f \u0440\u0443\u0434\u0430 \u043d\u0430\u0437\u044b\u0432\u0430\u0435\u0442\u0441\u044f \u0438\u0437\u043e\u0431\u0438\u043b\u0443\u044e\u0449\u0438\u043c \u0438\u0442\u0442\u0435\u0440\u0431\u0438\u0442\u043e\u043c. \u0438\u0437 \u043d\u0435\u0451 \u043c\u043e\u0436\u043d\u043e \u0438\u0437\u0432\u043b\u0435\u0447\u044c \u043d\u0430 15% \u0431\u043e\u043b\u044c\u0448\u0435 \u043f\u043e\u043b\u0435\u0437\u043d\u043e\u0433\u043e \u043c\u0430\u0442\u0435\u0440\u0438\u0430\u043b\u0430. \u0418\u0442\u0442\u0435\u0440\u0431\u0438\u0442\u00a0\u2014 \u0438\u0441\u043a\u043b\u044e\u0447\u0438\u0442\u0435\u043b\u044c\u043d\u044b\u0439 \u0432\u0438\u0434 \u0440\u0443\u0434\u044b, \u0434\u043e\u0431\u044b\u0432\u0430\u0435\u043c\u044b\u0439 \u0432 \u043f\u0440\u043e\u043c\u044b\u0448\u043b\u0435\u043d\u043d\u044b\u0445 \u043a\u043e\u043b\u0438\u0447\u0435\u0441\u0442\u0432\u0430\u0445 \u043d\u0430 \u0441\u043f\u0443\u0442\u043d\u0438\u043a\u0430\u0445. \u0415\u0433\u043e \u0446\u0435\u043d\u043d\u043e\u0441\u0442\u044c \u0437\u0430\u043a\u043b\u044e\u0447\u0430\u0435\u0442\u0441\u044f \u0432 \u0432\u044b\u0441\u043e\u043a\u043e\u043c \u0441\u043e\u0434\u0435\u0440\u0436\u0430\u043d\u0438\u0438 <a href=showinfo:16653>\u0442\u0443\u043b\u0438\u044f</a>, \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u0443\u0435\u043c\u043e\u0433\u043e \u0432 \u043a\u0430\u0447\u0435\u0441\u0442\u0432\u0435 \u0446\u0435\u043d\u0442\u0440\u0430\u043b\u044c\u043d\u043e\u0433\u043e \u044d\u043b\u0435\u043c\u0435\u043d\u0442\u0430 \u0434\u043b\u044f \u043c\u043d\u043e\u0433\u0438\u0445 \u0441\u043b\u043e\u0436\u043d\u044b\u0445 \u043c\u0430\u0442\u0435\u0440\u0438\u0430\u043b\u043e\u0432. \u0418\u0442\u0442\u0435\u0440\u0431\u0438\u0442\u043e\u0432\u044b\u0435 \u0440\u0443\u0434\u044b \u0442\u0430\u043a\u0436\u0435 \u0441\u043e\u0434\u0435\u0440\u0436\u0430\u0442 <a href=showinfo:16643>\u043a\u0430\u0434\u043c\u0438\u0439</a>, <a href=showinfo:16638>\u0442\u0438\u0442\u0430\u043d</a> \u0438 <a href=showinfo:16636>\u0441\u0438\u043b\u0438\u043a\u0430\u0442\u044b</a>.",
+      "description_uk": null,
+      "description_zh_hans": "\u5982\u679c\u536b\u661f\u5f00\u91c7\u51fa\u7684\u77ff\u77f3\u7684\u4ea7\u51fa\u9ad8\u4e8e\u7845\u94cd\u9487\u77ff\u7684\u5e73\u5747\u5bc6\u5ea6\uff0c\u5219\u79f0\u4e3a\u88d5\u7845\u94cd\u9487\u77ff\uff0c\u63d0\u70bc\u51fa\u7684\u6709\u7528\u77ff\u7269\u4f1a\u591a\u51fa\u5927\u698215%\u3002\n\n\n\n\u7845\u94cd\u9487\u77ff\u662f\u536b\u661f\u4e2d\u5f00\u91c7\u51fa\u7684\u4e00\u79cd\u7279\u6b8a\u77ff\u77f3\uff0c\u4ef7\u503c\u6781\u9ad8\uff0c\u80fd\u591f\u4ea7\u51fa\u4e30\u5bcc\u7684<a href=showinfo:16653>\u94e5</a>\uff0c\u53ef\u4f5c\u4e3a\u8bb8\u591a\u9ad8\u7ea7\u77ff\u7269\u7684\u91cd\u8981\u5143\u7d20\u3002\u7845\u94cd\u9487\u77ff\u77f3\u8fd8\u4f1a\u4ea7\u51fa<a href=showinfo:16643>\u9549</a>\u3001<a href=showinfo:16638>\u949b\u5408\u91d1</a>\u548c<a href=showinfo:16636>\u7845\u9178\u76d0</a>\u3002",
+      "faction_id_raw": null,
+      "graphic_id": null,
+      "group": 1923,
+      "icon_id": 21796,
+      "market_group": 2401,
       "mass": 4000.0,
       "meta_group_id_raw": null,
       "portion_size": 100,
@@ -1409,7 +1556,7 @@
       "description_pl_pl": null,
       "description_ru": "\u041c\u044f\u0433\u043a\u0438\u0439 \u043c\u0438\u043d\u0435\u0440\u0430\u043b \u043a\u0440\u0438\u0441\u0442\u0430\u043b\u043b\u0438\u0447\u0435\u0441\u043a\u043e\u0439 \u0444\u043e\u0440\u043c\u044b. \u0421\u0432\u0435\u0442\u0438\u0442\u0441\u044f \u043e\u0440\u0430\u043d\u0436\u0435\u0432\u044b\u043c, \u0441\u043b\u043e\u0432\u043d\u043e \u0432\u043d\u0443\u0442\u0440\u0438 \u043f\u044b\u043b\u0430\u0435\u0442 \u043e\u0433\u043e\u043d\u044c. \u0418\u0441\u043f\u043e\u043b\u044c\u0437\u0443\u0435\u0442\u0441\u044f \u0432 \u043a\u0430\u0447\u0435\u0441\u0442\u0432\u0435 \u043f\u0440\u043e\u0432\u043e\u0434\u043d\u0438\u043a\u0430, \u0430 \u0442\u0430\u043a\u0436\u0435 \u0432 \u0431\u0438\u043e\u0445\u0438\u043c\u0438\u0447\u0435\u0441\u043a\u043e\u0439 \u043f\u0440\u043e\u043c\u044b\u0448\u043b\u0435\u043d\u043d\u043e\u0441\u0442\u0438. \u0412\u0441\u0442\u0440\u0435\u0447\u0430\u0435\u0442\u0441\u044f \u0432\u043e \u043c\u043d\u043e\u0433\u0438\u0445 \u0432\u0438\u0434\u0430\u0445 \u0430\u0441\u0442\u0435\u0440\u043e\u0438\u0434\u043d\u044b\u0445 \u0440\u0443\u0434. \u0414\u043e\u0431\u044b\u0432\u0430\u0435\u0442\u0441\u044f \u043f\u0443\u0442\u0451\u043c \u043f\u0435\u0440\u0435\u0440\u0430\u0431\u043e\u0442\u043a\u0438 \u0441\u043b\u0435\u0434\u0443\u044e\u0449\u0438\u0445 \u0440\u0443\u0434 \u0438\u00a0\u0438\u0445 \u0440\u0430\u0437\u043d\u043e\u0432\u0438\u0434\u043d\u043e\u0441\u0442\u0435\u0439. \u0421\u0438\u0441\u0442\u0435\u043c\u044b \u0441\u00a0\u0432\u044b\u0441\u043e\u043a\u0438\u043c \u0443\u0440\u043e\u0432\u043d\u0435\u043c \u0431\u0435\u0437\u043e\u043f\u0430\u0441\u043d\u043e\u0441\u0442\u0438: <a href=showinfo:1228>\u0441\u043a\u043e\u0440\u0434\u0438\u0442</a> \u0438 <a href=showinfo:1224>\u043f\u0438\u0440\u043e\u043a\u0441\u0435\u0440</a>. \u0421\u0438\u0441\u0442\u0435\u043c\u044b \u0441\u00a0\u043d\u0438\u0437\u043a\u0438\u043c \u0443\u0440\u043e\u0432\u043d\u0435\u043c \u0431\u0435\u0437\u043e\u043f\u0430\u0441\u043d\u043e\u0441\u0442\u0438: <a href=showinfo:1224>\u043f\u0438\u0440\u043e\u043a\u0441\u0435\u0440</a>, <a href=showinfo:1227>\u043e\u043c\u0431\u0435\u0440</a>, <a href=showinfo:21>\u0445\u0435\u0434\u0431\u0435\u0440\u0433\u0438\u0442</a>, <a href=showinfo:1229>\u0433\u043d\u0435\u0439\u0441\u0441</a> \u0438 <a href=showinfo:1225>\u043a\u0440\u043e\u043a\u0438\u0442</a>. \u0421\u0438\u0441\u0442\u0435\u043c\u044b \u0441\u00a0\u043d\u0443\u043b\u0435\u0432\u044b\u043c \u0443\u0440\u043e\u0432\u043d\u0435\u043c \u0431\u0435\u0437\u043e\u043f\u0430\u0441\u043d\u043e\u0441\u0442\u0438: <a href=showinfo:1224>\u043f\u0438\u0440\u043e\u043a\u0441\u0435\u0440</a>, <a href=showinfo:1223>\u0431\u0438\u0441\u0442\u043e\u0442</a>, <a href=showinfo:22>\u0430\u0440\u043a\u043e\u043d\u043e\u0440</a>, <a href=showinfo:81900>\u043a\u0438\u043b\u0438\u0446\u0438\u0439</a> \u0438 <a href=showinfo:82016>\u043d\u043e\u043a\u0446\u0438\u0442</a>. \u0421\u0438\u0441\u0442\u0435\u043c\u044b \u0447\u0435\u0440\u0432\u043e\u0442\u043e\u0447\u0438\u043d: <a href=showinfo:1224>\u043f\u0438\u0440\u043e\u043a\u0441\u0435\u0440</a>, <a href=showinfo:1227>\u043e\u043c\u0431\u0435\u0440</a>, <a href=showinfo:1229>\u0433\u043d\u0435\u0439\u0441\u0441</a>, <a href=showinfo:1223>\u0431\u0438\u0441\u0442\u043e\u0442</a> \u0438 <a href=showinfo:22>\u0430\u0440\u043a\u043e\u043d\u043e\u0440</a>. \u0420\u0435\u0434\u043a\u0430\u044f \u0440\u0443\u0434\u0430 <a href=showinfo:74521>\u043c\u043e\u0440\u0434\u0443\u043d\u0438\u0439</a> \u0442\u043e\u0436\u0435 \u0441\u043e\u0434\u0435\u0440\u0436\u0438\u0442 \u043c\u043d\u043e\u0433\u043e \u044d\u0442\u043e\u0433\u043e \u043c\u0438\u043d\u0435\u0440\u0430\u043b\u0430. \u041d\u0430\u0439\u0442\u0438 \u0435\u0451 \u043c\u043e\u0436\u043d\u043e, \u043a\u0430\u043a \u043f\u0440\u0430\u0432\u0438\u043b\u043e, \u0432\u00a0\u0441\u0438\u0441\u0442\u0435\u043c\u0430\u0445 \u0441\u00a0\u043d\u0443\u043b\u0435\u0432\u044b\u043c \u0443\u0440\u043e\u0432\u043d\u0435\u043c \u0431\u0435\u0437\u043e\u043f\u0430\u0441\u043d\u043e\u0441\u0442\u0438 \u0438\u00a0w-\u043f\u0440\u043e\u0441\u0442\u0440\u0430\u043d\u0441\u0442\u0432\u0435, \u0433\u0434\u0435 \u043f\u0440\u0438\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u044e\u0442 \u0437\u0432\u0451\u0437\u0434\u044b \u043f\u043e\u0434\u043a\u043b\u0430\u0441\u0441\u0430 \u04100 (\u0433\u043e\u043b\u0443\u0431\u044b\u0435 \u043a\u0430\u0440\u043b\u0438\u043a\u0438), \u0430\u00a0\u0442\u0430\u043a\u0436\u0435 \u0432\u00a0\u0438\u0437\u0443\u0447\u0435\u043d\u043d\u044b\u0445 \u043e\u0431\u043b\u0430\u0441\u0442\u044f\u0445 \u043d\u0430 \u0433\u0440\u0430\u043d\u0438\u0446\u0430\u0445 \u0434\u0435\u0440\u0436\u0430\u0432 \u0438\u00a0\u00ab\u043d\u0443\u043b\u0435\u0439\u00bb.",
       "description_uk": null,
-      "description_zh_hans": "\u4e00\u79cd\u7c7b\u6c34\u6676\u7684\u67d4\u8f6f\u77ff\u7269\uff0c\u6709\u7740\u975e\u5e38\u6613\u8fa8\u8ba4\u7684\u6854\u9ec4\u5149\u8f89\uff0c\u4eff\u4f5b\u662f\u5728\u71c3\u70e7\u4e00\u6837\u3002\u7528\u4e8e\u5bfc\u7ba1\u548c\u751f\u5316\u5de5\u4e1a\u3002\u53ef\u4ee5\u5728\u591a\u79cd\u5c0f\u884c\u661f\u77ff\u77f3\u4e2d\u627e\u5230\u3002\u53ef\u4ee5\u4ece\u4e0b\u5217\u77ff\u77f3\u53ca\u5176\u53d8\u79cd\u4e2d\u63d0\u70bc\u83b7\u5f97\uff1a\u9ad8\u5b89\u5168\u7b49\u7ea7\u661f\u7cfb\uff1a<a href=showinfo:1228>\u707c\u70e7\u5ca9</a>\u548c<a href=showinfo:1224>\u5e72\u7126\u5ca9</a>\u3002\u4f4e\u5b89\u5168\u7b49\u7ea7\u661f\u7cfb\uff1a<a href=showinfo:1224>\u5e72\u7126\u5ca9</a>\u3001<a href=showinfo:1227>\u5965\u8d1d\u5c14\u77f3</a>\u3001<a href=showinfo:21>\u540c\u4f4d\u539f\u77ff</a>\u3001<a href=showinfo:1229>\u7247\u9ebb\u5ca9</a>\u548c<a href=showinfo:1225>\u514b\u6d1b\u57fa\u77f3</a>\u3002\u96f6\u5b89\u5168\u7b49\u7ea7\u661f\u7cfb\uff1a<a href=showinfo:1224>\u5e72\u7126\u5ca9</a>\u3001<a href=showinfo:1223>\u53cc\u591a\u7279\u77f3</a>\u3001<a href=showinfo:22>\u827e\u514b\u8bfa\u5ca9</a>\u3001<a href=showinfo:81900>\u514b\u91cc\u77f3</a>\u548c<a href=showinfo:82016>\u8bfa\u514b\u5e0c\u7279</a>\u3002\u866b\u6d1e\u661f\u7cfb\uff1a<a href=showinfo:1224>\u5e72\u7126\u5ca9</a>\u3001<a href=showinfo:1227>\u5965\u8d1d\u5c14\u77f3</a>\u3001<a href=showinfo:1229>\u7247\u9ebb\u5ca9</a>\u3001<a href=showinfo:1223>\u53cc\u591a\u7279\u77f3</a>\uff0c\u4ee5\u53ca<a href=showinfo:22>\u827e\u514b\u8bfa\u5ca9</a>\u3002\u6b64\u5916\uff0c\u4ece<a href=showinfo:74521>\u6469\u591a\u77f3</a>\u4e2d\u4e5f\u80fd\u63d0\u70bc\u51fa\u76f8\u5f53\u53ef\u89c2\u7684\u6570\u91cf\u3002\u8fd9\u79cd\u7a00\u6709\u77ff\u77f3\u4e3b\u8981\u5206\u5e03\u5728\u96f6\u5b89\u5168\u7b49\u7ea7\u661f\u7cfb\u548c\u866b\u6d1e\u661f\u7cfb\u7684A0\u6052\u661f\uff08\u84dd\u8272\u5c0f\u578b\uff09\uff0c\u4ee5\u53ca\u5e1d\u56fd\u548c\u96f6\u5b89\u5168\u533a\u57df\u8fb9\u5883\u7684\u5df2\u63a2\u660e\u5730\u70b9\u3002",
+      "description_zh_hans": "\u4e00\u79cd\u7c7b\u6c34\u6676\u7684\u67d4\u8f6f\u77ff\u7269\uff0c\u6709\u7740\u975e\u5e38\u6613\u8fa8\u8ba4\u7684\u6854\u9ec4\u5149\u8f89\uff0c\u4eff\u4f5b\u662f\u5728\u71c3\u70e7\u4e00\u6837\u3002\u7528\u4e8e\u5bfc\u7ba1\u548c\u751f\u5316\u5de5\u4e1a\u3002\u53ef\u4ee5\u5728\u591a\u79cd\u5c0f\u884c\u661f\u77ff\u77f3\u4e2d\u627e\u5230\u3002\u53ef\u4ee5\u4ece\u4e0b\u5217\u77ff\u77f3\u53ca\u5176\u53d8\u79cd\u4e2d\u63d0\u70bc\u83b7\u5f97\uff1a\u9ad8\u5b89\u5168\u7b49\u7ea7\u661f\u7cfb\uff1a<a href=showinfo:1228>\u707c\u70e7\u5ca9</a>\u548c<a href=showinfo:1224>\u5e72\u7126\u5ca9</a>\u3002\u4f4e\u5b89\u5168\u7b49\u7ea7\u661f\u7cfb\uff1a<a href=showinfo:1224>\u5e72\u7126\u5ca9</a>\u3001<a href=showinfo:1227>\u5965\u8d1d\u5c14\u77f3</a>\u3001<a href=showinfo:21>\u540c\u4f4d\u539f\u77ff</a>\u3001<a href=showinfo:1229>\u7247\u9ebb\u5ca9</a>\u548c<a href=showinfo:1225>\u514b\u6d1b\u57fa\u77f3</a>\u3002\u96f6\u5b89\u5168\u7b49\u7ea7\u661f\u7cfb\uff1a<a href=showinfo:1224>\u5e72\u7126\u5ca9</a>\u3001<a href=showinfo:1223>\u53cc\u591a\u7279\u77f3</a>\u3001<a href=showinfo:22>\u827e\u514b\u8bfa\u5ca9</a>\u3001<a href=showinfo:81900>\u514b\u91cc\u77f3</a>\u548c<a href=showinfo:82016>\u8bfa\u514b\u5e0c\u7279</a>\u3002\u866b\u6d1e\u661f\u7cfb\uff1a<a href=showinfo:1224>\u5e72\u7126\u5ca9</a>\u3001<a href=showinfo:1227>\u5965\u8d1d\u5c14\u77f3</a>\u3001<a href=showinfo:1229>\u7247\u9ebb\u5ca9</a>\u3001<a href=showinfo:1223>\u53cc\u591a\u7279\u77f3</a>\uff0c\u4ee5\u53ca<a href=showinfo:22>\u827e\u514b\u8bfa\u5ca9</a>\u3002\u6b64\u5916\uff0c\u4ece<a href=showinfo:74521>\u83ab\u5fb7\u5408\u91d1</a>\u4e2d\u4e5f\u80fd\u63d0\u70bc\u51fa\u76f8\u5f53\u53ef\u89c2\u7684\u6570\u91cf\u3002\u8fd9\u79cd\u7a00\u6709\u77ff\u77f3\u4e3b\u8981\u5206\u5e03\u5728\u96f6\u5b89\u5168\u7b49\u7ea7\u661f\u7cfb\u548c\u866b\u6d1e\u661f\u7cfb\u7684A0\u6052\u661f\uff08\u84dd\u8272\u5c0f\u578b\uff09\uff0c\u4ee5\u53ca\u5e1d\u56fd\u548c\u96f6\u5b89\u5168\u533a\u57df\u8fb9\u5883\u7684\u5df2\u63a2\u660e\u5730\u70b9\u3002",
       "faction_id_raw": null,
       "graphic_id": null,
       "group": 18,
@@ -1429,7 +1576,51 @@
   },
   {
     "model": "eve_sde.itemtypematerials",
-    "pk": 1114383,
+    "pk": 1160478,
+    "fields": {
+      "item_type": 45513,
+      "material_item_type": 16636,
+      "quantity": 20,
+      "quantity_max": null,
+      "quantity_min": null
+    }
+  },
+  {
+    "model": "eve_sde.itemtypematerials",
+    "pk": 1160479,
+    "fields": {
+      "item_type": 45513,
+      "material_item_type": 16638,
+      "quantity": 20,
+      "quantity_max": null,
+      "quantity_min": null
+    }
+  },
+  {
+    "model": "eve_sde.itemtypematerials",
+    "pk": 1160480,
+    "fields": {
+      "item_type": 45513,
+      "material_item_type": 16643,
+      "quantity": 10,
+      "quantity_max": null,
+      "quantity_min": null
+    }
+  },
+  {
+    "model": "eve_sde.itemtypematerials",
+    "pk": 1160481,
+    "fields": {
+      "item_type": 45513,
+      "material_item_type": 16653,
+      "quantity": 22,
+      "quantity_max": null,
+      "quantity_min": null
+    }
+  },
+  {
+    "model": "eve_sde.itemtypematerials",
+    "pk": 1161071,
     "fields": {
       "item_type": 46285,
       "material_item_type": 35,
@@ -1440,7 +1631,7 @@
   },
   {
     "model": "eve_sde.itemtypematerials",
-    "pk": 1114384,
+    "pk": 1161072,
     "fields": {
       "item_type": 46285,
       "material_item_type": 36,
@@ -1451,7 +1642,7 @@
   },
   {
     "model": "eve_sde.itemtypematerials",
-    "pk": 1114385,
+    "pk": 1161073,
     "fields": {
       "item_type": 46285,
       "material_item_type": 16633,
@@ -1462,7 +1653,18 @@
   },
   {
     "model": "eve_sde.itemtypematerials",
-    "pk": 1114399,
+    "pk": 1161082,
+    "fields": {
+      "item_type": 46290,
+      "material_item_type": 16639,
+      "quantity": 46,
+      "quantity_max": null,
+      "quantity_min": null
+    }
+  },
+  {
+    "model": "eve_sde.itemtypematerials",
+    "pk": 1161087,
     "fields": {
       "item_type": 46295,
       "material_item_type": 16637,
@@ -1473,7 +1675,7 @@
   },
   {
     "model": "eve_sde.itemtypematerials",
-    "pk": 1114410,
+    "pk": 1161098,
     "fields": {
       "item_type": 46301,
       "material_item_type": 16636,
@@ -1484,7 +1686,7 @@
   },
   {
     "model": "eve_sde.itemtypematerials",
-    "pk": 1114411,
+    "pk": 1161099,
     "fields": {
       "item_type": 46301,
       "material_item_type": 16642,
@@ -1495,7 +1697,7 @@
   },
   {
     "model": "eve_sde.itemtypematerials",
-    "pk": 1114431,
+    "pk": 1161119,
     "fields": {
       "item_type": 46309,
       "material_item_type": 16633,
@@ -1506,7 +1708,7 @@
   },
   {
     "model": "eve_sde.itemtypematerials",
-    "pk": 1114432,
+    "pk": 1161120,
     "fields": {
       "item_type": 46309,
       "material_item_type": 16639,
@@ -1517,7 +1719,7 @@
   },
   {
     "model": "eve_sde.itemtypematerials",
-    "pk": 1114433,
+    "pk": 1161121,
     "fields": {
       "item_type": 46309,
       "material_item_type": 16647,
@@ -1528,7 +1730,51 @@
   },
   {
     "model": "eve_sde.itemtypematerials",
-    "pk": 1114468,
+    "pk": 1161152,
+    "fields": {
+      "item_type": 46318,
+      "material_item_type": 16636,
+      "quantity": 23,
+      "quantity_max": null,
+      "quantity_min": null
+    }
+  },
+  {
+    "model": "eve_sde.itemtypematerials",
+    "pk": 1161153,
+    "fields": {
+      "item_type": 46318,
+      "material_item_type": 16638,
+      "quantity": 23,
+      "quantity_max": null,
+      "quantity_min": null
+    }
+  },
+  {
+    "model": "eve_sde.itemtypematerials",
+    "pk": 1161154,
+    "fields": {
+      "item_type": 46318,
+      "material_item_type": 16643,
+      "quantity": 12,
+      "quantity_max": null,
+      "quantity_min": null
+    }
+  },
+  {
+    "model": "eve_sde.itemtypematerials",
+    "pk": 1161155,
+    "fields": {
+      "item_type": 46318,
+      "material_item_type": 16653,
+      "quantity": 25,
+      "quantity_max": null,
+      "quantity_min": null
+    }
+  },
+  {
+    "model": "eve_sde.itemtypematerials",
+    "pk": 1161156,
     "fields": {
       "item_type": 46319,
       "material_item_type": 16636,
@@ -1539,7 +1785,7 @@
   },
   {
     "model": "eve_sde.itemtypematerials",
-    "pk": 1114469,
+    "pk": 1161157,
     "fields": {
       "item_type": 46319,
       "material_item_type": 16638,
@@ -1550,7 +1796,7 @@
   },
   {
     "model": "eve_sde.itemtypematerials",
-    "pk": 1114470,
+    "pk": 1161158,
     "fields": {
       "item_type": 46319,
       "material_item_type": 16643,
@@ -1561,13 +1807,1347 @@
   },
   {
     "model": "eve_sde.itemtypematerials",
-    "pk": 1114471,
+    "pk": 1161159,
     "fields": {
       "item_type": 46319,
       "material_item_type": 16653,
       "quantity": 44,
       "quantity_max": null,
       "quantity_min": null
+    }
+  },
+  {
+    "model": "eve_sde.dogmaattributecategory",
+    "pk": 31,
+    "fields": {
+      "name": "Graphics",
+      "description": "NPC Graphic Attributes"
+    }
+  },
+  {
+    "model": "eve_sde.dogmaunit",
+    "pk": 9,
+    "fields": {
+      "name": "Volume",
+      "description": "Cubic meter",
+      "description_en": "Cubic meter",
+      "description_de": "Kubikmeter",
+      "description_es": "Metro c\u00fabico.",
+      "description_it_it": null,
+      "description_ja": "\u7acb\u65b9\u30e1\u30fc\u30c8\u30eb",
+      "description_ko_kr": "m\u00b3",
+      "description_fr_fr": "M\u00e8tre cube",
+      "description_nl_nl": null,
+      "description_pl_pl": null,
+      "description_ru": "\u043a\u0443\u0431\u0438\u0447\u0435\u0441\u043a\u0438\u0439 \u043c\u0435\u0442\u0440",
+      "description_uk": null,
+      "description_zh_hans": "\u7acb\u65b9\u7c73",
+      "display_name": "m3",
+      "display_name_en": "m3",
+      "display_name_de": "m3",
+      "display_name_es": "m\u00b3",
+      "display_name_it_it": null,
+      "display_name_ja": "m3",
+      "display_name_ko_kr": "m\u00b3",
+      "display_name_fr_fr": "m\u00b3",
+      "display_name_nl_nl": null,
+      "display_name_pl_pl": null,
+      "display_name_ru": "\u043c^3",
+      "display_name_uk": null,
+      "display_name_zh_hans": "m3"
+    }
+  },
+  {
+    "model": "eve_sde.dogmaattribute",
+    "pk": 2727,
+    "fields": {
+      "name": "asteroidMaxRadius ",
+      "attribute_category": 31,
+      "chargeRecharge_time_id": null,
+      "data_type_id_raw": 5,
+      "default_value": 16255.0,
+      "description": "max visual size for asteroids to fit moon chunk",
+      "display_name": null,
+      "display_name_en": null,
+      "display_name_de": null,
+      "display_name_es": null,
+      "display_name_it_it": null,
+      "display_name_ja": null,
+      "display_name_ko_kr": null,
+      "display_name_fr_fr": null,
+      "display_name_nl_nl": null,
+      "display_name_pl_pl": null,
+      "display_name_ru": null,
+      "display_name_uk": null,
+      "display_name_zh_hans": null,
+      "display_when_zero": false,
+      "high_is_good": true,
+      "icon_id": null,
+      "max_attribute_id_raw": null,
+      "published": false,
+      "stackable": true,
+      "tooltip_description": null,
+      "tooltip_description_en": null,
+      "tooltip_description_de": null,
+      "tooltip_description_es": null,
+      "tooltip_description_it_it": null,
+      "tooltip_description_ja": null,
+      "tooltip_description_ko_kr": null,
+      "tooltip_description_fr_fr": null,
+      "tooltip_description_nl_nl": null,
+      "tooltip_description_pl_pl": null,
+      "tooltip_description_ru": null,
+      "tooltip_description_uk": null,
+      "tooltip_description_zh_hans": null,
+      "tooltip_title": null,
+      "tooltip_title_en": null,
+      "tooltip_title_de": null,
+      "tooltip_title_es": null,
+      "tooltip_title_it_it": null,
+      "tooltip_title_ja": null,
+      "tooltip_title_ko_kr": null,
+      "tooltip_title_fr_fr": null,
+      "tooltip_title_nl_nl": null,
+      "tooltip_title_pl_pl": null,
+      "tooltip_title_ru": null,
+      "tooltip_title_uk": null,
+      "tooltip_title_zh_hans": null,
+      "unit": 9
+    }
+  },
+  {
+    "model": "eve_sde.dogmaattribute",
+    "pk": 2711,
+    "fields": {
+      "name": "oreBasicType",
+      "attribute_category": 7,
+      "chargeRecharge_time_id": null,
+      "data_type_id_raw": 11,
+      "default_value": 0.0,
+      "description": "Reference for grouping ores in visual displays. All variants of one ore should have the same BasicType ID",
+      "display_name": null,
+      "display_name_en": null,
+      "display_name_de": null,
+      "display_name_es": null,
+      "display_name_it_it": null,
+      "display_name_ja": null,
+      "display_name_ko_kr": null,
+      "display_name_fr_fr": null,
+      "display_name_nl_nl": null,
+      "display_name_pl_pl": null,
+      "display_name_ru": null,
+      "display_name_uk": null,
+      "display_name_zh_hans": null,
+      "display_when_zero": false,
+      "high_is_good": false,
+      "icon_id": null,
+      "max_attribute_id_raw": null,
+      "published": false,
+      "stackable": false,
+      "tooltip_description": null,
+      "tooltip_description_en": null,
+      "tooltip_description_de": null,
+      "tooltip_description_es": null,
+      "tooltip_description_it_it": null,
+      "tooltip_description_ja": null,
+      "tooltip_description_ko_kr": null,
+      "tooltip_description_fr_fr": null,
+      "tooltip_description_nl_nl": null,
+      "tooltip_description_pl_pl": null,
+      "tooltip_description_ru": null,
+      "tooltip_description_uk": null,
+      "tooltip_description_zh_hans": null,
+      "tooltip_title": null,
+      "tooltip_title_en": null,
+      "tooltip_title_de": null,
+      "tooltip_title_es": null,
+      "tooltip_title_it_it": null,
+      "tooltip_title_ja": null,
+      "tooltip_title_ko_kr": null,
+      "tooltip_title_fr_fr": null,
+      "tooltip_title_nl_nl": null,
+      "tooltip_title_pl_pl": null,
+      "tooltip_title_ru": null,
+      "tooltip_title_uk": null,
+      "tooltip_title_zh_hans": null,
+      "unit": 116
+    }
+  },
+  {
+    "model": "eve_sde.dogmaunit",
+    "pk": 116,
+    "fields": {
+      "name": "typeID",
+      "description": null,
+      "description_en": null,
+      "description_de": null,
+      "description_es": null,
+      "description_it_it": null,
+      "description_ja": null,
+      "description_ko_kr": null,
+      "description_fr_fr": null,
+      "description_nl_nl": null,
+      "description_pl_pl": null,
+      "description_ru": null,
+      "description_uk": null,
+      "description_zh_hans": null,
+      "display_name": "typeID",
+      "display_name_en": "typeID",
+      "display_name_de": "typeID",
+      "display_name_es": "typeID",
+      "display_name_it_it": null,
+      "display_name_ja": "\u30bf\u30a4\u30d7 ID",
+      "display_name_ko_kr": "\ud0c0\uc785ID",
+      "display_name_fr_fr": "typeID",
+      "display_name_nl_nl": null,
+      "display_name_pl_pl": null,
+      "display_name_ru": "typeID",
+      "display_name_uk": null,
+      "display_name_zh_hans": "\u7c7b\u522bID"
+    }
+  },
+  {
+    "model": "eve_sde.dogmaattributecategory",
+    "pk": 7,
+    "fields": {
+      "name": "Miscellaneous",
+      "description": "Misc. attributes"
+    }
+  },
+  {
+    "model": "eve_sde.dogmaattribute",
+    "pk": 2699,
+    "fields": {
+      "name": "asteroidMetaLevel",
+      "attribute_category": 7,
+      "chargeRecharge_time_id": null,
+      "data_type_id_raw": 5,
+      "default_value": 0.0,
+      "description": "0: Mission/NPE Ore\r\n1: Standard Ore/Ice\r\n2: +5% Ore\r\n3: +10% Ore\r\n4: High Quality Ice or Extracted Ore\r\n5: Jackpot Moon Ore",
+      "display_name": null,
+      "display_name_en": null,
+      "display_name_de": null,
+      "display_name_es": null,
+      "display_name_it_it": null,
+      "display_name_ja": null,
+      "display_name_ko_kr": null,
+      "display_name_fr_fr": null,
+      "display_name_nl_nl": null,
+      "display_name_pl_pl": null,
+      "display_name_ru": null,
+      "display_name_uk": null,
+      "display_name_zh_hans": null,
+      "display_when_zero": false,
+      "high_is_good": true,
+      "icon_id": null,
+      "max_attribute_id_raw": null,
+      "published": false,
+      "stackable": true,
+      "tooltip_description": null,
+      "tooltip_description_en": null,
+      "tooltip_description_de": null,
+      "tooltip_description_es": null,
+      "tooltip_description_it_it": null,
+      "tooltip_description_ja": null,
+      "tooltip_description_ko_kr": null,
+      "tooltip_description_fr_fr": null,
+      "tooltip_description_nl_nl": null,
+      "tooltip_description_pl_pl": null,
+      "tooltip_description_ru": null,
+      "tooltip_description_uk": null,
+      "tooltip_description_zh_hans": null,
+      "tooltip_title": null,
+      "tooltip_title_en": null,
+      "tooltip_title_de": null,
+      "tooltip_title_es": null,
+      "tooltip_title_it_it": null,
+      "tooltip_title_ja": null,
+      "tooltip_title_ko_kr": null,
+      "tooltip_title_fr_fr": null,
+      "tooltip_title_nl_nl": null,
+      "tooltip_title_pl_pl": null,
+      "tooltip_title_ru": null,
+      "tooltip_title_uk": null,
+      "tooltip_title_zh_hans": null,
+      "unit": null
+    }
+  },
+  {
+    "model": "eve_sde.dogmaunit",
+    "pk": 108,
+    "fields": {
+      "name": "Inverse Absolute Percent",
+      "description": "Used for resistance.\n0.0 = 100% 1.0 = 0%",
+      "description_en": "Used for resistance.\n0.0 = 100% 1.0 = 0%",
+      "description_de": "F\u00fcr Resistenzen verwendet.\n0,0 = 100%\n1,0 = 0%",
+      "description_es": "Se usa en la resistencia.\n\n0,0 = 100% 1,0 = 0%",
+      "description_it_it": null,
+      "description_ja": "\u62b5\u6297\u3067\u4f7f\u7528\u3002\n0.0 = 100% 1.0 = 0%",
+      "description_ko_kr": "\uc800\ud56d\ub825 \ud45c\uae30\uc5d0 \uc0ac\uc6a9\ub429\ub2c8\ub2e4.<br>0.0 = 100% 1.0 = 0%",
+      "description_fr_fr": "Utilis\u00e9 pour la r\u00e9sistance. 0,0 = 100% 1,0 = 0\u00a0%",
+      "description_nl_nl": null,
+      "description_pl_pl": null,
+      "description_ru": "\u0418\u0441\u043f\u043e\u043b\u044c\u0437\u0443\u0435\u0442\u0441\u044f \u0434\u043b\u044f \u043e\u0431\u043e\u0437\u043d\u0430\u0447\u0435\u043d\u0438\u044f \u0441\u0438\u043b\u044b \u0441\u043e\u043f\u0440\u043e\u0442\u0438\u0432\u043b\u0435\u043d\u0438\u044f.\n0.0 = 100%\n1.0 = 0%",
+      "description_uk": null,
+      "description_zh_hans": "\u7528\u4e8e\u6297\u6027\u30020.0 = 100% 1.0 = 0%",
+      "display_name": "%",
+      "display_name_en": "%",
+      "display_name_de": "%",
+      "display_name_es": "%",
+      "display_name_it_it": null,
+      "display_name_ja": "%",
+      "display_name_ko_kr": "%",
+      "display_name_fr_fr": "%",
+      "display_name_nl_nl": null,
+      "display_name_pl_pl": null,
+      "display_name_ru": "%",
+      "display_name_uk": null,
+      "display_name_zh_hans": "%"
+    }
+  },
+  {
+    "model": "eve_sde.dogmaattributecategory",
+    "pk": 36,
+    "fields": {
+      "name": "EW - Resistance",
+      "description": "Resistances to different types of EWar Effects"
+    }
+  },
+  {
+    "model": "eve_sde.dogmaattribute",
+    "pk": 2115,
+    "fields": {
+      "name": "stasisWebifierResistance",
+      "attribute_category": 36,
+      "chargeRecharge_time_id": null,
+      "data_type_id_raw": 5,
+      "default_value": 1.0,
+      "description": "Resistance against Stasis Webifiers",
+      "display_name": "Stasis Webifier Resistance",
+      "display_name_en": "Stasis Webifier Resistance",
+      "display_name_de": "Widerstand gegen Stasisnetze",
+      "display_name_es": "Resistencia redes ralentizadoras",
+      "display_name_it_it": null,
+      "display_name_ja": "\u30b9\u30c6\u30a4\u30b7\u30b9\u30a6\u30a7\u30d3\u30d5\u30a1\u30a4\u30e4\u30fc\u30fb\u30ec\u30b8\u30b9\u30bf\u30f3\u30b9",
+      "display_name_ko_kr": "\uc2a4\ud14c\uc774\uc2dc\uc2a4 \uc6f9 \uc800\ud56d\ub825",
+      "display_name_fr_fr": "R\u00e9sistance de G\u00e9n\u00e9rateur de stase",
+      "display_name_nl_nl": null,
+      "display_name_pl_pl": null,
+      "display_name_ru": "\u0421\u043e\u043f\u0440\u043e\u0442\u0438\u0432\u043b\u0435\u043d\u0438\u0435 \u0432\u043e\u0437\u0434\u0435\u0439\u0441\u0442\u0432\u0438\u044e \u0433\u0435\u043d\u0435\u0440\u0430\u0442\u043e\u0440\u043e\u0432 \u0441\u0442\u0430\u0437\u0438\u0441-\u043f\u043e\u043b\u044f",
+      "display_name_uk": null,
+      "display_name_zh_hans": "\u505c\u6ede\u7f20\u7ed5\u6297\u6027",
+      "display_when_zero": false,
+      "high_is_good": false,
+      "icon_id": 1389,
+      "max_attribute_id_raw": null,
+      "published": true,
+      "stackable": true,
+      "tooltip_description": "Decreases the impact on speed from hostile stasis webifiers",
+      "tooltip_description_en": "Decreases the impact on speed from hostile stasis webifiers",
+      "tooltip_description_de": "Verringert den Einfluss feindlicher Stasisnetze auf die Geschwindigkeit",
+      "tooltip_description_es": "Reduce el impacto en la velocidad de las redes ralentizadoras hostiles.",
+      "tooltip_description_it_it": null,
+      "tooltip_description_ja": "\u6575\u306e\u30b9\u30c6\u30a4\u30b7\u30b9\u30a6\u30a7\u30d3\u30d5\u30a1\u30a4\u30e4\u30fc\u306e\u901f\u5ea6\u3078\u306e\u5f71\u97ff\u3092\u6e1b\u5c11\u3055\u305b\u308b",
+      "tooltip_description_ko_kr": "\uc801\uc774 \uc2a4\ud14c\uc774\uc2dc\uc2a4 \uc6f9 \uc0dd\uc131\uae30\ub85c \ud568\uc120 \uc18d\ub3c4\uc5d0 \ubbf8\uce58\ub294 \uc601\ud5a5\uc774 \uac10\uc18c\ud569\ub2c8\ub2e4.",
+      "tooltip_description_fr_fr": "R\u00e9duit l'impact des g\u00e9n\u00e9rateurs de stase hostiles sur la vitesse",
+      "tooltip_description_nl_nl": null,
+      "tooltip_description_pl_pl": null,
+      "tooltip_description_ru": "\u0423\u043c\u0435\u043d\u044c\u0448\u0430\u0435\u0442 \u0432\u043b\u0438\u044f\u043d\u0438\u0435 \u0432\u0440\u0430\u0436\u0435\u0441\u043a\u0438\u0445 \u0441\u0442\u0430\u0437\u0438\u0441-\u0438\u043d\u0434\u0443\u043a\u0442\u043e\u0440\u043e\u0432 \u043d\u0430 \u0441\u043a\u043e\u0440\u043e\u0441\u0442\u044c \u043a\u043e\u0440\u0430\u0431\u043b\u044f",
+      "tooltip_description_uk": null,
+      "tooltip_description_zh_hans": "\u51cf\u5c11\u654c\u5bf9\u505c\u6ede\u7f20\u7ed5\u5149\u675f\u5bf9\u901f\u5ea6\u7684\u5f71\u54cd",
+      "tooltip_title": "Stasis Webifier Resistance",
+      "tooltip_title_en": "Stasis Webifier Resistance",
+      "tooltip_title_de": "Widerstand gegen Stasisnetze",
+      "tooltip_title_es": "Resistencia a redes ralentizadoras",
+      "tooltip_title_it_it": null,
+      "tooltip_title_ja": "\u30b9\u30c6\u30a4\u30b7\u30b9\u30a6\u30a7\u30d3\u30d5\u30a1\u30a4\u30e4\u30fc\u3078\u306e\u30ec\u30b8\u30b9\u30bf\u30f3\u30b9",
+      "tooltip_title_ko_kr": "\uc2a4\ud14c\uc774\uc2dc\uc2a4 \uc6f9 \uc0dd\uc131\uae30 \uc800\ud56d",
+      "tooltip_title_fr_fr": "R\u00e9sistance aux g\u00e9n\u00e9rateurs de stase",
+      "tooltip_title_nl_nl": null,
+      "tooltip_title_pl_pl": null,
+      "tooltip_title_ru": "\u0421\u043e\u043f\u0440\u043e\u0442\u0438\u0432\u043b\u044f\u0435\u043c\u043e\u0441\u0442\u044c \u0432\u043e\u0437\u0434\u0435\u0439\u0441\u0442\u0432\u0438\u044e \u0441\u0442\u0430\u0437\u0438\u0441-\u0438\u043d\u0434\u0443\u043a\u0442\u043e\u0440\u043e\u0432",
+      "tooltip_title_uk": null,
+      "tooltip_title_zh_hans": "\u505c\u6ede\u7f20\u7ed5\u6297\u6027",
+      "unit": 108
+    }
+  },
+  {
+    "model": "eve_sde.dogmaattribute",
+    "pk": 1981,
+    "fields": {
+      "name": "asteroidRadiusUnitSize",
+      "attribute_category": 31,
+      "chargeRecharge_time_id": null,
+      "data_type_id_raw": 2,
+      "default_value": 90.0,
+      "description": "Sets the radius of the asteroid ball when it has a quantity of 1 unit",
+      "display_name": "Asteroid unit radius",
+      "display_name_en": "Asteroid unit radius",
+      "display_name_de": "Asteroideneinheitenradius",
+      "display_name_es": "Radio de unidad de asteroide",
+      "display_name_it_it": null,
+      "display_name_ja": "\u30a2\u30b9\u30c6\u30ed\u30a4\u30c9\u30e6\u30cb\u30c3\u30c8\u534a\u5f84",
+      "display_name_ko_kr": "\uc18c\ud589\uc131 \uc720\ub2db \ubc18\uacbd",
+      "display_name_fr_fr": "Rayon de l'unit\u00e9 d'ast\u00e9ro\u00efde",
+      "display_name_nl_nl": null,
+      "display_name_pl_pl": null,
+      "display_name_ru": "\u0420\u0430\u0434\u0438\u0443\u0441 \u0430\u0441\u0442\u0435\u0440\u043e\u0438\u0434\u0430",
+      "display_name_uk": null,
+      "display_name_zh_hans": "\u5c0f\u884c\u661f\u5355\u4f4d\u534a\u5f84",
+      "display_when_zero": false,
+      "high_is_good": true,
+      "icon_id": null,
+      "max_attribute_id_raw": null,
+      "published": false,
+      "stackable": true,
+      "tooltip_description": null,
+      "tooltip_description_en": null,
+      "tooltip_description_de": null,
+      "tooltip_description_es": null,
+      "tooltip_description_it_it": null,
+      "tooltip_description_ja": null,
+      "tooltip_description_ko_kr": null,
+      "tooltip_description_fr_fr": null,
+      "tooltip_description_nl_nl": null,
+      "tooltip_description_pl_pl": null,
+      "tooltip_description_ru": null,
+      "tooltip_description_uk": null,
+      "tooltip_description_zh_hans": null,
+      "tooltip_title": null,
+      "tooltip_title_en": null,
+      "tooltip_title_de": null,
+      "tooltip_title_es": null,
+      "tooltip_title_it_it": null,
+      "tooltip_title_ja": null,
+      "tooltip_title_ko_kr": null,
+      "tooltip_title_fr_fr": null,
+      "tooltip_title_nl_nl": null,
+      "tooltip_title_pl_pl": null,
+      "tooltip_title_ru": null,
+      "tooltip_title_uk": null,
+      "tooltip_title_zh_hans": null,
+      "unit": 1
+    }
+  },
+  {
+    "model": "eve_sde.dogmaunit",
+    "pk": 1,
+    "fields": {
+      "name": "Length",
+      "description": "Meter",
+      "description_en": "Meter",
+      "description_de": "Meter",
+      "description_es": "Metro.",
+      "description_it_it": null,
+      "description_ja": "\u30e1\u30fc\u30c8\u30eb",
+      "description_ko_kr": "m",
+      "description_fr_fr": "M\u00e8tre",
+      "description_nl_nl": null,
+      "description_pl_pl": null,
+      "description_ru": "\u043c\u0435\u0442\u0440",
+      "description_uk": null,
+      "description_zh_hans": "\u7c73",
+      "display_name": "m",
+      "display_name_en": "m",
+      "display_name_de": "m",
+      "display_name_es": "m",
+      "display_name_it_it": null,
+      "display_name_ja": "m",
+      "display_name_ko_kr": "m",
+      "display_name_fr_fr": "m",
+      "display_name_nl_nl": null,
+      "display_name_pl_pl": null,
+      "display_name_ru": "\u043c",
+      "display_name_uk": null,
+      "display_name_zh_hans": "m"
+    }
+  },
+  {
+    "model": "eve_sde.dogmaattribute",
+    "pk": 1980,
+    "fields": {
+      "name": "asteroidRadiusGrowthFactor",
+      "attribute_category": 31,
+      "chargeRecharge_time_id": null,
+      "data_type_id_raw": 2,
+      "default_value": 1.0,
+      "description": "Controls how quickly an asteroid radius increases as its quantity grows.",
+      "display_name": "Asteroid radius size multiplier",
+      "display_name_en": "Asteroid radius size multiplier",
+      "display_name_de": "Asteroidradius-Multiplizierer",
+      "display_name_es": "Multiplicador del radio del asteroide",
+      "display_name_it_it": null,
+      "display_name_ja": "\u30a2\u30b9\u30c6\u30ed\u30a4\u30c9\u534a\u5f84\u4e57\u6570",
+      "display_name_ko_kr": "\uc18c\ud589\uc131 \ud06c\uae30 \ubc30\uc218",
+      "display_name_fr_fr": "Multiplicateur de la taille du rayon de l'ast\u00e9ro\u00efde",
+      "display_name_nl_nl": null,
+      "display_name_pl_pl": null,
+      "display_name_ru": "\u041c\u043d\u043e\u0436\u0438\u0442\u0435\u043b\u044c \u0440\u0430\u0434\u0438\u0443\u0441\u0430 \u0430\u0441\u0442\u0435\u0440\u043e\u0438\u0434\u043e\u0432",
+      "display_name_uk": null,
+      "display_name_zh_hans": "\u5c0f\u884c\u661f\u534a\u5f84\u7cfb\u6570",
+      "display_when_zero": false,
+      "high_is_good": true,
+      "icon_id": null,
+      "max_attribute_id_raw": null,
+      "published": false,
+      "stackable": true,
+      "tooltip_description": null,
+      "tooltip_description_en": null,
+      "tooltip_description_de": null,
+      "tooltip_description_es": null,
+      "tooltip_description_it_it": null,
+      "tooltip_description_ja": null,
+      "tooltip_description_ko_kr": null,
+      "tooltip_description_fr_fr": null,
+      "tooltip_description_nl_nl": null,
+      "tooltip_description_pl_pl": null,
+      "tooltip_description_ru": null,
+      "tooltip_description_uk": null,
+      "tooltip_description_zh_hans": null,
+      "tooltip_title": null,
+      "tooltip_title_en": null,
+      "tooltip_title_de": null,
+      "tooltip_title_es": null,
+      "tooltip_title_it_it": null,
+      "tooltip_title_ja": null,
+      "tooltip_title_ko_kr": null,
+      "tooltip_title_fr_fr": null,
+      "tooltip_title_nl_nl": null,
+      "tooltip_title_pl_pl": null,
+      "tooltip_title_ru": null,
+      "tooltip_title_uk": null,
+      "tooltip_title_zh_hans": null,
+      "unit": null
+    }
+  },
+  {
+    "model": "eve_sde.dogmaattribute",
+    "pk": 790,
+    "fields": {
+      "name": "reprocessingSkillType",
+      "attribute_category": 7,
+      "chargeRecharge_time_id": null,
+      "data_type_id_raw": 11,
+      "default_value": 0.0,
+      "description": "The skill required to reprocess this ore type.",
+      "display_name": "Reprocessing Skill",
+      "display_name_en": "Reprocessing Skill",
+      "display_name_de": "Aufbereitung-Skill",
+      "display_name_es": "Habilidad de reprocesamiento",
+      "display_name_it_it": null,
+      "display_name_ja": "\u518d\u51e6\u7406\u30b9\u30ad\u30eb",
+      "display_name_ko_kr": "\uc7ac\ucc98\ub9ac \uc2a4\ud0ac",
+      "display_name_fr_fr": "Comp\u00e9tence de retraitement",
+      "display_name_nl_nl": null,
+      "display_name_pl_pl": null,
+      "display_name_ru": "\u041d\u0430\u0432\u044b\u043a \u043f\u0435\u0440\u0435\u0440\u0430\u0431\u043e\u0442\u043a\u0438",
+      "display_name_uk": null,
+      "display_name_zh_hans": "\u56de\u6536\u518d\u751f\u6280\u80fd",
+      "display_when_zero": false,
+      "high_is_good": true,
+      "icon_id": 0,
+      "max_attribute_id_raw": null,
+      "published": true,
+      "stackable": true,
+      "tooltip_description": null,
+      "tooltip_description_en": null,
+      "tooltip_description_de": null,
+      "tooltip_description_es": null,
+      "tooltip_description_it_it": null,
+      "tooltip_description_ja": null,
+      "tooltip_description_ko_kr": null,
+      "tooltip_description_fr_fr": null,
+      "tooltip_description_nl_nl": null,
+      "tooltip_description_pl_pl": null,
+      "tooltip_description_ru": null,
+      "tooltip_description_uk": null,
+      "tooltip_description_zh_hans": null,
+      "tooltip_title": null,
+      "tooltip_title_en": null,
+      "tooltip_title_de": null,
+      "tooltip_title_es": null,
+      "tooltip_title_it_it": null,
+      "tooltip_title_ja": null,
+      "tooltip_title_ko_kr": null,
+      "tooltip_title_fr_fr": null,
+      "tooltip_title_nl_nl": null,
+      "tooltip_title_pl_pl": null,
+      "tooltip_title_ru": null,
+      "tooltip_title_uk": null,
+      "tooltip_title_zh_hans": null,
+      "unit": 116
+    }
+  },
+  {
+    "model": "eve_sde.dogmaattribute",
+    "pk": 277,
+    "fields": {
+      "name": "requiredSkill1Level",
+      "attribute_category": 8,
+      "chargeRecharge_time_id": null,
+      "data_type_id_raw": 4,
+      "default_value": 0.0,
+      "description": "Required skill level for skill 1",
+      "display_name": null,
+      "display_name_en": null,
+      "display_name_de": null,
+      "display_name_es": null,
+      "display_name_it_it": null,
+      "display_name_ja": null,
+      "display_name_ko_kr": null,
+      "display_name_fr_fr": null,
+      "display_name_nl_nl": null,
+      "display_name_pl_pl": null,
+      "display_name_ru": null,
+      "display_name_uk": null,
+      "display_name_zh_hans": null,
+      "display_when_zero": false,
+      "high_is_good": true,
+      "icon_id": null,
+      "max_attribute_id_raw": null,
+      "published": false,
+      "stackable": true,
+      "tooltip_description": null,
+      "tooltip_description_en": null,
+      "tooltip_description_de": null,
+      "tooltip_description_es": null,
+      "tooltip_description_it_it": null,
+      "tooltip_description_ja": null,
+      "tooltip_description_ko_kr": null,
+      "tooltip_description_fr_fr": null,
+      "tooltip_description_nl_nl": null,
+      "tooltip_description_pl_pl": null,
+      "tooltip_description_ru": null,
+      "tooltip_description_uk": null,
+      "tooltip_description_zh_hans": null,
+      "tooltip_title": null,
+      "tooltip_title_en": null,
+      "tooltip_title_de": null,
+      "tooltip_title_es": null,
+      "tooltip_title_it_it": null,
+      "tooltip_title_ja": null,
+      "tooltip_title_ko_kr": null,
+      "tooltip_title_fr_fr": null,
+      "tooltip_title_nl_nl": null,
+      "tooltip_title_pl_pl": null,
+      "tooltip_title_ru": null,
+      "tooltip_title_uk": null,
+      "tooltip_title_zh_hans": null,
+      "unit": null
+    }
+  },
+  {
+    "model": "eve_sde.dogmaattributecategory",
+    "pk": 8,
+    "fields": {
+      "name": "Required Skills",
+      "description": "Skill requirements"
+    }
+  },
+  {
+    "model": "eve_sde.dogmaattribute",
+    "pk": 182,
+    "fields": {
+      "name": "requiredSkill1",
+      "attribute_category": 8,
+      "chargeRecharge_time_id": null,
+      "data_type_id_raw": 11,
+      "default_value": 0.0,
+      "description": "The type ID of the skill that is required.",
+      "display_name": "Primary Skill required",
+      "display_name_en": "Primary Skill required",
+      "display_name_de": "Prim\u00e4rer Skill ben\u00f6tigt",
+      "display_name_es": "Habilidad principal necesaria",
+      "display_name_it_it": null,
+      "display_name_ja": "\u7b2c\u4e00\u5fc5\u9808\u30b9\u30ad\u30eb",
+      "display_name_ko_kr": "1\ucc28 \uc2a4\ud0ac \ud544\uc694",
+      "display_name_fr_fr": "Comp\u00e9tence principale requise",
+      "display_name_nl_nl": null,
+      "display_name_pl_pl": null,
+      "display_name_ru": "\u0422\u0440\u0435\u0431\u0443\u0435\u043c\u044b\u0439 \u043f\u0435\u0440\u0432\u0438\u0447\u043d\u044b\u0439 \u043d\u0430\u0432\u044b\u043a",
+      "display_name_uk": null,
+      "display_name_zh_hans": "\u4e3b\u6280\u80fd\u9700\u6c42",
+      "display_when_zero": false,
+      "high_is_good": true,
+      "icon_id": 33,
+      "max_attribute_id_raw": null,
+      "published": true,
+      "stackable": true,
+      "tooltip_description": null,
+      "tooltip_description_en": null,
+      "tooltip_description_de": null,
+      "tooltip_description_es": null,
+      "tooltip_description_it_it": null,
+      "tooltip_description_ja": null,
+      "tooltip_description_ko_kr": null,
+      "tooltip_description_fr_fr": null,
+      "tooltip_description_nl_nl": null,
+      "tooltip_description_pl_pl": null,
+      "tooltip_description_ru": null,
+      "tooltip_description_uk": null,
+      "tooltip_description_zh_hans": null,
+      "tooltip_title": null,
+      "tooltip_title_en": null,
+      "tooltip_title_de": null,
+      "tooltip_title_es": null,
+      "tooltip_title_it_it": null,
+      "tooltip_title_ja": null,
+      "tooltip_title_ko_kr": null,
+      "tooltip_title_fr_fr": null,
+      "tooltip_title_nl_nl": null,
+      "tooltip_title_pl_pl": null,
+      "tooltip_title_ru": null,
+      "tooltip_title_uk": null,
+      "tooltip_title_zh_hans": null,
+      "unit": 116
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6717711,
+    "fields": {
+      "item_type": 45513,
+      "dogma_attribute": 182,
+      "value": 3386.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6717712,
+    "fields": {
+      "item_type": 45513,
+      "dogma_attribute": 277,
+      "value": 1.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6717713,
+    "fields": {
+      "item_type": 45513,
+      "dogma_attribute": 790,
+      "value": 46156.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6717714,
+    "fields": {
+      "item_type": 45513,
+      "dogma_attribute": 1980,
+      "value": 0.75
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6717715,
+    "fields": {
+      "item_type": 45513,
+      "dogma_attribute": 1981,
+      "value": 600.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6717716,
+    "fields": {
+      "item_type": 45513,
+      "dogma_attribute": 2115,
+      "value": 0.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6717717,
+    "fields": {
+      "item_type": 45513,
+      "dogma_attribute": 2699,
+      "value": 1.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6717718,
+    "fields": {
+      "item_type": 45513,
+      "dogma_attribute": 2711,
+      "value": 45513.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6717719,
+    "fields": {
+      "item_type": 45513,
+      "dogma_attribute": 2727,
+      "value": 5000.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6721926,
+    "fields": {
+      "item_type": 46285,
+      "dogma_attribute": 182,
+      "value": 3386.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6721927,
+    "fields": {
+      "item_type": 46285,
+      "dogma_attribute": 277,
+      "value": 1.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6721928,
+    "fields": {
+      "item_type": 46285,
+      "dogma_attribute": 790,
+      "value": 46152.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6721929,
+    "fields": {
+      "item_type": 46285,
+      "dogma_attribute": 1980,
+      "value": 0.75
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6721930,
+    "fields": {
+      "item_type": 46285,
+      "dogma_attribute": 1981,
+      "value": 600.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6721931,
+    "fields": {
+      "item_type": 46285,
+      "dogma_attribute": 2115,
+      "value": 0.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6721932,
+    "fields": {
+      "item_type": 46285,
+      "dogma_attribute": 2699,
+      "value": 5.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6721933,
+    "fields": {
+      "item_type": 46285,
+      "dogma_attribute": 2711,
+      "value": 45492.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6721934,
+    "fields": {
+      "item_type": 46285,
+      "dogma_attribute": 2727,
+      "value": 5000.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6721971,
+    "fields": {
+      "item_type": 46290,
+      "dogma_attribute": 182,
+      "value": 3386.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6721972,
+    "fields": {
+      "item_type": 46290,
+      "dogma_attribute": 277,
+      "value": 1.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6721973,
+    "fields": {
+      "item_type": 46290,
+      "dogma_attribute": 790,
+      "value": 46153.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6721974,
+    "fields": {
+      "item_type": 46290,
+      "dogma_attribute": 1980,
+      "value": 0.75
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6721975,
+    "fields": {
+      "item_type": 46290,
+      "dogma_attribute": 1981,
+      "value": 600.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6721976,
+    "fields": {
+      "item_type": 46290,
+      "dogma_attribute": 2115,
+      "value": 0.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6721977,
+    "fields": {
+      "item_type": 46290,
+      "dogma_attribute": 2699,
+      "value": 3.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6721978,
+    "fields": {
+      "item_type": 46290,
+      "dogma_attribute": 2711,
+      "value": 45495.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6721979,
+    "fields": {
+      "item_type": 46290,
+      "dogma_attribute": 2727,
+      "value": 5000.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722016,
+    "fields": {
+      "item_type": 46295,
+      "dogma_attribute": 182,
+      "value": 3386.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722017,
+    "fields": {
+      "item_type": 46295,
+      "dogma_attribute": 277,
+      "value": 1.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722018,
+    "fields": {
+      "item_type": 46295,
+      "dogma_attribute": 790,
+      "value": 46153.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722019,
+    "fields": {
+      "item_type": 46295,
+      "dogma_attribute": 1980,
+      "value": 0.75
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722020,
+    "fields": {
+      "item_type": 46295,
+      "dogma_attribute": 1981,
+      "value": 600.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722021,
+    "fields": {
+      "item_type": 46295,
+      "dogma_attribute": 2115,
+      "value": 0.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722022,
+    "fields": {
+      "item_type": 46295,
+      "dogma_attribute": 2699,
+      "value": 5.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722023,
+    "fields": {
+      "item_type": 46295,
+      "dogma_attribute": 2711,
+      "value": 45497.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722024,
+    "fields": {
+      "item_type": 46295,
+      "dogma_attribute": 2727,
+      "value": 5000.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722070,
+    "fields": {
+      "item_type": 46301,
+      "dogma_attribute": 182,
+      "value": 3386.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722071,
+    "fields": {
+      "item_type": 46301,
+      "dogma_attribute": 277,
+      "value": 1.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722072,
+    "fields": {
+      "item_type": 46301,
+      "dogma_attribute": 790,
+      "value": 46154.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722073,
+    "fields": {
+      "item_type": 46301,
+      "dogma_attribute": 1980,
+      "value": 0.75
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722074,
+    "fields": {
+      "item_type": 46301,
+      "dogma_attribute": 1981,
+      "value": 600.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722075,
+    "fields": {
+      "item_type": 46301,
+      "dogma_attribute": 2115,
+      "value": 0.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722076,
+    "fields": {
+      "item_type": 46301,
+      "dogma_attribute": 2699,
+      "value": 5.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722077,
+    "fields": {
+      "item_type": 46301,
+      "dogma_attribute": 2711,
+      "value": 45500.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722078,
+    "fields": {
+      "item_type": 46301,
+      "dogma_attribute": 2727,
+      "value": 5000.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722142,
+    "fields": {
+      "item_type": 46309,
+      "dogma_attribute": 182,
+      "value": 3386.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722143,
+    "fields": {
+      "item_type": 46309,
+      "dogma_attribute": 277,
+      "value": 1.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722144,
+    "fields": {
+      "item_type": 46309,
+      "dogma_attribute": 790,
+      "value": 46155.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722145,
+    "fields": {
+      "item_type": 46309,
+      "dogma_attribute": 1980,
+      "value": 0.75
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722146,
+    "fields": {
+      "item_type": 46309,
+      "dogma_attribute": 1981,
+      "value": 600.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722147,
+    "fields": {
+      "item_type": 46309,
+      "dogma_attribute": 2115,
+      "value": 0.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722148,
+    "fields": {
+      "item_type": 46309,
+      "dogma_attribute": 2699,
+      "value": 5.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722149,
+    "fields": {
+      "item_type": 46309,
+      "dogma_attribute": 2711,
+      "value": 45504.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722150,
+    "fields": {
+      "item_type": 46309,
+      "dogma_attribute": 2727,
+      "value": 5000.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722223,
+    "fields": {
+      "item_type": 46318,
+      "dogma_attribute": 182,
+      "value": 3386.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722224,
+    "fields": {
+      "item_type": 46318,
+      "dogma_attribute": 277,
+      "value": 1.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722225,
+    "fields": {
+      "item_type": 46318,
+      "dogma_attribute": 790,
+      "value": 46156.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722226,
+    "fields": {
+      "item_type": 46318,
+      "dogma_attribute": 1980,
+      "value": 0.75
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722227,
+    "fields": {
+      "item_type": 46318,
+      "dogma_attribute": 1981,
+      "value": 600.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722228,
+    "fields": {
+      "item_type": 46318,
+      "dogma_attribute": 2115,
+      "value": 0.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722229,
+    "fields": {
+      "item_type": 46318,
+      "dogma_attribute": 2699,
+      "value": 3.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722230,
+    "fields": {
+      "item_type": 46318,
+      "dogma_attribute": 2711,
+      "value": 45513.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722231,
+    "fields": {
+      "item_type": 46318,
+      "dogma_attribute": 2727,
+      "value": 5000.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722232,
+    "fields": {
+      "item_type": 46319,
+      "dogma_attribute": 182,
+      "value": 3386.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722233,
+    "fields": {
+      "item_type": 46319,
+      "dogma_attribute": 277,
+      "value": 1.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722234,
+    "fields": {
+      "item_type": 46319,
+      "dogma_attribute": 790,
+      "value": 46156.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722235,
+    "fields": {
+      "item_type": 46319,
+      "dogma_attribute": 1980,
+      "value": 0.75
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722236,
+    "fields": {
+      "item_type": 46319,
+      "dogma_attribute": 1981,
+      "value": 600.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722237,
+    "fields": {
+      "item_type": 46319,
+      "dogma_attribute": 2115,
+      "value": 0.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722238,
+    "fields": {
+      "item_type": 46319,
+      "dogma_attribute": 2699,
+      "value": 5.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722239,
+    "fields": {
+      "item_type": 46319,
+      "dogma_attribute": 2711,
+      "value": 45513.0
+    }
+  },
+  {
+    "model": "eve_sde.typedogma",
+    "pk": 6722240,
+    "fields": {
+      "item_type": 46319,
+      "dogma_attribute": 2727,
+      "value": 5000.0
     }
   }
 ]

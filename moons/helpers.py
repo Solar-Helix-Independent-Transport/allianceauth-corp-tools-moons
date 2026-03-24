@@ -1,6 +1,6 @@
 from typing import Dict
 
-from eve_sde.models import ItemTypeMaterials
+from eve_sde.models import ItemTypeMaterials, TypeDogma
 
 from .models import OrePrice, OreTax
 
@@ -17,6 +17,8 @@ class OreHelper:
 
     asteroids = 25
 
+    base_dogma_attib_id = 2711
+
     def get_mineral_array():
         return list(
             set(
@@ -29,8 +31,8 @@ class OreHelper:
             )
         )
 
-    def get_ore_array():
-        inv_types = ItemTypeMaterials.objects.filter(
+    def get_inv_types():
+        return ItemTypeMaterials.objects.filter(
             item_type__group__category_id=OreHelper.asteroids
         ).select_related(
             'item_type',
@@ -38,45 +40,51 @@ class OreHelper:
             'material_item_type'
         )
 
+    def get_base_attributes():
+        base_attributes = TypeDogma.objects.filter(
+            item_type__group__category_id=OreHelper.asteroids,
+            dogma_attribute__id=OreHelper.base_dogma_attib_id
+        )
+        base_types = {}
+        for ba in base_attributes:
+            base_types[ba.item_type_id] = ba.value
+        return base_types
+
+    def get_rarity(component: ItemTypeMaterials):
+        return OreHelper.rank_ids[
+            component.item_type.group_id
+        ] if component.item_type.group_id in OreHelper.rank_ids else "ore_rate"
+
+    def get_base_ore_values(component: ItemTypeMaterials, base_types: dict):
+        rarity = OreHelper.get_rarity(component)
+        return {
+            "minerals": {},
+            "volume": component.item_type.packaged_volume if component.item_type.packaged_volume else component.item_type.volume,
+            "model": component.item_type,
+            "rarity": rarity,
+            "portion": component.item_type.portion_size,
+            "base_ore_id": base_types.get(component.item_type.pk, False)
+        }
+
+    def get_ore_array():
+        inv_types = OreHelper.get_inv_types()
+        base_types = OreHelper.get_base_attributes()
         ore_infos = {}
         for comp in inv_types:
             if comp.item_type.pk not in ore_infos:
-                rarity = OreHelper.rank_ids[
-                    comp.item_type.group_id
-                ] if comp.item_type.group_id in OreHelper.rank_ids else "ore_rate"
-                ore_infos[comp.item_type.pk] = {
-                    "minerals": {},
-                    "volume": comp.item_type.packaged_volume if comp.item_type.packaged_volume else comp.item_type.volume,
-                    "model": comp.item_type,
-                    "rarity": rarity,
-                    "portion": comp.item_type.portion_size
-                }
+                ore_infos[comp.item_type.pk] = OreHelper.get_base_ore_values(comp, base_types)
             ore_infos[comp.item_type.pk]['minerals'][comp.material_item_type.name] = comp.quantity
 
         return ore_infos
 
     def get_detailed_ore_array():
-        inv_types = ItemTypeMaterials.objects.filter(
-            item_type__group__category_id=OreHelper.asteroids
-        ).select_related(
-            'item_type',
-            'item_type__group',
-            'material_item_type'
-        )
-
+        inv_types = OreHelper.get_inv_types()
+        base_types = OreHelper.get_base_attributes()
+        base_types = OreHelper.get_base_attributes()
         ore_infos = {}
         for comp in inv_types:
             if comp.item_type.pk not in ore_infos:
-                rarity = OreHelper.rank_ids[
-                    comp.item_type.group_id
-                ] if comp.item_type.group_id in OreHelper.rank_ids else "ore_rate"
-                ore_infos[comp.item_type.pk] = {
-                    "minerals": {},
-                    "volume": comp.item_type.packaged_volume,
-                    "model": comp.item_type,
-                    "rarity": rarity,
-                    "portion": comp.item_type.portion_size
-                }
+                ore_infos[comp.item_type.pk] = OreHelper.get_base_ore_values(comp, base_types)
             ore_infos[comp.item_type.pk]['minerals'][comp.material_item_type.name] = {
                 "grp": comp.material_item_type.group_id,
                 "qty": comp.quantity
