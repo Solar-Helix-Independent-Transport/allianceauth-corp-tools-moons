@@ -353,7 +353,7 @@ def update_ore_prices():
     price_cache = {}
 
     for key, item in price_data.items():
-        name = ItemType.objects.get(key)
+        name = ItemType.objects.get(id=key)
         name = name.name
         if name not in price_cache:
             price_cache[name] = {}
