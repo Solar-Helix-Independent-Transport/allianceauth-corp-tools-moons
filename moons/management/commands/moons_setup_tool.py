@@ -1,5 +1,4 @@
 from celery import chain
-from corptools.models import MapSystem
 from django_celery_beat.models import (
     CrontabSchedule, IntervalSchedule, PeriodicTask,
 )
@@ -96,7 +95,6 @@ class Command(BaseCommand):
             }
         )
 
-        MapSystem.objects.all().count()
         if options['inline']:
             self.stdout.write("Starting Ore Price Updates")
             update_ore_prices()
