@@ -321,18 +321,59 @@ def get_moon_rentals(request):
         return []
 
     rentals = models.MoonRental.objects.filter(end_date__isnull=True).select_related(
-        "moon", "moon__system", "contact", "corporation")
+        "moon", "moon__solar_system", "contact", "corporation")
     out = []
     for r in rentals:
         out.append(
-            {"moon": {
-                "id": r.moon.id,
-                "name": r.moon.name
-            },
+            {
+                "moon": {
+                    "id": r.moon.id,
+                    "name": r.moon.name
+                },
                 "system": {
-                "id": r.moon.solar_system.id,
-                "name": r.moon.solar_system.name
-            },
+                    "id": r.moon.solar_system.id,
+                    "name": r.moon.solar_system.name
+                },
+                "contact": r.contact,
+                "corporation": r.corporation,
+                "price": r.price,
+                "start_date": r.start_date
+            }
+        )
+
+    return out
+
+
+@api.get(
+    "/rental/invalid",
+    response={200: List[schema.MoonRental]},
+    tags=["Rentals"]
+)
+def get_moon_rentals(request):
+    if not request.user.has_perm("moons.add_moonrental"):
+        return []
+
+    rentals = models.MoonRental.objects.filter(
+        end_date__isnull=True,
+        contact__character_ownership=None
+    ).select_related(
+        "moon",
+        "moon__solar_system",
+        "contact",
+        "corporation"
+    )
+    out = []
+    for r in rentals:
+        out.append(
+            {
+                "moon": {
+                    "id": r.moon.id,
+                    "name": r.moon.name
+                },
+                "system": {
+                    "id": r.moon.solar_system.id,
+                    "name": r.moon.solar_system.name
+                },
                 "contact": r.contact,
                 "corporation": r.corporation,
                 "price": r.price,
