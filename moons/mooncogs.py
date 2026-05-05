@@ -6,11 +6,12 @@ from typing import Optional
 from aadiscordbot.app_settings import get_all_servers
 from aadiscordbot.cogs.utils.decorators import has_any_perm
 from aadiscordbot.utils.auth import get_auth_user
-from corptools.models import CorporationAudit, MapSystemMoon, Structure
-from discord import AutocompleteContext, Interaction, option
+from corptools.models import CorporationAudit, Structure
+from discord import AutocompleteContext, option
 from discord.commands import SlashCommandGroup
 from discord.embeds import Embed
 from discord.ext import commands
+from eve_sde.models import Moon
 
 from django.utils import timezone
 
@@ -162,7 +163,7 @@ class MoonsCog(commands.Cog):
 
         async def search_moons(ctx: AutocompleteContext):
             """Returns a list of moons that begin with the characters entered so far."""
-            resp = list(MapSystemMoon.objects.filter(
+            resp = list(Moon.objects.filter(
                 name__icontains=ctx.value).values_list("name", flat=True)[:10])
             return resp
 
@@ -243,7 +244,7 @@ class MoonsCog(commands.Cog):
                 moon__name=moon, end_date__isnull=True)
 
             if not moon_q.exists():
-                moon = MapSystemMoon.objects.get(name=moon)
+                moon = Moon.objects.get(name=moon)
                 char = EveCharacter.objects.get(character_name=character)
                 corp = EveCorporationInfo.objects.get(
                     corporation_name=corporation)
