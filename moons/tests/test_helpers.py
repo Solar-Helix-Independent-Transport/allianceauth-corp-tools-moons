@@ -1,8 +1,8 @@
-
+from datetime import datetime, timedelta, timezone as dt_timezone
 
 from django.test import TestCase
 
-from moons.helpers import OreHelper
+from moons.helpers import OreHelper, calculate_split_value, what_frack_id
 from moons.models import OreTaxRates
 from moons.tasks import update_tax_prices
 
@@ -112,3 +112,53 @@ class TestInvoicesAccessPerms(TestCase):
         ores = OreHelper.get_mineral_array()
         self.assertEqual(len(ores), 11)
         self.assertEqual(sum(ores), 149839)
+
+
+class TestWhatFrackId(TestCase):
+    def _fracks(self, extraction_end):
+        return {1: {"structure_id": 100, "extraction_end": extraction_end}}
+
+    def _obs(self, structure_id, last_updated):
+        return {"structure": structure_id, "last_updated": last_updated}
+
+    def test_match_on_extraction_day(self):
+        t = datetime(2024, 1, 10, tzinfo=dt_timezone.utc)
+        self.assertEqual(what_frack_id(self._fracks(t), self._obs(100, t)), 1)
+
+    def test_match_early_boundary(self):
+        t = datetime(2024, 1, 10, tzinfo=dt_timezone.utc)
+        self.assertEqual(what_frack_id(self._fracks(t), self._obs(100, t - timedelta(days=2))), 1)
+
+    def test_match_late_boundary(self):
+        t = datetime(2024, 1, 10, tzinfo=dt_timezone.utc)
+        self.assertEqual(what_frack_id(self._fracks(t), self._obs(100, t + timedelta(days=5))), 1)
+
+    def test_no_match_too_early(self):
+        t = datetime(2024, 1, 10, tzinfo=dt_timezone.utc)
+        self.assertFalse(what_frack_id(self._fracks(t), self._obs(100, t - timedelta(days=3))))
+
+    def test_no_match_too_late(self):
+        t = datetime(2024, 1, 10, tzinfo=dt_timezone.utc)
+        self.assertFalse(what_frack_id(self._fracks(t), self._obs(100, t + timedelta(days=6))))
+
+    def test_no_match_wrong_structure(self):
+        t = datetime(2024, 1, 10, tzinfo=dt_timezone.utc)
+        self.assertFalse(what_frack_id(self._fracks(t), self._obs(999, t)))
+
+    def test_empty_fracks(self):
+        t = datetime(2024, 1, 10, tzinfo=dt_timezone.utc)
+        self.assertFalse(what_frack_id({}, self._obs(100, t)))
+
+
+class TestCalculateSplitValue(TestCase):
+    def test_equal_buy_sell(self):
+        prices = {"buy": {"max": "100.0"}, "sell": {"min": "100.0"}}
+        self.assertEqual(calculate_split_value(prices), 100.0)
+
+    def test_midpoint(self):
+        prices = {"buy": {"max": "80.0"}, "sell": {"min": "120.0"}}
+        self.assertEqual(calculate_split_value(prices), 100.0)
+
+    def test_zero_buy(self):
+        prices = {"buy": {"max": "0.0"}, "sell": {"min": "200.0"}}
+        self.assertEqual(calculate_split_value(prices), 100.0)

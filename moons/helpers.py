@@ -4,6 +4,9 @@ from eve_sde.models import ItemTypeMaterials, TypeDogma
 
 from .models import OrePrice, OreTax
 
+FRACK_WINDOW_EARLY_DAYS = -2
+FRACK_WINDOW_LATE_DAYS = 5
+
 
 class OreHelper:
 
@@ -15,15 +18,15 @@ class OreHelper:
         1884: "ubiquitous_rate"
     }
 
-    asteroids = 25
-
-    base_dogma_attib_id = 2711
+    asteroids_category_id = 25
+    minerals_group_id = 18
+    base_ore_dogma_attribute_id = 2711
 
     def get_mineral_array():
         return list(
             set(
                 ItemTypeMaterials.objects.filter(
-                    item_type__group__category_id=OreHelper.asteroids
+                    item_type__group__category_id=OreHelper.asteroids_category_id
                 ).values_list(
                     'material_item_type_id',
                     flat=True
@@ -33,7 +36,7 @@ class OreHelper:
 
     def get_inv_types():
         return ItemTypeMaterials.objects.filter(
-            item_type__group__category_id=OreHelper.asteroids
+            item_type__group__category_id=OreHelper.asteroids_category_id
         ).select_related(
             'item_type',
             'item_type__group',
@@ -42,8 +45,8 @@ class OreHelper:
 
     def get_base_attributes():
         base_attributes = TypeDogma.objects.filter(
-            item_type__group__category_id=OreHelper.asteroids,
-            dogma_attribute__id=OreHelper.base_dogma_attib_id
+            item_type__group__category_id=OreHelper.asteroids_category_id,
+            dogma_attribute__id=OreHelper.base_ore_dogma_attribute_id
         )
         base_types = {}
         for ba in base_attributes:
@@ -114,7 +117,7 @@ class OreHelper:
         for ore, minerals in ores.items():
             price = 0
             for mineral, detail in minerals["minerals"].items():
-                if detail["grp"] == 18 and goo_only:
+                if detail["grp"] == OreHelper.minerals_group_id and goo_only:
                     continue
                 else:
                     price = price + (
@@ -139,7 +142,7 @@ def what_frack_id(fracks: dict, observation: dict):
         if f['structure_id'] == observation['structure']:
             compare_to = f["extraction_end"]
             diff = date - compare_to
-            if -2 <= diff.days <= 5:
+            if FRACK_WINDOW_EARLY_DAYS <= diff.days <= FRACK_WINDOW_LATE_DAYS:
                 return id
 
     return False
