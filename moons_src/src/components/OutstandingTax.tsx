@@ -1,11 +1,11 @@
-import { getAdmimOutstanding } from "../helpers/Api";
+import { getAdminOutstanding } from "../helpers/Api";
 import { ProgressBar } from "react-bootstrap";
 import { useQuery } from "react-query";
 
 export const OutstandingTax = () => {
   const { isLoading, isFetching, error, data } = useQuery(
     ["outstanding"],
-    () => getAdmimOutstanding(),
+    () => getAdminOutstanding(),
     {
       refetchOnWindowFocus: false,
     }
@@ -17,10 +17,10 @@ export const OutstandingTax = () => {
         variant={error ? "danger" : isFetching ? "info" : "success"}
         now={100}
       />
-
       <pre>
         {`Mining Taxes:\n`}
-        {isLoading ? "Loading..." : ""}
+        {isLoading && "Loading..."}
+        {error && `Error loading outstanding taxes: ${(error as Error).message}\n`}
         {data?.map((i: any) => (
           <>{`${i}\n`}</>
         ))}

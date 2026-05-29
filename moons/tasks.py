@@ -100,6 +100,7 @@ def process_moon_pulls():
 
     _type_list = []
     _ores = []
+    _corps_touched = {}  # pk → CorporationAudit, for bulk timestamp update after the loop
     for notification in notifications:
         try:
             if notification.notification_id not in notification_ids:
@@ -138,6 +139,7 @@ def process_moon_pulls():
                         arrival_time=filetime_to_dt(notification_data['readyTime']),
                         auto_time=filetime_to_dt(notification_data['autoTime'])
                     )
+                    _corps_touched[_corp_audit.pk] = _corp_audit
 
                     for ore, volume in notification_data['oreVolumeByType'].items():
                         if ore not in _type_list:
@@ -153,6 +155,15 @@ def process_moon_pulls():
             logger.warning("Failed to process moon", exc_info=1)
 
     FrackOre.objects.bulk_create(_ores, batch_size=500)
+
+    now_iso = timezone.now().isoformat()
+    for corp_audit in CorporationAudit.objects.filter(
+        corporation__corporation_id__in=PUBLIC_MOON_CORPS
+    ):
+        corp_audit.update_timestamps['moons'] = now_iso
+        if corp_audit.pk in _corps_touched:
+            corp_audit.change_timestamps['moons'] = now_iso
+        corp_audit.save()
 
     return "fetched!"
 
@@ -211,6 +222,9 @@ def process_moon_obs(self, observer_id, corporation_id):
         ]
     )
 
+    corp = CorporationAudit.objects.get(
+        corporation__corporation_id=corporation_id)
+
     try:
         obs = providers.esi_openapi.client.Industry.GetCorporationCorporationIdMiningObserversObserverId(
             corporation_id=corporation_id,
@@ -218,12 +232,12 @@ def process_moon_obs(self, observer_id, corporation_id):
             token=token
         ).results()
     except HTTPNotModified:
+        corp.update_timestamps['observers'] = timezone.now().isoformat()
+        corp.save()
         return f"Corp:{corporation_id} Moon:{observer_id} Not Modified"
 
     eve_names = set(EveName.objects.all().values_list('eve_id', flat=True))
     type_names = set(ItemType.objects.all().values_list('id', flat=True))
-    corp = CorporationAudit.objects.get(
-        corporation__corporation_id=corporation_id)
 
     observer = None
     structure_exists = False
@@ -329,7 +343,10 @@ def process_moon_obs(self, observer_id, corporation_id):
 
     msg = f"Corp:{corporation_id} Moon:{observer_id} Updated:{len(mining_ob_updates)} Created:{len(mining_ob_creates)}"
 
-    corp.last_update_observers = timezone.now()
+    now_iso = timezone.now().isoformat()
+    corp.update_timestamps['observers'] = now_iso
+    if mining_ob_creates or mining_ob_updates:
+        corp.change_timestamps['observers'] = now_iso
     corp.save()
 
     logger.debug(msg)

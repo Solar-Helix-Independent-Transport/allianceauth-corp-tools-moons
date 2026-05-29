@@ -7,8 +7,20 @@
   }
 }
 
+.sortable {
+  cursor: pointer;
+}
+
+.tableRow {
+  transition: background-color 0.15s ease;
+}
+
+.tableRow:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
 .refreshAnimate {
-  -animation: spin 2s infinite linear;
+  animation: spin 2s infinite linear;
   -ms-animation: spin 2s infinite linear;
   -webkit-animation: spin 2s infinite linear;
   -moz-animation: spin 2s infinite linear;

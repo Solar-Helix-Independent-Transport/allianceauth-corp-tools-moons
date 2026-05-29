@@ -37,12 +37,10 @@ export const OreProgress = ({
           <Badge pill className="fw-normal">
             {badgePercent.toFixed(0)}% of Ore Composition
           </Badge>
-          {value > 0 ? (
+          {value > 0 && (
             <Badge pill className="fw-normal">
-              ${Number(value / 1000000000).toFixed(1)}B {valueMessage}
+              ${(value / 1_000_000_000).toFixed(1)}B {valueMessage}
             </Badge>
-          ) : (
-            <></>
           )}
           <Badge
             pill

@@ -10,7 +10,7 @@ from ninja.security import django_auth
 
 from django.conf import settings
 from django.db.models import (
-    ExpressionWrapper, F, FloatField, Max, OuterRef, Subquery, Sum,
+    ExpressionWrapper, F, FloatField, OuterRef, Subquery, Sum,
 )
 from django.utils import timezone
 
@@ -471,34 +471,29 @@ def get_corp_stats(request):
 
     output = []
 
-    for c in corps:
-        _c = {
-            "name": c.corporation.corporation_name,
-            "char_tokens": 0,
-            "corp_tokens": 0,
-            "obs": c.last_update_observers,
-            "frack": "Never"
-        }
+    scopes = ['esi-industry.read_corporation_mining.v1',
+              'esi-universe.read_structures.v1']
 
-        chars = CharacterAudit.objects.filter(
-            character__corporation_id=c.corporation.corporation_id,
-            characterroles__accountant=True,
-            active=True
+    for c in corps:
+        chars = list(
+            CharacterAudit.objects.filter(
+                character__corporation_id=c.corporation.corporation_id,
+                characterroles__accountant=True,
+                active=True
+            ).select_related('character')
         )
 
-        _c["char_tokens"] = chars.count()
-        dt = chars.aggregate(Max("last_update_notif"))
-        _c["frack"] = dt["last_update_notif__max"]
-        scopes = ['esi-industry.read_corporation_mining.v1',
-                  'esi-universe.read_structures.v1']
-
         tokens = Token.objects \
-            .filter(character_id__in=chars.values_list("character__character_id", flat=True)) \
+            .filter(character_id__in=[ca.character.character_id for ca in chars]) \
             .require_scopes(scopes)
 
-        _c["corp_tokens"] = tokens.count()
-
-        output.append(_c)
+        output.append({
+            "name": c.corporation.corporation_name,
+            "char_tokens": len(chars),
+            "corp_tokens": tokens.count(),
+            "obs": c.get_update_time('observers'),
+            "frack": c.get_update_time('moons'),
+        })
 
     return output
 

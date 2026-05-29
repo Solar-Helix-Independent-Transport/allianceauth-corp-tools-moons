@@ -11,7 +11,6 @@ const colourStyles = {
 
 export const ApiSelect = ({ setValue, apiLookup }: any) => {
   function handleChange(newValue: any) {
-    console.log("Selected: " + newValue.label);
     setValue(newValue);
   }
 

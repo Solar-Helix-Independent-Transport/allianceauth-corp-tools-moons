@@ -1,4 +1,3 @@
-import { Badge } from "react-bootstrap";
 import ReactTimeAgo from "react-time-ago";
 
 const dateFormat = Intl.DateTimeFormat("default", {
@@ -12,15 +11,18 @@ const timeFormat = Intl.DateTimeFormat("default", {
   hour12: false,
 });
 
-export const TimeAndSince = ({ stringDate }: { stringDate: string }) => {
+export const TimeAndSince = ({ stringDate }: { stringDate: string | null | undefined }) => {
+  if (!stringDate) {
+    return <div className="text-center text-muted fst-italic">Never</div>;
+  }
   const dateOb = Date.parse(stringDate);
   return (
     <div className="text-center">
       {dateFormat.format(dateOb)} {timeFormat.format(dateOb)}
       <br />
-      <Badge className="">
+      <small className="text-muted">
         <ReactTimeAgo date={dateOb} />
-      </Badge>
+      </small>
     </div>
   );
 };

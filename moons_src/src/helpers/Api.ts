@@ -19,9 +19,7 @@ function return_key_pair(label_key: any, value_key: any, ob: any) {
         label: fetchFromObject(c, label_key),
       });
       return p;
-    } catch (err) {
-      console.log(`ERROR searching for key/val`);
-      console.log(err);
+    } catch {
       return p;
     }
   }, []);
@@ -86,13 +84,13 @@ export async function getAdminList() {
   return api.data;
 }
 
-export async function getAdminExpliain() {
+export async function getAdminExplain() {
   const api = await axios.get(`/m/api/admin/explain`);
 
   return api.data;
 }
 
-export async function getAdmimOutstanding() {
+export async function getAdminOutstanding() {
   const api = await axios.get(`/m/api/admin/outstanding`);
 
   return api.data;

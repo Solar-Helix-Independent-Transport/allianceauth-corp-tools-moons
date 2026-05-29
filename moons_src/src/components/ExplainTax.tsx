@@ -1,9 +1,9 @@
-import { getAdminExpliain } from "../helpers/Api";
+import { getAdminExplain } from "../helpers/Api";
 import { ProgressBar } from "react-bootstrap";
 import { useQuery } from "react-query";
 
 export const ExplainPre = () => {
-  const { isLoading, isFetching, error, data } = useQuery(["explain"], () => getAdminExpliain(), {
+  const { isLoading, isFetching, error, data } = useQuery(["explain"], () => getAdminExplain(), {
     refetchOnWindowFocus: true,
   });
   return (
@@ -15,14 +15,14 @@ export const ExplainPre = () => {
       />
       <pre>
         {`#Tax Steps Explanation (Highest Rank First):\n`}
-        {isLoading ? (
-          "Loading..."
-        ) : (
+        {isLoading && "Loading..."}
+        {error != null &&
+          `Error loading tax explanation: ${(error as Error).message ?? "Unknown error"}\n`}
+        {!isLoading && !error && (
           <>
             {`---------------------------------------------------------------------------------------------------------\n`}
             {data?.taxes.map((i: any) => (
               <>
-                {console.log(i)}
                 {`${i.name}\n`}
                 {`  - Structures Captured in Tax Rank:\n`}
                 {i.structures.map((s: any) => `     - ${s}\n`)}

@@ -32,50 +32,30 @@ import {
 } from "react-bootstrap";
 import { useLocation } from "react-router-dom";
 
-function MyTooltip(message: string) {
-  return <Tooltip id="character_tooltip">{message}</Tooltip>;
+function TableTooltip(message: string) {
+  return <Tooltip id="table_tooltip">{message}</Tooltip>;
 }
 
 const exportToCSV = (table: ReactTable<any>, exportFileName: string) => {
   const { rows } = table.getCoreRowModel();
 
-  const headerRows = table.getHeaderGroups().map((headerGroup: HeaderGroup<any>) => {
-    return headerGroup.headers.map((header: Header<any, any>) => {
-      return header.column.columnDef.header;
-    });
-  });
+  const headerRows = table
+    .getHeaderGroups()
+    .map((headerGroup: HeaderGroup<any>) =>
+      headerGroup.headers.map((header: Header<any, any>) => header.column.columnDef.header)
+    );
+  const csvData = rows.map((row: any) => row.getVisibleCells().map((cell: any) => cell.getValue()));
 
-  const csvData = rows.map((row: any) => {
-    return row.getVisibleCells().map((cell: any) => {
-      return cell.getValue();
-    });
-  });
-  console.log(headerRows, csvData);
   const csv = stringify([...headerRows, ...csvData]);
-  const fileType = "csv";
-  const blob = new Blob([csv], {
-    type: `text/${fileType};charset=utf8;`,
-  });
-
-  // spoof a download
+  const blob = new Blob([csv], { type: "text/csv;charset=utf8;" });
   const link = document.createElement("a");
   link.download = exportFileName;
   link.href = URL.createObjectURL(blob);
-
-  // Ensure the link isn't visible to the user or cause layout shifts.
   link.setAttribute("visibility", "hidden");
-
-  // Add to document body, click and remove it.
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
 };
-
-// function strToKey(keyString: string, ob: object) {
-//   return keyString.split(".").reduce(function (p: any, prop: any) {
-//     return p[prop];
-//   }, ob);
-// }
 
 type tableInitialState = SortingTableState | VisibilityTableState | PaginationInitialTableState;
 
@@ -98,30 +78,18 @@ interface _BaseTableProps extends BaseTableProps {
 }
 
 const BaseTable = ({
-  // isLoading = false,
   isFetching = false,
   debugTable = false,
   data = [],
-  // error = false,
   columns,
-  // asyncExpandFunction = undefined,
-  striped = false,
-  hover = false,
   initialState = undefined,
   exportFileName = undefined,
 }: BaseTableProps) => {
-  let initState: tableInitialState = {
-    pagination: {
-      pageSize: 15, //custom default page size
-    },
-  };
-  if (initialState !== undefined) {
-    initState = initialState;
-  }
+  const initState: tableInitialState = initialState ?? { pagination: { pageSize: 15 } };
+
   const table = useReactTable({
     data,
     columns,
-    // Pipeline
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -129,25 +97,13 @@ const BaseTable = ({
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
     getFacetedMinMaxValues: getFacetedMinMaxValues(),
-    //
-    debugTable: debugTable,
-    // state: initialState,
+    debugTable,
     initialState: initState,
   });
 
   return (
     <_baseTable
-      {...{
-        table,
-        data,
-        columns,
-        isFetching,
-        debugTable,
-        initialState,
-        striped,
-        hover,
-        exportFileName,
-      }}
+      {...{ table, data, columns, isFetching, debugTable, initialState, exportFileName }}
     />
   );
 };
@@ -155,187 +111,144 @@ const BaseTable = ({
 function _baseTable({
   table,
   isFetching = false,
-  striped = false,
-  hover = false,
   debugTable = false,
   exportFileName = undefined,
 }: _BaseTableProps) {
   const { rows } = table.getRowModel();
   const location = useLocation();
-  const fileName =
-    typeof exportFileName !== "undefined" ? exportFileName : `ExportedData_${location.pathname}`;
+  const fileName = exportFileName ?? `ExportedData_${location.pathname}`;
+  const pageSize = table.getState().pagination.pageSize;
+
   return (
     <>
-      <div {...{ striped, hover }}>
-        <Col className="">
-          {table.getHeaderGroups().map((headerGroup: HeaderGroup<any>) => (
-            <>
-              <Row key={`name-${headerGroup.id}`}>
-                {headerGroup.headers.map((header: Header<any, any> | any) => {
-                  return (
-                    <Col
-                      key={header.id}
-                      xs={12}
-                      className={`col-sm-12 col-md-12 col-lg-12 col-xl mt-4 ${header.column.columnDef.width}`}
-                    >
-                      {header.isPlaceholder ? null : (
-                        <Row
-                          {...{
-                            className: header.column.getCanSort()
-                              ? "d-dlex cursor-pointer select-none"
-                              : "d-flex",
-                          }}
-                        >
-                          <Row {...{ onClick: header.column.getToggleSortingHandler() }}>
-                            <div className="d-flex">
-                              {header.column.getCanSort() ? (
-                                <div>
-                                  {{
-                                    asc: <i className="fas fa-sort-down fa-fw"></i>,
-                                    desc: <i className="fas fa-sort-up fa-fw"></i>,
-                                  }[header.column.getIsSorted() as string] ?? (
-                                    <i className="fas fa-sort fa-fw"></i>
-                                  )}
-                                </div>
-                              ) : null}
-                              {flexRender(header.column.columnDef.header, header.getContext())}
-                            </div>
-                          </Row>
-                          <Row>
-                            {header.column.getCanFilter() && rows.length >= 0 ? (
-                              <Filter column={header.column} table={table} />
-                            ) : (
-                              <></>
-                            )}
-                          </Row>
-                        </Row>
-                      )}
-                    </Col>
-                  );
-                })}
-              </Row>
-              <hr />
-            </>
+      {/* Header */}
+      {table.getHeaderGroups().map((headerGroup: HeaderGroup<any>) => (
+        <Row key={headerGroup.id} className="pb-2 mb-1 border-bottom fw-semibold align-items-end">
+          {headerGroup.headers.map((header: Header<any, any> | any) => (
+            <Col key={header.id} className={`col-12 ${header.column.columnDef.width ?? "col-xl"}`}>
+              {header.isPlaceholder ? null : (
+                <>
+                  <div
+                    className={`d-flex align-items-center gap-1 ${
+                      header.column.getCanSort() ? `${tableStyles.sortable} user-select-none` : ""
+                    }`}
+                    onClick={header.column.getToggleSortingHandler()}
+                  >
+                    {header.column.getCanSort() && (
+                      <i
+                        className={`fas fa-fw ${
+                          header.column.getIsSorted() === "asc"
+                            ? "fa-sort-down"
+                            : header.column.getIsSorted() === "desc"
+                            ? "fa-sort-up"
+                            : "fa-sort text-muted"
+                        }`}
+                      />
+                    )}
+                    {flexRender(header.column.columnDef.header, header.getContext())}
+                  </div>
+                  {header.column.getCanFilter() && <Filter column={header.column} table={table} />}
+                </>
+              )}
+            </Col>
           ))}
-        </Col>
-        <Col>
-          {rows.map((row) => {
-            return (
-              <>
-                <Row key={row.id} className="">
-                  {row.getVisibleCells().map((cell: any) => {
-                    return (
-                      <Col
-                        key={cell.id}
-                        xs={12}
-                        className={`col-sm-12 col-md-12 col-lg-12 col-xl mt-2 ${cell.column.columnDef.width}`}
-                      >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </Col>
-                    );
-                  })}
-                </Row>
-                <hr />
-              </>
-            );
-          })}
-        </Col>
-      </div>
-      <div className="d-flex justify-content-between">
-        <ButtonGroup>
-          <Button active variant="info">
-            {
-              <>
-                {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
-              </>
-            }
+        </Row>
+      ))}
+
+      {/* Data rows */}
+      {rows.map((row) => (
+        <Row key={row.id} className={`py-2 border-top align-items-center ${tableStyles.tableRow}`}>
+          {row.getVisibleCells().map((cell: any) => (
+            <Col key={cell.id} className={`col-12 ${cell.column.columnDef.width ?? "col-xl"}`}>
+              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+            </Col>
+          ))}
+        </Row>
+      ))}
+
+      {/* Empty state */}
+      {rows.length === 0 && !isFetching && (
+        <div className="text-center py-5 text-muted">
+          <i className="fas fa-inbox fa-2x d-block mb-2" />
+          No data available.
+        </div>
+      )}
+
+      {/* Footer */}
+      <div className="d-flex justify-content-between align-items-center mt-3 pt-2 border-top flex-wrap gap-2">
+        <ButtonGroup size="sm">
+          <Button variant="outline-secondary" disabled>
+            Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount() || 1}
           </Button>
-          {isFetching ? (
-            <OverlayTrigger
-              placement="bottom"
-              trigger="focus"
-              overlay={MyTooltip("Refreshing Data")}
-            >
-              <Button variant="info">
-                <i className={tableStyles.refreshAnimate + " fas fa-sync"}></i>
-              </Button>
-            </OverlayTrigger>
-          ) : (
-            <OverlayTrigger
-              placement="bottom"
-              trigger="focus"
-              overlay={MyTooltip("Data Loaded: " + new Date().toLocaleString())}
-            >
-              <Button variant="info">
-                <i className="far fa-check-circle"></i>
-              </Button>
-            </OverlayTrigger>
-          )}
-          <Button active variant="primary" onClick={() => exportToCSV(table, fileName as string)}>
-            Export Table to CSV
-          </Button>{" "}
+          <OverlayTrigger
+            placement="top"
+            trigger={["hover", "focus"]}
+            overlay={TableTooltip(isFetching ? "Refreshing data…" : "Data up to date")}
+          >
+            <Button variant="outline-secondary">
+              <i
+                className={
+                  isFetching ? `${tableStyles.refreshAnimate} fas fa-sync` : "far fa-check-circle"
+                }
+              />
+            </Button>
+          </OverlayTrigger>
+          <Button variant="outline-primary" onClick={() => exportToCSV(table, fileName)}>
+            <i className="fas fa-download me-1" />
+            Export CSV
+          </Button>
         </ButtonGroup>
 
         <ButtonToolbar>
-          <ButtonGroup>
+          <ButtonGroup size="sm">
             <Button
-              variant="success"
+              variant="outline-success"
               onClick={() => table.setPageIndex(0)}
               disabled={!table.getCanPreviousPage()}
             >
-              <i className="fas fa-angle-double-left"></i>
-            </Button>{" "}
+              <i className="fas fa-angle-double-left" />
+            </Button>
             <Button
-              variant="success"
+              variant="outline-success"
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
             >
-              <i className="fas fa-caret-left"></i>
-            </Button>{" "}
+              <i className="fas fa-caret-left" />
+            </Button>
             <Button
-              variant="success"
+              variant="outline-success"
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
             >
-              <i className="fas fa-caret-right"></i>
+              <i className="fas fa-caret-right" />
             </Button>
             <Button
-              variant="success"
+              variant="outline-success"
               onClick={() => table.setPageIndex(table.getPageCount() - 1)}
               disabled={!table.getCanNextPage()}
             >
-              <i className="fas fa-angle-double-right"></i>
+              <i className="fas fa-angle-double-right" />
             </Button>
           </ButtonGroup>
 
-          <ButtonGroup className="ms-1">
-            <Button active variant="success">
-              {"Page Size:"}
-            </Button>{" "}
+          <ButtonGroup size="sm" className="ms-2">
             <SplitButton
               id="pageSizeDropdown"
-              variant="success"
-              title={table.getState().pagination.pageSize}
+              variant="outline-success"
+              title={pageSize === 1_000_000 ? "All rows" : `${pageSize} rows`}
             >
-              {[15, 30, 60, 100, 1000000].map((_pageSize) => (
-                <Dropdown.Item
-                  id={`${_pageSize}`}
-                  key={_pageSize}
-                  eventKey={_pageSize}
-                  onClick={(eventKey: any) => {
-                    console.log(eventKey.target.id);
-                    table.setPageSize(Number(eventKey.target.id));
-                  }}
-                >
-                  Show {_pageSize}
+              {[15, 30, 60, 100, 1_000_000].map((_pageSize) => (
+                <Dropdown.Item key={_pageSize} onClick={() => table.setPageSize(_pageSize)}>
+                  {_pageSize === 1_000_000 ? "Show all" : `Show ${_pageSize}`}
                 </Dropdown.Item>
               ))}
             </SplitButton>
           </ButtonGroup>
         </ButtonToolbar>
       </div>
+
       {debugTable && (
-        <div className="col-xs-12">
+        <div className="mt-2">
           <div>{table.getRowModel().rows.length} Rows</div>
           <pre>{JSON.stringify(table.getState(), null, 2)}</pre>
         </div>
@@ -343,6 +256,5 @@ function _baseTable({
     </>
   );
 }
-// export all the base table modules
 
-export default BaseTable; // Export the table
+export default BaseTable;

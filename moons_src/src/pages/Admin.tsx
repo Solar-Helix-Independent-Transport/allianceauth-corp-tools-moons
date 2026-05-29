@@ -2,6 +2,7 @@ import BaseTable from "../components/BaseTable/BaseTable";
 import ErrorBoundary from "../components/ErrorBoundary";
 import { ExplainPre } from "../components/ExplainTax";
 import { OutstandingTax } from "../components/OutstandingTax";
+import { TimeAndSince } from "../components/TimeAndSince";
 import { getAdminList } from "../helpers/Api";
 import { corps } from "../types";
 import { createColumnHelper } from "@tanstack/react-table";
@@ -27,9 +28,11 @@ const AdminList = () => {
     }),
     columnHelper.accessor("obs", {
       header: "Last Observation Update",
+      cell: (props: any) => <TimeAndSince stringDate={props.getValue()} />,
     }),
     columnHelper.accessor("frack", {
       header: "Last Frack Update",
+      cell: (props: any) => <TimeAndSince stringDate={props.getValue()} />,
     }),
   ];
 
