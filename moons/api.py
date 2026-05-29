@@ -290,7 +290,7 @@ def get_future_extractions(request):
     tags=["Search"]
 )
 def get_moon_search(request, search_text: str, limit: int = 10):
-    return Moon.objects.filter(name__icontains=search_text).values("name", id=F("moon_id"))[:limit]
+    return Moon.objects.filter(name__icontains=search_text).values("name", "id")[:limit]
 
 
 @api.get(
