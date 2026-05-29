@@ -7,12 +7,11 @@ Test settings
 ########################################################
 # local.py settings
 # Every setting in base.py can be overloaded by redefining it here.
-
 import os
 
 os.environ["NINJA_SKIP_REGISTRY"] = "1"
 
-from .base import *  # noqa
+from allianceauth.project_template.project_name.settings.base import *  # noqa
 
 PACKAGE = "moons"
 
