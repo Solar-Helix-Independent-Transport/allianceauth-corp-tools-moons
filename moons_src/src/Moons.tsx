@@ -3,6 +3,7 @@ import CorporateLedger from "./pages/CorporateLedger";
 import FutureExtractions from "./pages/FutureExtractions";
 import MoonsPage from "./pages/MoonsPage";
 import PastLedger from "./pages/PastLedger";
+import Rentals from "./pages/Rentals";
 import TimeAgo from "javascript-time-ago";
 import en from "javascript-time-ago/locale/en";
 import { Navigate, Route, BrowserRouter as Router, Routes } from "react-router-dom";
@@ -21,6 +22,7 @@ const Moons = () => {
             <Route path={"admin"} element={<AdminList />} />
             <Route path={"future"} element={<FutureExtractions />} />
             <Route path={"past"} element={<PastLedger />} />
+            <Route path={"rentals"} element={<Rentals />} />
           </Route>
         </Routes>
       </Router>

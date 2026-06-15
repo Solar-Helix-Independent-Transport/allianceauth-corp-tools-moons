@@ -321,9 +321,15 @@ def get_moon_rentals(request):
         return []
 
     rentals = models.MoonRental.objects.filter(end_date__isnull=True).select_related(
-        "moon", "moon__solar_system", "contact", "corporation")
+        "moon", "moon__solar_system", "contact", "corporation",
+        "contact__character_ownership__user__profile__main_character"
+    )
     out = []
     for r in rentals:
+        try:
+            main_char = r.contact.character_ownership.user.profile.main_character
+        except Exception:
+            main_char = None
         out.append(
             {
                 "moon": {
@@ -336,6 +342,7 @@ def get_moon_rentals(request):
                 },
                 "contact": r.contact,
                 "corporation": r.corporation,
+                "main_character": main_char,
                 "price": r.price,
                 "start_date": r.start_date
             }

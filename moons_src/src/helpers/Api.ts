@@ -95,3 +95,9 @@ export async function getAdminOutstanding() {
 
   return api.data;
 }
+
+export async function getRentals() {
+  const api = await axios.get(`/m/api/rental/list`);
+
+  return api.data;
+}

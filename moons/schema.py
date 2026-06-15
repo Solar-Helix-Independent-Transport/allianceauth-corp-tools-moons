@@ -64,6 +64,7 @@ class MoonRental(Schema):
     system: IdName
     contact: Character
     corporation: Corporation
+    main_character: Optional[Character] = None
     price: Decimal
     start_date: datetime
 

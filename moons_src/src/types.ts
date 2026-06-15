@@ -29,3 +29,26 @@ export interface corps {
   obs: string;
   frack: string;
 }
+export interface rentalCharacter {
+  character_name: string;
+  character_id: number;
+  corporation_name: string;
+  corporation_id: number;
+  alliance_name?: string;
+  alliance_id?: number;
+}
+export interface rentalCorporation {
+  corporation_name: string;
+  corporation_id: number;
+  alliance_name?: string;
+  alliance_id?: number;
+}
+export interface moonRental {
+  moon: KeyVal;
+  system: KeyVal;
+  contact: rentalCharacter;
+  corporation: rentalCorporation;
+  main_character?: rentalCharacter;
+  price: number;
+  start_date: string;
+}
