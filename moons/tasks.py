@@ -98,8 +98,15 @@ def process_moon_pulls():
             frack_dict[frack.moon_id] = {}
         frack_dict[frack.moon_id][frack.start_time] = frack
 
+    logger.info(
+        "Mining Pull Sync: found %d notifications, %d existing frack IDs",
+        notifications.count(), len(notification_ids)
+    )
+
     _type_list = []
     _ores = []
+    _fracks_created = 0
+    _skipped = 0
     _corps_touched = {}  # pk → CorporationAudit, for bulk timestamp update after the loop
     for notification in notifications:
         try:
@@ -119,6 +126,10 @@ def process_moon_pulls():
                     new_frack = True
 
                 if new_frack:
+                    logger.debug(
+                        "Mining Pull Sync: creating frack for moon %s from notification %s",
+                        moon_id, notification.notification_id
+                    )
                     _structure, _c = EveLocation.objects.update_or_create(
                         location_id=notification_data['structureID'],
                         defaults={
@@ -140,6 +151,7 @@ def process_moon_pulls():
                         auto_time=filetime_to_dt(notification_data['autoTime'])
                     )
                     _corps_touched[_corp_audit.pk] = _corp_audit
+                    _fracks_created += 1
 
                     for ore, volume in notification_data['oreVolumeByType'].items():
                         if ore not in _type_list:
@@ -151,8 +163,19 @@ def process_moon_pulls():
                                 total_m3=volume
                             )
                         )
+                else:
+                    logger.debug(
+                        "Mining Pull Sync: skipping duplicate frack for moon %s at %s",
+                        moon_id, start_time
+                    )
+                    _skipped += 1
+            else:
+                _skipped += 1
         except Exception:
-            logger.warning("Failed to process moon", exc_info=1)
+            logger.warning(
+                "Mining Pull Sync: failed to process notification %s",
+                notification.notification_id, exc_info=1
+            )
 
     FrackOre.objects.bulk_create(_ores, batch_size=500)
 
@@ -165,7 +188,11 @@ def process_moon_pulls():
             corp_audit.change_timestamps['moons'] = now_iso
         corp_audit.save()
 
-    return "fetched!"
+    corp_names = [c.corporation.corporation_name for c in _corps_touched.values()]
+    logger.info(
+        "Mining Pull Sync complete: created %d fracks, skipped %d, updated %d corps (%s)",
+        _fracks_created, _skipped, len(_corps_touched), ", ".join(corp_names) or "none"
+    )
 
 
 @shared_task
