@@ -62,6 +62,8 @@ class ExtractionEvent(Schema):
 class MoonRental(Schema):
     moon: IdName
     system: IdName
+    constellation: str
+    region: str
     contact: Character
     corporation: Corporation
     main_character: Optional[Character] = None

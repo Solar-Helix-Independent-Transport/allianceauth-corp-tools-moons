@@ -16,12 +16,16 @@ const columns = [
     header: "Moon",
     width: "col-md-2",
     cell: (props: any) => {
-      const { system } = props.cell.row.original;
+      const { system, constellation, region } = props.cell.row.original;
       return (
         <div>
           <strong>{props.getValue()}</strong>
           <br />
           <span className="text-muted small">{system.name}</span>
+          <br />
+          <span className="text-muted small">
+            {constellation} - {region}
+          </span>
         </div>
       );
     },

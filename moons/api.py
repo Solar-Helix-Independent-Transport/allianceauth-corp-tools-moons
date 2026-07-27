@@ -321,7 +321,8 @@ def get_moon_rentals(request):
         return []
 
     rentals = models.MoonRental.objects.filter(end_date__isnull=True).select_related(
-        "moon", "moon__solar_system", "contact", "corporation",
+        "moon", "moon__solar_system", "moon__solar_system__constellation",
+        "moon__solar_system__constellation__region", "contact", "corporation",
         "contact__character_ownership__user__profile__main_character"
     )
     out = []
@@ -340,6 +341,8 @@ def get_moon_rentals(request):
                     "id": r.moon.solar_system.id,
                     "name": r.moon.solar_system.name
                 },
+                "constellation": r.moon.solar_system.constellation.name,
+                "region": r.moon.solar_system.constellation.region.name,
                 "contact": r.contact,
                 "corporation": r.corporation,
                 "main_character": main_char,
@@ -366,6 +369,8 @@ def get_moon_rentals(request):
     ).select_related(
         "moon",
         "moon__solar_system",
+        "moon__solar_system__constellation",
+        "moon__solar_system__constellation__region",
         "contact",
         "corporation"
     )
@@ -381,6 +386,8 @@ def get_moon_rentals(request):
                     "id": r.moon.solar_system.id,
                     "name": r.moon.solar_system.name
                 },
+                "constellation": r.moon.solar_system.constellation.name,
+                "region": r.moon.solar_system.constellation.region.name,
                 "contact": r.contact,
                 "corporation": r.corporation,
                 "price": r.price,
@@ -458,6 +465,8 @@ def post_moon_rental_new(request, rental: schema.NewMoonRental = Form(...)):
         "id": new_rental.moon.solar_system.id,
         "name": new_rental.moon.solar_system.name
     },
+        "constellation": new_rental.moon.solar_system.constellation.name,
+        "region": new_rental.moon.solar_system.constellation.region.name,
         "contact": new_rental.contact,
         "corporation": new_rental.corporation,
         "price": new_rental.price,

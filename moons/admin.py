@@ -71,11 +71,32 @@ def invoice_send_action(RentalAdmin, request, queryset):
 
 @admin.register(MoonRental)
 class RentalAdmin(admin.ModelAdmin):
-    list_select_related = True
+    list_select_related = (
+        'corporation', 'contact', 'moon',
+        'moon__solar_system__constellation__region',
+    )
     raw_id_fields = ('corporation', 'contact', 'moon')
-    search_fields = ('corporation__corporation_name', 'contact__character_name', 'moon__name')
+    search_fields = (
+        'corporation__corporation_name', 'contact__character_name', 'moon__name',
+        'moon__solar_system__constellation__name',
+        'moon__solar_system__constellation__region__name',
+    )
 
     actions = [invoice_send_action]
+
+    @admin.display(
+        description='Constellation',
+        ordering='moon__solar_system__constellation__name',
+    )
+    def constellation(self, obj):
+        return obj.moon.solar_system.constellation.name
+
+    @admin.display(
+        description='Region',
+        ordering='moon__solar_system__constellation__region__name',
+    )
+    def region(self, obj):
+        return obj.moon.solar_system.constellation.region.name
 
     # generate a custom formater cause i am lazy...
     def __init__(self, *args, **kwargs):
@@ -97,5 +118,5 @@ class RentalAdmin(admin.ModelAdmin):
 
         super().__init__(*args, **kwargs)
 
-    list_display = ['moon', 'contact', 'corporation',
+    list_display = ['moon', 'constellation', 'region', 'contact', 'corporation',
                     'start_date', 'end_date', ('price', "{:,}")]

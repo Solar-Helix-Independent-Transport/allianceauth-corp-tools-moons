@@ -46,6 +46,8 @@ export interface rentalCorporation {
 export interface moonRental {
   moon: KeyVal;
   system: KeyVal;
+  constellation: string;
+  region: string;
   contact: rentalCharacter;
   corporation: rentalCorporation;
   main_character?: rentalCharacter;
