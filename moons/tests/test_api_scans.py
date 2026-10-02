@@ -160,6 +160,7 @@ class TestMoonValuesApi(TestCase):
         self.assertEqual(moon["ores"], [{"type_id": CINNABAR, "name": "Cinnabar", "fraction": 0.5}])
         self.assertEqual(moon["unpriced"], [])
         self.assertEqual(moon["added_by"], "Scout Main")
+        self.assertEqual(moon["rarity"], 32)
 
     def test_scanned_regions_with_moon_counts(self):
         response = self.client.get("/scans/regions", user=self.viewer)

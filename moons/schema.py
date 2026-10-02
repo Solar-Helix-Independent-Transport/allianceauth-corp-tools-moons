@@ -125,6 +125,7 @@ class ScannedMoonValue(Schema):
     unpriced: List[str]
     added_at: datetime
     added_by: Optional[str]
+    rarity: Optional[int]  # R-rating: 4, 8, 16, 32 or 64
 
 
 class ScannedMoonValues(Schema):

@@ -690,6 +690,7 @@ def get_scan_values(request, tax_rate: int, region_id: int):
             "unpriced": v.unpriced,
             "added_at": v.added_at,
             "added_by": v.added_by,
+            "rarity": v.rarity,
         }
         # one region at a time: tens of thousands of scanned moons won't fit in one response
         for v in scans.moon_values(profile, region_id=region_id)

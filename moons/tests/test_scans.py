@@ -332,3 +332,19 @@ class TestMoonValues(TestCase):
 
         # priced as plain Cinnabar: 1,440,000 units at 875
         self.assertEqual(moon.value_30d, Decimal("1260000000"))
+
+    def test_rarity_is_r_rating_of_rarest_moon_ore(self):
+        self._scan({CINNABAR: "0.25", BITUMENS: "0.5"})
+
+        [moon] = moon_values(self.profile)
+
+        self.assertEqual(moon.rarity, 32)  # Cinnabar is a rare (R32) moon ore
+
+    def test_rarity_ignores_ores_that_are_not_moon_ores(self):
+        bistot = ItemGroup.objects.create(id=451, name="Bistot")
+        ItemType.objects.create(id=CUBIC_BISTOT, name="Cubic Bistot", group=bistot)
+        self._scan({BITUMENS: "0.5", CUBIC_BISTOT: "0.3"})
+
+        [moon] = moon_values(self.profile)
+
+        self.assertEqual(moon.rarity, 4)

@@ -84,6 +84,7 @@ export interface scannedMoonValue {
   unpriced: Array<string>;
   added_at: string;
   added_by: string | null;
+  rarity: number | null;
 }
 export interface scannedRegion {
   id: number;

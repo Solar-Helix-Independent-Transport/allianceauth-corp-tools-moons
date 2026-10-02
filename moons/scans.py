@@ -23,6 +23,9 @@ REJECTED = "rejected"
 HOURS_30D = 720
 MOON_ORE_M3_PER_UNIT = 10
 
+# moon ore group -> the R-rating a moon gets when this is its rarest ore
+R_RATING = {1884: 4, 1920: 8, 1921: 16, 1922: 32, 1923: 64}
+
 # re-scans of the same moon agree to this precision
 SAME_SCAN_PLACES = Decimal("0.0001")
 
@@ -159,6 +162,7 @@ class MoonValue:
     system: str = ""
     region: str = ""
     ores: list = field(default_factory=list)  # (ore id, name, fraction)
+    rarity: int = None  # R4..R64 from the rarest moon ore; None with no moon ores
 
 
 def moon_values(tax_rate, moon_ids=None, region_id=None):
@@ -191,8 +195,14 @@ def moon_values(tax_rate, moon_ids=None, region_id=None):
     for scan_id, ore_id, fraction in MoonScanOre.objects.filter(scan__in=scans).values_list(
             "scan_id", "ore_id", "fraction").iterator(chunk_size=10000):
         ores_by_scan.setdefault(scan_id, []).append((ore_id, fraction))
-    ore_names = dict(ItemType.objects.filter(
-        id__in=MoonScanOre.objects.filter(scan__in=scans).values("ore_id")).values_list("id", "name"))
+    ore_names = {}
+    ore_rating = {}
+    for ore_id, name, group_id in ItemType.objects.filter(
+            id__in=MoonScanOre.objects.filter(scan__in=scans).values("ore_id")
+    ).values_list("id", "name", "group_id"):
+        ore_names[ore_id] = name
+        if group_id in R_RATING:
+            ore_rating[ore_id] = R_RATING[group_id]
 
     values = []
     for (scan_id, moon_id, moon_name, system, region, added_at,
@@ -217,5 +227,6 @@ def moon_values(tax_rate, moon_ids=None, region_id=None):
             moon_id, moon_name, value, tax, total, unpriced, added_at, main_name or username,
             system=system, region=region,
             ores=[(ore_id, ore_names[ore_id], fraction) for ore_id, fraction in ores],
+            rarity=max((ore_rating[o] for o, _ in ores if o in ore_rating), default=None),
         ))
     return values

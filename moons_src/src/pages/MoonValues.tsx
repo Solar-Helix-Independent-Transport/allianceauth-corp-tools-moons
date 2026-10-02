@@ -1,6 +1,7 @@
 import BaseTable from "../components/BaseTable/BaseTable";
 import ErrorBoundary from "../components/ErrorBoundary";
 import { ErrorLoader, PanelLoader } from "../components/Loaders/Loaders";
+import { OreColourMap } from "../components/OreColourKey";
 import { getScanProfiles, getScanRegions, getScanValues } from "../helpers/Api";
 import { scannedMoonValue, scannedRegion, taxProfile } from "../types";
 import { createColumnHelper } from "@tanstack/react-table";
@@ -9,6 +10,9 @@ import { Alert, Badge, Form } from "react-bootstrap";
 import { useQuery } from "react-query";
 
 const col: any = createColumnHelper<scannedMoonValue>();
+
+// R-rating -> moon ore group, to reuse the ore colour key
+const RARITY_GROUP: Record<number, number> = { 4: 1884, 8: 1920, 16: 1921, 32: 1922, 64: 1923 };
 
 const isk = (n: number) => `${Math.round(n).toLocaleString()} ISK`;
 
@@ -27,6 +31,21 @@ const columns = [
         </div>
       );
     },
+  }),
+  col.accessor("rarity", {
+    header: "Rarity",
+    cell: (props: any) => {
+      const rarity: number | null = props.getValue();
+      if (!rarity) {
+        return <span className="text-muted">-</span>;
+      }
+      return (
+        <Badge className={`${(OreColourMap as any)[RARITY_GROUP[rarity]]} fw-normal`}>
+          R{rarity}
+        </Badge>
+      );
+    },
+    enableColumnFilter: false,
   }),
   col.accessor((row: scannedMoonValue) => row.ores.map((o) => o.name).join(", "), {
     id: "composition",
