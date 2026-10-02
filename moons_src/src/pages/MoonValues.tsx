@@ -21,6 +21,9 @@ const RARITY_NAME: Record<number, string> = {
   64: "Exceptional",
 };
 
+const rarityLabel = (rarity: number | null) =>
+  rarity ? `R${rarity} ${RARITY_NAME[rarity]}` : "None";
+
 const isk = (n: number) => `${Math.round(n).toLocaleString()} ISK`;
 
 const columns = [
@@ -39,20 +42,22 @@ const columns = [
       );
     },
   }),
-  col.accessor("rarity", {
+  // filter on the label ("R32 Rare"), sort on the number so R64 ranks above R8
+  col.accessor((row: scannedMoonValue) => rarityLabel(row.rarity), {
+    id: "rarity",
     header: "Rarity",
     cell: (props: any) => {
-      const rarity: number | null = props.getValue();
+      const rarity: number | null = props.cell.row.original.rarity;
       if (!rarity) {
         return <span className="text-muted">-</span>;
       }
       return (
         <Badge className={`${(OreColourMap as any)[RARITY_GROUP[rarity]]} fw-normal`}>
-          R{rarity} {RARITY_NAME[rarity]}
+          {rarityLabel(rarity)}
         </Badge>
       );
     },
-    enableColumnFilter: false,
+    sortingFn: (a: any, b: any) => (a.original.rarity ?? 0) - (b.original.rarity ?? 0),
   }),
   col.accessor((row: scannedMoonValue) => row.ores.map((o) => o.name).join(", "), {
     id: "composition",
