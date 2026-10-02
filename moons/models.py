@@ -307,6 +307,11 @@ class OreTaxRates(models.Model):
         default=False,
         help_text="Offer this profile when valuing scanned moons and suggesting rental prices."
     )
+    drill_m3_per_hour = models.PositiveIntegerField(
+        null=True, blank=True, default=None,
+        help_text="Moon value extraction rate. Blank uses MOONS_DRILL_M3_PER_HOUR (40,000 for an "
+                  "Athanor/Tatara). A Metenox harvests 30,000 at 40% refine, moon materials only."
+    )
     def __str__(self):
         try:
             return self.tag

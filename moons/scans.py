@@ -168,8 +168,8 @@ class MoonValue:
 def moon_values(tax_rate, moon_ids=None, region_id=None):
     """Each scanned moon's 30 day value and tax under one OreTaxRates profile.
     Fractions are used as stored, never scaled up to 100%."""
-    units_per_fraction = Decimal(
-        HOURS_30D * app_settings.drill_m3_per_hour() / MOON_ORE_M3_PER_UNIT)
+    m3_per_hour = tax_rate.drill_m3_per_hour or app_settings.drill_m3_per_hour()
+    units_per_fraction = Decimal(HOURS_30D * m3_per_hour / MOON_ORE_M3_PER_UNIT)
     refine = Decimal(tax_rate.refine_rate) / 100
     prices = dict(
         OrePrice.objects.filter(goo_only=tax_rate.ignore_ores_in_refine)

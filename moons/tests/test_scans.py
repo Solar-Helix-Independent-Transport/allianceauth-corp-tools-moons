@@ -348,3 +348,14 @@ class TestMoonValues(TestCase):
         [moon] = moon_values(self.profile)
 
         self.assertEqual(moon.rarity, 4)
+
+    def test_profile_drill_rate_overrides_the_setting_for_metenox(self):
+        self._scan({CINNABAR: "0.5"})
+        self.profile.drill_m3_per_hour = 30000  # Metenox Moon Drill
+        self.profile.refine_rate = Decimal("40")
+        self.profile.ignore_ores_in_refine = True
+
+        [moon] = moon_values(self.profile)
+
+        # 0.5 * 720 h * 30,000 m3 / 10 = 1,080,000 units at 800 goo-only * 40%
+        self.assertEqual(moon.value_30d, Decimal("345600000"))

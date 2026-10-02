@@ -132,3 +132,4 @@ When creating a rental from **Moons > Rentals > New Rental**, the 30 day tax und
 `MOONS_DRILL_M3_PER_HOUR = 40000`
 
 - The moon drill extraction rate used for values. 40,000 m3/h has applied to every Athanor and Tatara since December 2021; structure rigs don't change it.
+- A tax profile can set its own **Drill m3 per hour**, which wins over this setting. For Metenox moon drills, make a profile with drill m3 per hour `30000`, refine rate `40` and **ignore ores in refine** ticked (a Metenox outputs moon materials only, at 40% efficiency).
