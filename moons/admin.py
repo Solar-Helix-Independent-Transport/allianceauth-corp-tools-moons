@@ -30,7 +30,8 @@ class TaxAdmin(admin.ModelAdmin):
 @admin.register(OreTaxRates)
 class OreTaxRatesAdmin(admin.ModelAdmin):
     list_display = ('tag', 'refine_rate', 'exceptional_rate', 'rare_rate',
-                    'uncommon_rate', 'common_rate', 'ubiquitous_rate', 'ore_rate')
+                    'uncommon_rate', 'common_rate', 'ubiquitous_rate', 'ore_rate',
+                    'show_in_moon_values')
 
 
 

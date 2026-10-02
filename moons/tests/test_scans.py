@@ -2,16 +2,20 @@ from decimal import Decimal
 from pathlib import Path
 
 from eve_sde.models import (
-    Constellation, ItemGroup, ItemType, Moon, Region, SolarSystem,
+    Constellation, DogmaAttribute, ItemGroup, ItemType, Moon, Region,
+    SolarSystem, TypeDogma,
 )
 
 from django.contrib.auth.models import Permission
-from django.test import SimpleTestCase, TestCase
+from django.test import SimpleTestCase, TestCase, override_settings
+from django.utils import timezone
 
 from allianceauth.tests.auth_utils import AuthUtils
 
-from moons.models import MoonScan
-from moons.scans import commit_import, parse_moon_scan, preview_import
+from moons.models import MoonScan, OrePrice, OreTax, OreTaxRates
+from moons.scans import (
+    commit_import, moon_values, parse_moon_scan, preview_import,
+)
 
 FIXTURES = Path(__file__).parent / "fixtures" / "scans"
 
@@ -231,3 +235,100 @@ class TestImportScans(TestCase):
             set(MoonScan.objects.get(moon_id=MOON_1).ores.values_list("ore_id", flat=True)),
             {CINNABAR, CUBIC_BISTOT},
         )
+
+
+class TestMoonValues(TestCase):
+    """Worked by hand: a 30 day pull at 40,000 m3/h is 28,800,000 m3,
+    i.e. 2,880,000 units of 10 m3 ore per 1.0 of composition."""
+
+    @classmethod
+    def setUpTestData(cls):
+        region = Region.objects.create(id=10000001, name="Test Region")
+        constellation = Constellation.objects.create(id=20000001, name="Test Constellation", region=region)
+        system = SolarSystem.objects.create(id=30002542, name="Auga", constellation=constellation)
+        cls.moon = Moon.objects.create(id=MOON_1, name="Auga V - Moon 1", solar_system=system)
+        rare = ItemGroup.objects.create(id=1922, name="Rare Moon Asteroids")
+        ubiq = ItemGroup.objects.create(id=1884, name="Ubiquitous Moon Asteroids")
+        cls.cinnabar = ItemType.objects.create(id=CINNABAR, name="Cinnabar", group=rare)
+        cls.bitumens = ItemType.objects.create(id=BITUMENS, name="Bitumens", group=ubiq)
+        cls.user = AuthUtils.create_user("valuer")
+
+        cls.profile = OreTaxRates.objects.create(
+            tag="Rental", refine_rate=Decimal("87.5"), ore_rate=0, ubiquitous_rate=10,
+            common_rate=0, uncommon_rate=0, rare_rate=20, exceptional_rate=0,
+            show_in_moon_values=True)
+        OrePrice.objects.create(item=cls.cinnabar, price=Decimal("1000"))
+        OrePrice.objects.create(item=cls.cinnabar, price=Decimal("800"), goo_only=True)
+        OrePrice.objects.create(item=cls.bitumens, price=Decimal("100"))
+        OreTax.objects.create(item=cls.cinnabar, tax=cls.profile, price=Decimal("175"))
+        OreTax.objects.create(item=cls.bitumens, tax=cls.profile, price=Decimal("8.75"))
+
+    def _scan(self, ores):
+        scan = MoonScan.objects.create(moon=self.moon, added_by=self.user, added_at=timezone.now())
+        for ore, fraction in ores.items():
+            scan.ores.create(ore_id=ore, fraction=Decimal(fraction))
+        return scan
+
+    def test_value_and_tax_per_30_days(self):
+        self._scan({CINNABAR: "0.5", BITUMENS: "0.5"})
+
+        [moon] = moon_values(self.profile)
+
+        # 1,440,000 units each; value at 87.5% refine: 875 + 87.5 per unit
+        self.assertEqual(moon.moon_id, MOON_1)
+        self.assertEqual(moon.value_30d, Decimal("1386000000"))
+        # tax uses the stored per-unit OreTax: 175 + 8.75 per unit
+        self.assertEqual(moon.tax_30d, Decimal("264600000"))
+        self.assertEqual(moon.added_by, self.user)
+        self.assertEqual(moon.unpriced, [])
+
+    def test_profile_ignoring_ores_in_refine_uses_goo_only_price(self):
+        self._scan({CINNABAR: "0.5"})
+        self.profile.ignore_ores_in_refine = True
+
+        [moon] = moon_values(self.profile)
+
+        # 1,440,000 units at 800 goo-only * 87.5%
+        self.assertEqual(moon.value_30d, Decimal("1008000000"))
+
+    def test_partial_composition_is_not_scaled_up(self):
+        self._scan({CINNABAR: "0.25"})
+
+        [moon] = moon_values(self.profile)
+
+        # 720,000 units at 875
+        self.assertEqual(moon.value_30d, Decimal("630000000"))
+        self.assertEqual(moon.total_fraction, Decimal("0.25"))
+
+    def test_ore_without_a_price_is_zero_and_listed(self):
+        rare = ItemGroup.objects.get(id=1922)
+        ItemType.objects.create(id=45510, name="Xenotime", group=rare)
+        self._scan({CINNABAR: "0.25", 45510: "0.5"})
+
+        [moon] = moon_values(self.profile)
+
+        self.assertEqual(moon.value_30d, Decimal("630000000"))
+        self.assertEqual(moon.unpriced, ["Xenotime"])
+
+    @override_settings(MOONS_DRILL_M3_PER_HOUR=20000)
+    def test_drill_rate_setting(self):
+        self._scan({CINNABAR: "0.5"})
+
+        [moon] = moon_values(self.profile)
+
+        # 720,000 units at 875
+        self.assertEqual(moon.value_30d, Decimal("630000000"))
+
+    def test_profile_taxing_base_ore_values_jackpot_variant_at_base_price(self):
+        jackpot = ItemType.objects.create(
+            id=46311, name="Glistening Cinnabar", group=ItemGroup.objects.get(id=1922))
+        attr = DogmaAttribute.objects.create(id=2711, name="oreBasicType")
+        TypeDogma.objects.create(item_type=jackpot, dogma_attribute=attr, value=CINNABAR)
+        OrePrice.objects.create(item=jackpot, price=Decimal("2000"))
+        self._scan({46311: "0.5"})
+        self.profile.tax_on_base_ore_value = True
+
+        [moon] = moon_values(self.profile)
+
+        # priced as plain Cinnabar: 1,440,000 units at 875
+        self.assertEqual(moon.value_30d, Decimal("1260000000"))

@@ -2,13 +2,14 @@ import re
 from dataclasses import dataclass, field
 from decimal import Decimal
 
-from eve_sde.models import ItemType, Moon
+from eve_sde.models import ItemType, Moon, TypeDogma
 
 from django.db import transaction
 from django.utils import timezone
 
+from . import app_settings
 from .helpers import OreHelper
-from .models import MoonScan, MoonScanOre
+from .models import MoonScan, MoonScanOre, OrePrice, OreTax
 
 # non-English clients wrap names as <localized hint="English">Local</localized>
 LOCALIZED = re.compile(r'<localized hint="([^"]*)">[^<]*</localized>')
@@ -18,6 +19,9 @@ UNCHANGED = "unchanged"
 CHANGED = "changed"
 NEEDS_CHANGE_PERM = "needs_change_perm"
 REJECTED = "rejected"
+
+HOURS_30D = 720
+MOON_ORE_M3_PER_UNIT = 10
 
 # re-scans of the same moon agree to this precision
 SAME_SCAN_PLACES = Decimal("0.0001")
@@ -132,3 +136,53 @@ def commit_import(text, user):
             for type_id, fraction in parsed.ores.items()
         )
     return [result for _, result in plan]
+
+
+@dataclass
+class MoonValue:
+    moon_id: int
+    name: str
+    value_30d: Decimal
+    tax_30d: Decimal
+    total_fraction: Decimal
+    unpriced: list
+    added_at: object
+    added_by: object
+
+
+def moon_values(tax_rate):
+    """Every scanned moon's 30 day value and tax under one OreTaxRates profile.
+    Fractions are used as stored, never scaled up to 100%."""
+    units_per_fraction = Decimal(
+        HOURS_30D * app_settings.drill_m3_per_hour() / MOON_ORE_M3_PER_UNIT)
+    refine = Decimal(tax_rate.refine_rate) / 100
+    prices = dict(
+        OrePrice.objects.filter(goo_only=tax_rate.ignore_ores_in_refine)
+        .values_list("item_id", "price"))
+    taxes = dict(OreTax.objects.filter(tax=tax_rate).values_list("item_id", "price"))
+    base_ore = {}
+    if tax_rate.tax_on_base_ore_value:
+        base_ore = {
+            type_id: int(base_id) for type_id, base_id in TypeDogma.objects.filter(
+                dogma_attribute_id=OreHelper.base_ore_dogma_attribute_id,
+                item_type_id__in=MoonScanOre.objects.values("ore_id"),
+            ).values_list("item_type_id", "value")
+        }
+
+    values = []
+    scans = MoonScan.objects.select_related("moon", "added_by").prefetch_related("ores__ore")
+    for scan in scans:
+        value = tax = total = Decimal(0)
+        unpriced = []
+        for o in scan.ores.all():
+            units = o.fraction * units_per_fraction
+            total += o.fraction
+            priced_as = base_ore.get(o.ore_id, o.ore_id)
+            if priced_as not in prices:
+                unpriced.append(o.ore.name)
+                continue
+            value += units * prices[priced_as] * refine
+            tax += units * taxes.get(o.ore_id, 0)
+        values.append(MoonValue(
+            scan.moon_id, scan.moon.name, value, tax, total, unpriced, scan.added_at, scan.added_by))
+    return values

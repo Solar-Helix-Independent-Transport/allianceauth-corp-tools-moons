@@ -303,6 +303,10 @@ class OreTaxRates(models.Model):
         default=False,
         help_text="Calculate Tax on the base ore value for all variants of an ore."
     )
+    show_in_moon_values = models.BooleanField(
+        default=False,
+        help_text="Offer this profile when valuing scanned moons and suggesting rental prices."
+    )
     def __str__(self):
         try:
             return self.tag

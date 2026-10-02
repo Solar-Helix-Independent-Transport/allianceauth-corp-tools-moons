@@ -53,3 +53,8 @@ MOONS_ENABLE_RENT_COG = getattr(settings, "MOONS_ENABLE_RENT_COG", True)
 MOONS_LIMITED_FUTURE_REGIONS = getattr(
     settings, "MOONS_LIMITED_FUTURE_REGIONS", [])
 MOONS_LIMITED_FUTURE_DAYS = getattr(settings, "MOONS_LIMITED_FUTURE_DAYS", 7)
+
+
+def drill_m3_per_hour():
+    # Athanor/Tatara moon drill rate since patch 19.11 (Dec 2021); rigs don't change it
+    return getattr(settings, "MOONS_DRILL_M3_PER_HOUR", 40000)
