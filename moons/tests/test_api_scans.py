@@ -135,7 +135,7 @@ class TestMoonValuesApi(TestCase):
         self.client = TestClient(api)
 
     def test_value_endpoints_need_view_permission(self):
-        for path in ("/scans/profiles", f"/scans/values?tax_rate={self.flagged.id}"):
+        for path in ("/scans/profiles", "/scans/regions", f"/scans/values?tax_rate={self.flagged.id}&region_id=10000001"):
             with self.subTest(path):
                 self.assertEqual(self.client.get(path, user=self.nobody).status_code, 403)
 
@@ -145,7 +145,7 @@ class TestMoonValuesApi(TestCase):
         self.assertEqual(response.json(), [{"id": self.flagged.id, "tag": "Rental"}])
 
     def test_values_for_a_flagged_profile(self):
-        response = self.client.get(f"/scans/values?tax_rate={self.flagged.id}", user=self.viewer)
+        response = self.client.get(f"/scans/values?tax_rate={self.flagged.id}&region_id=10000001", user=self.viewer)
 
         self.assertEqual(response.status_code, 200)
         self.assertIsNotNone(response.json()["prices_updated"])
@@ -161,8 +161,26 @@ class TestMoonValuesApi(TestCase):
         self.assertEqual(moon["unpriced"], [])
         self.assertEqual(moon["added_by"], "Scout Main")
 
+    def test_scanned_regions_with_moon_counts(self):
+        response = self.client.get("/scans/regions", user=self.viewer)
+
+        self.assertEqual(response.json(), [{"id": 10000001, "name": "Test Region", "moons": 1}])
+
+    def test_values_only_for_the_requested_region(self):
+        other = Region.objects.create(id=10000002, name="Other Region")
+        constellation = Constellation.objects.create(id=20000002, name="Other Constellation", region=other)
+        system = SolarSystem.objects.create(id=30000002, name="Elsewhere", constellation=constellation)
+        far = Moon.objects.create(id=40000099, name="Elsewhere I - Moon 1", solar_system=system)
+        MoonScan.objects.create(moon=far, added_at=timezone.now()).ores.create(
+            ore_id=CINNABAR, fraction=Decimal("0.1"))
+
+        response = self.client.get(
+            f"/scans/values?tax_rate={self.flagged.id}&region_id=10000002", user=self.viewer)
+
+        self.assertEqual([m["moon"]["id"] for m in response.json()["moons"]], [40000099])
+
     def test_values_for_unflagged_profile_is_not_found(self):
-        response = self.client.get(f"/scans/values?tax_rate={self.hidden.id}", user=self.viewer)
+        response = self.client.get(f"/scans/values?tax_rate={self.hidden.id}&region_id=10000001", user=self.viewer)
 
         self.assertEqual(response.status_code, 404)
 

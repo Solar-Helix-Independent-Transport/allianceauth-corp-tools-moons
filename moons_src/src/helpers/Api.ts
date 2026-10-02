@@ -124,8 +124,16 @@ export async function getScanProfiles() {
   return api.data;
 }
 
-export async function getScanValues(taxRate: number) {
-  const api = await axios.get(`/m/api/scans/values`, { params: { tax_rate: taxRate } });
+export async function getScanRegions() {
+  const api = await axios.get(`/m/api/scans/regions`);
+
+  return api.data;
+}
+
+export async function getScanValues(taxRate: number, regionId: number) {
+  const api = await axios.get(`/m/api/scans/values`, {
+    params: { tax_rate: taxRate, region_id: regionId },
+  });
 
   return api.data;
 }

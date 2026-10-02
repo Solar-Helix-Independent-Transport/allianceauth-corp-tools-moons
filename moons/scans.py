@@ -155,13 +155,13 @@ class MoonValue:
     total_fraction: Decimal
     unpriced: list
     added_at: object
-    added_by: object
+    added_by: str  # main character name, else username; None for bulk imports
     system: str = ""
     region: str = ""
     ores: list = field(default_factory=list)  # (ore id, name, fraction)
 
 
-def moon_values(tax_rate, moon_ids=None):
+def moon_values(tax_rate, moon_ids=None, region_id=None):
     """Each scanned moon's 30 day value and tax under one OreTaxRates profile.
     Fractions are used as stored, never scaled up to 100%."""
     units_per_fraction = Decimal(
@@ -180,28 +180,42 @@ def moon_values(tax_rate, moon_ids=None):
             ).values_list("item_type_id", "value")
         }
 
-    values = []
-    scans = MoonScan.objects.select_related(
-        "moon__solar_system__constellation__region", "added_by__profile__main_character",
-    ).prefetch_related("ores__ore")
+    # plain tuples, not model instances: building ~50k scans and ~200k ores as
+    # objects (with modeltranslation hooks on the SDE models) dominated the run time
+    scans = MoonScan.objects.all()
     if moon_ids is not None:
         scans = scans.filter(moon_id__in=moon_ids)
-    for scan in scans:
+    if region_id is not None:
+        scans = scans.filter(moon__solar_system__constellation__region_id=region_id)
+    ores_by_scan = {}
+    for scan_id, ore_id, fraction in MoonScanOre.objects.filter(scan__in=scans).values_list(
+            "scan_id", "ore_id", "fraction").iterator(chunk_size=10000):
+        ores_by_scan.setdefault(scan_id, []).append((ore_id, fraction))
+    ore_names = dict(ItemType.objects.filter(
+        id__in=MoonScanOre.objects.filter(scan__in=scans).values("ore_id")).values_list("id", "name"))
+
+    values = []
+    for (scan_id, moon_id, moon_name, system, region, added_at,
+         main_name, username) in scans.values_list(
+            "id", "moon_id", "moon__name", "moon__solar_system__name",
+            "moon__solar_system__constellation__region__name", "added_at",
+            "added_by__profile__main_character__character_name", "added_by__username",
+    ).iterator(chunk_size=10000):
         value = tax = total = Decimal(0)
         unpriced = []
-        for o in scan.ores.all():
-            units = o.fraction * units_per_fraction
-            total += o.fraction
-            priced_as = base_ore.get(o.ore_id, o.ore_id)
+        ores = ores_by_scan.get(scan_id, [])
+        for ore_id, fraction in ores:
+            units = fraction * units_per_fraction
+            total += fraction
+            priced_as = base_ore.get(ore_id, ore_id)
             if priced_as not in prices:
-                unpriced.append(o.ore.name)
+                unpriced.append(ore_names[ore_id])
                 continue
             value += units * prices[priced_as] * refine
-            tax += units * taxes.get(o.ore_id, 0)
-        system = scan.moon.solar_system
+            tax += units * taxes.get(ore_id, 0)
         values.append(MoonValue(
-            scan.moon_id, scan.moon.name, value, tax, total, unpriced, scan.added_at, scan.added_by,
-            system=system.name, region=system.constellation.region.name,
-            ores=[(o.ore_id, o.ore.name, o.fraction) for o in scan.ores.all()],
+            moon_id, moon_name, value, tax, total, unpriced, added_at, main_name or username,
+            system=system, region=region,
+            ores=[(ore_id, ore_names[ore_id], fraction) for ore_id, fraction in ores],
         ))
     return values

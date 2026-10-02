@@ -10,7 +10,7 @@ from ninja.security import django_auth
 
 from django.conf import settings
 from django.db.models import (
-    ExpressionWrapper, F, FloatField, OuterRef, Subquery, Sum,
+    Count, ExpressionWrapper, F, FloatField, OuterRef, Subquery, Sum,
 )
 from django.utils import timezone
 
@@ -649,11 +649,20 @@ def get_scan_profiles(request):
     return 200, models.OreTaxRates.objects.filter(show_in_moon_values=True).order_by("id")
 
 
-def _submitter(user):
-    try:
-        return user.profile.main_character.character_name
-    except AttributeError:
-        return user.username if user else None
+@api.get(
+    "/scans/regions",
+    response={200: List[schema.ScannedRegion], 403: str},
+    tags=["Scans"]
+)
+def get_scanned_regions(request):
+    if not request.user.has_perm("moons.view_moonscan"):
+        return 403, "Permission Denied!"
+    region = "moon__solar_system__constellation__region"
+    return 200, [
+        {"id": r[f"{region}_id"], "name": r[f"{region}__name"], "moons": r["moons"]}
+        for r in models.MoonScan.objects.values(f"{region}_id", f"{region}__name")
+        .annotate(moons=Count("id")).order_by(f"{region}__name")
+    ]
 
 
 @api.get(
@@ -661,7 +670,7 @@ def _submitter(user):
     response={200: schema.ScannedMoonValues, 403: str, 404: str},
     tags=["Scans"]
 )
-def get_scan_values(request, tax_rate: int):
+def get_scan_values(request, tax_rate: int, region_id: int):
     if not request.user.has_perm("moons.view_moonscan"):
         return 403, "Permission Denied!"
     profile = models.OreTaxRates.objects.filter(id=tax_rate, show_in_moon_values=True).first()
@@ -680,9 +689,10 @@ def get_scan_values(request, tax_rate: int):
             "ores": [{"type_id": t, "name": n, "fraction": f} for t, n, f in v.ores],
             "unpriced": v.unpriced,
             "added_at": v.added_at,
-            "added_by": _submitter(v.added_by),
+            "added_by": v.added_by,
         }
-        for v in scans.moon_values(profile)
+        # one region at a time: tens of thousands of scanned moons won't fit in one response
+        for v in scans.moon_values(profile, region_id=region_id)
     ]}
 
 

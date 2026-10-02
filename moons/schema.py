@@ -134,3 +134,9 @@ class ScannedMoonValues(Schema):
 
 class RentalSuggestion(Schema):
     price: Optional[int]  # None when the moon has no scan
+
+
+class ScannedRegion(Schema):
+    id: int
+    name: str
+    moons: int

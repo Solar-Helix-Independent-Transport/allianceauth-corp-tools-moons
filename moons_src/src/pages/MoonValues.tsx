@@ -1,8 +1,8 @@
 import BaseTable from "../components/BaseTable/BaseTable";
 import ErrorBoundary from "../components/ErrorBoundary";
 import { ErrorLoader, PanelLoader } from "../components/Loaders/Loaders";
-import { getScanProfiles, getScanValues } from "../helpers/Api";
-import { scannedMoonValue, taxProfile } from "../types";
+import { getScanProfiles, getScanRegions, getScanValues } from "../helpers/Api";
+import { scannedMoonValue, scannedRegion, taxProfile } from "../types";
 import { createColumnHelper } from "@tanstack/react-table";
 import { useState } from "react";
 import { Alert, Badge, Form } from "react-bootstrap";
@@ -77,25 +77,31 @@ const columns = [
 
 const MoonValues = () => {
   const [profileId, setProfileId] = useState<number | null>(null);
+  const [regionId, setRegionId] = useState<number | null>(null);
 
   const profiles = useQuery(["scan-profiles"], () => getScanProfiles(), {
     refetchOnWindowFocus: false,
   });
-  const selected: number | undefined = profileId ?? profiles.data?.[0]?.id;
-
-  const values = useQuery(["scan-values", selected], () => getScanValues(selected!), {
-    enabled: selected !== undefined,
+  const regions = useQuery(["scan-regions"], () => getScanRegions(), {
     refetchOnWindowFocus: false,
   });
+  const selected: number | undefined = profileId ?? profiles.data?.[0]?.id;
 
-  if (profiles.isLoading) {
+  // one region at a time: all scanned moons together is far too much for one page
+  const values = useQuery(
+    ["scan-values", selected, regionId],
+    () => getScanValues(selected!, regionId!),
+    { enabled: selected !== undefined && regionId !== null, refetchOnWindowFocus: false }
+  );
+
+  if (profiles.isLoading || regions.isLoading) {
     return <PanelLoader />;
   }
-  if (profiles.error || values.error) {
+  if (profiles.error || regions.error || values.error) {
     return (
       <ErrorLoader
         title="Failed to load moon values"
-        message={((profiles.error || values.error) as Error).message}
+        message={((profiles.error || regions.error || values.error) as Error).message}
       />
     );
   }
@@ -111,6 +117,19 @@ const MoonValues = () => {
   return (
     <ErrorBoundary>
       <div className="d-flex gap-3 align-items-center mb-2">
+        <Form.Label className="mb-0">Region</Form.Label>
+        <Form.Select
+          style={{ width: 260 }}
+          value={regionId ?? ""}
+          onChange={(e) => setRegionId(e.target.value ? Number(e.target.value) : null)}
+        >
+          <option value="">— pick a region —</option>
+          {(regions.data ?? []).map((r: scannedRegion) => (
+            <option key={r.id} value={r.id}>
+              {r.name} ({r.moons.toLocaleString()})
+            </option>
+          ))}
+        </Form.Select>
         <Form.Label className="mb-0">Price profile</Form.Label>
         <Form.Select
           style={{ width: 260 }}
@@ -129,16 +148,20 @@ const MoonValues = () => {
             ` · prices updated ${new Date(values.data.prices_updated).toLocaleString()}`}
         </span>
       </div>
-      <BaseTable
-        isLoading={values.isLoading}
-        isFetching={values.isFetching}
-        columns={columns}
-        data={values.data?.moons ?? []}
-        initialState={
-          { sorting: [{ id: "value", desc: true }], pagination: { pageSize: 25 } } as any
-        }
-        exportFileName="MoonValues"
-      />
+      {regionId === null ? (
+        <Alert variant="secondary">Pick a region to rank its scanned moons.</Alert>
+      ) : (
+        <BaseTable
+          isLoading={values.isLoading}
+          isFetching={values.isFetching}
+          columns={columns}
+          data={values.data?.moons ?? []}
+          initialState={
+            { sorting: [{ id: "value", desc: true }], pagination: { pageSize: 25 } } as any
+          }
+          exportFileName="MoonValues"
+        />
+      )}
     </ErrorBoundary>
   );
 };

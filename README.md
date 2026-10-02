@@ -110,7 +110,7 @@ Compositions are stored exactly as scanned. Moons under 100% are normal and are 
 
 ### Moon values and rental suggestions
 
-**Moons > Moon Values** ranks scanned moons by estimated value and tax per 30 days of extraction, priced under an Ore Tax Rates profile. In admin, tick **Show in moon values** on each profile you want to offer.
+**Moons > Moon Values** ranks the scanned moons of one region at a time by estimated value and tax per 30 days of extraction, priced under an Ore Tax Rates profile. In admin, tick **Show in moon values** on each profile you want to offer.
 
 - Value: ore price at the profile's refine rate (honouring "ignore ores in refine" and "tax on base ore value").
 - Tax: what the profile would tax that ore.

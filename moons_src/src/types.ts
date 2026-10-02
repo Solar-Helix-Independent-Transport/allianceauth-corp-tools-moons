@@ -85,3 +85,8 @@ export interface scannedMoonValue {
   added_at: string;
   added_by: string | null;
 }
+export interface scannedRegion {
+  id: number;
+  name: string;
+  moons: number;
+}

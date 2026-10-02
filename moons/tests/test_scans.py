@@ -279,7 +279,7 @@ class TestMoonValues(TestCase):
         self.assertEqual(moon.value_30d, Decimal("1386000000"))
         # tax uses the stored per-unit OreTax: 175 + 8.75 per unit
         self.assertEqual(moon.tax_30d, Decimal("264600000"))
-        self.assertEqual(moon.added_by, self.user)
+        self.assertEqual(moon.added_by, "valuer")  # no main character: username
         self.assertEqual(moon.unpriced, [])
 
     def test_profile_ignoring_ores_in_refine_uses_goo_only_price(self):
