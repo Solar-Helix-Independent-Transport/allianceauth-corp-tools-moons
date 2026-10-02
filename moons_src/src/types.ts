@@ -54,3 +54,18 @@ export interface moonRental {
   price: number;
   start_date: string;
 }
+export type scanStatus = "new" | "unchanged" | "changed" | "needs_change_perm" | "rejected";
+export interface scanOre {
+  type_id: number;
+  name: string | null;
+  fraction: number | null;
+  previous: number | null;
+}
+export interface scanResult {
+  moon_id: number;
+  name: string;
+  status: scanStatus;
+  reason: string;
+  flagged: Array<string>;
+  ores: Array<scanOre>;
+}

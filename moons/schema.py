@@ -13,6 +13,9 @@ class MoonPermisions(Schema):
     view_observations: bool = False
     view_rentals: bool = False
     edit_rentals: bool = False
+    import_scans: bool = False
+    change_scans: bool = False
+    view_scans: bool = False
     su: bool = False
 
 
@@ -76,3 +79,23 @@ class NewMoonRental(Schema):
     contact_id: int
     corporation_id: int
     price: Decimal
+
+
+class ScanText(Schema):
+    text: str
+
+
+class ScanOre(Schema):
+    type_id: int
+    name: Optional[str]
+    fraction: Optional[float]  # None when the ore is only in the stored scan
+    previous: Optional[float]  # None when the moon has no stored scan with it
+
+
+class ScanImportResult(Schema):
+    moon_id: int
+    name: str
+    status: str
+    reason: str
+    flagged: List[str]
+    ores: List[ScanOre]

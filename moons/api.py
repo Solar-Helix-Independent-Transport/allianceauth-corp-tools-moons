@@ -19,7 +19,7 @@ from esi.models import Token
 
 from moons.helpers import OreHelper, what_frack_id
 
-from . import app_settings, models, schema
+from . import app_settings, models, scans, schema
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +43,9 @@ def get_user_permissions(request):
         "view_observations": request.user.has_perm('moons.view_all'),
         "view_rentals": request.user.has_perm('moons.view_moonrental'),
         "edit_rentals": request.user.has_perm('moons.change_moonrental'),
+        "import_scans": request.user.has_perm('moons.add_moonscan'),
+        "change_scans": request.user.has_perm('moons.change_moonscan'),
+        "view_scans": request.user.has_perm('moons.view_moonscan'),
         "su": request.user.is_superuser
     }
 
@@ -581,3 +584,47 @@ def get_outstanding_tax(request):
         output.append(f"  - {s}")
 
     return output
+
+
+def _scan_results(results):
+    out = []
+    for r in results:
+        ores = [
+            {
+                "type_id": type_id,
+                "name": r.ore_names.get(type_id),
+                "fraction": r.ores.get(type_id),
+                "previous": r.previous.get(type_id),
+            }
+            for type_id in sorted({*r.ores, *r.previous})
+        ]
+        out.append({
+            "moon_id": r.moon_id, "name": r.name, "status": r.status,
+            "reason": r.reason, "flagged": r.flagged, "ores": ores,
+        })
+    return out
+
+
+@api.post(
+    "/scans/preview",
+    response={200: List[schema.ScanImportResult], 403: str},
+    tags=["Scans"]
+)
+def post_scan_preview(request, body: schema.ScanText):
+    if not request.user.has_perm("moons.add_moonscan"):
+        return 403, "Permission Denied!"
+    return 200, _scan_results(scans.preview_import(body.text, request.user))
+
+
+@api.post(
+    "/scans/import",
+    response={200: List[schema.ScanImportResult], 403: str},
+    tags=["Scans"]
+)
+def post_scan_import(request, body: schema.ScanText):
+    if not request.user.has_perm("moons.add_moonscan"):
+        return 403, "Permission Denied!"
+    results = scans.commit_import(body.text, request.user)
+    logger.info(f"{request.user} imported moon scans: "
+                f"{sum(r.status in (scans.NEW, scans.CHANGED) for r in results)} written")
+    return 200, _scan_results(results)

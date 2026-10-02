@@ -8,6 +8,7 @@ const MoonMenu = ({
   limitedFutureExtractions = false,
   // observers = false,
   rentals = false,
+  importScans = false,
   admin = false,
 }) => {
   if (!menuRoot) {
@@ -32,6 +33,11 @@ const MoonMenu = ({
       {rentals && (
         <NavLink to={`rentals`} className={`nav-link`}>
           Rentals
+        </NavLink>
+      )}
+      {importScans && (
+        <NavLink to={`scans/import`} className={`nav-link`}>
+          Import Scans
         </NavLink>
       )}
       {admin && (

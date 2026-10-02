@@ -76,6 +76,9 @@ class MoonImportResult:
     status: str
     reason: str = ""
     flagged: list = field(default_factory=list)
+    ores: dict = field(default_factory=dict)  # ore id -> pasted fraction
+    previous: dict = field(default_factory=dict)  # ore id -> stored fraction
+    ore_names: dict = field(default_factory=dict)
 
 
 def _rounded(ores):
@@ -88,10 +91,12 @@ def _plan(text, user):
     moon_ids = [p.moon_id for p in parsed_moons]
     moons = Moon.objects.in_bulk(moon_ids)
     types = ItemType.objects.in_bulk({t for p in parsed_moons for t in p.ores})
-    existing = {
-        scan.moon_id: {o.ore_id: o.fraction for o in scan.ores.all()}
-        for scan in MoonScan.objects.filter(moon_id__in=moon_ids).prefetch_related("ores")
-    }
+    stored_scans = MoonScan.objects.filter(moon_id__in=moon_ids).prefetch_related("ores__ore")
+    existing = {}
+    ore_names = {t.id: t.name for t in types.values()}
+    for scan in stored_scans:
+        existing[scan.moon_id] = {o.ore_id: o.fraction for o in scan.ores.all()}
+        ore_names.update({o.ore_id: o.ore.name for o in scan.ores.all()})
 
     plan = []
     for parsed in parsed_moons:
@@ -108,6 +113,9 @@ def _plan(text, user):
             result = MoonImportResult(moon.id, moon.name, UNCHANGED)
         else:
             result = MoonImportResult(moon.id, moon.name, CHANGED if can_change else NEEDS_CHANGE_PERM)
+        result.ores = parsed.ores
+        result.previous = existing.get(parsed.moon_id, {})
+        result.ore_names = {t: ore_names[t] for t in {*result.ores, *result.previous} if t in ore_names}
         if result.status != REJECTED:
             # old scans can list ores CCP has since moved off moons; keep them, but say so
             result.flagged = [

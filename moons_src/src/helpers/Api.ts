@@ -1,4 +1,5 @@
 import axios from "axios";
+import Cookies from "js-cookie";
 
 axios.defaults.xsrfHeaderName = "X-CSRFToken";
 
@@ -98,6 +99,21 @@ export async function getAdminOutstanding() {
 
 export async function getRentals() {
   const api = await axios.get(`/m/api/rental/list`);
+
+  return api.data;
+}
+
+// ninja's django_auth enforces CSRF on POST
+const csrf = () => ({ headers: { "X-CSRFToken": Cookies.get("csrftoken") ?? "" } });
+
+export async function postScanPreview(text: string) {
+  const api = await axios.post(`/m/api/scans/preview`, { text }, csrf());
+
+  return api.data;
+}
+
+export async function postScanImport(text: string) {
+  const api = await axios.post(`/m/api/scans/import`, { text }, csrf());
 
   return api.data;
 }

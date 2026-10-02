@@ -1,6 +1,7 @@
 import AdminList from "./pages/Admin";
 import CorporateLedger from "./pages/CorporateLedger";
 import FutureExtractions from "./pages/FutureExtractions";
+import ImportScans from "./pages/ImportScans";
 import MoonsPage from "./pages/MoonsPage";
 import PastLedger from "./pages/PastLedger";
 import Rentals from "./pages/Rentals";
@@ -23,6 +24,7 @@ const Moons = () => {
             <Route path={"future"} element={<FutureExtractions />} />
             <Route path={"past"} element={<PastLedger />} />
             <Route path={"rentals"} element={<Rentals />} />
+            <Route path={"scans/import"} element={<ImportScans />} />
           </Route>
         </Routes>
       </Router>

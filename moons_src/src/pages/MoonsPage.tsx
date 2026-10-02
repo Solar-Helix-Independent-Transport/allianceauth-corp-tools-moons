@@ -28,6 +28,7 @@ const MoonPage = () => {
         futureExtractions={data.view_observations}
         limitedFutureExtractions={data.view_limited_future}
         rentals={data.view_rentals}
+        importScans={data.import_scans}
         admin={data.su}
       />
       <Outlet />
