@@ -92,3 +92,43 @@ Sets the bucket used in buy/sell ore calculations:
 - `MOONS_ORE_RATE_BUCKET="stddev"`
 - `MOONS_ORE_RATE_BUCKET="median"`
 - `MOONS_ORE_RATE_BUCKET="percentile"`
+
+## Moon Scans
+
+Import probe-scanner moon scans to rank moons by value and get rental price suggestions.
+
+### Importing
+
+In game, scan the moons with the probe scanner, select the results and copy them (Ctrl+C). Paste them into **Moons > Import Scans**, review, and confirm. Any client language works, and pastes relayed through Discord (tabs turned into spaces) are fine.
+
+- Moons with no scan yet are imported.
+- A re-import that matches the stored scan (to 4 decimal places) changes nothing; the original submitter keeps the credit.
+- A re-import that differs replaces the stored scan, but only for users with the change permission.
+- Unknown moons or ore types are rejected; ores that are no longer moon ores are kept and flagged.
+
+Compositions are stored exactly as scanned. Moons under 100% are normal and are never scaled up.
+
+### Moon values and rental suggestions
+
+**Moons > Moon Values** ranks scanned moons by estimated value and tax per 30 days of extraction, priced under an Ore Tax Rates profile. In admin, tick **Show in moon values** on each profile you want to offer.
+
+- Value: ore price at the profile's refine rate (honouring "ignore ores in refine" and "tax on base ore value").
+- Tax: what the profile would tax that ore.
+
+When creating a rental from **Moons > Rentals > New Rental**, the 30 day tax under a chosen profile is shown as a suggested monthly price. It is only a suggestion; the price you enter is what gets invoiced.
+
+### Permissions
+
+| Permission                | Allows                                                        |
+| ------------------------- | ------------------------------------------------------------- |
+| `moons.add_moonscan`      | Import scans for moons that have none                         |
+| `moons.change_moonscan`   | Overwrite a moon's scan when a re-import differs              |
+| `moons.view_moonscan`     | See scan compositions and the Moon Values ranking (all moons) |
+| `moons.add_moonrental`    | Create rentals and see price suggestions                      |
+| `moons.change_moonrental` | See price suggestions                                         |
+
+### MOONS_DRILL_M3_PER_HOUR
+
+`MOONS_DRILL_M3_PER_HOUR = 40000`
+
+- The moon drill extraction rate used for values. 40,000 m3/h has applied to every Athanor and Tatara since December 2021; structure rigs don't change it.
