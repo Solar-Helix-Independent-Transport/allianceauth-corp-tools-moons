@@ -628,3 +628,51 @@ def post_scan_import(request, body: schema.ScanText):
     logger.info(f"{request.user} imported moon scans: "
                 f"{sum(r.status in (scans.NEW, scans.CHANGED) for r in results)} written")
     return 200, _scan_results(results)
+
+
+@api.get(
+    "/scans/profiles",
+    response={200: List[schema.TaxProfile], 403: str},
+    tags=["Scans"]
+)
+def get_scan_profiles(request):
+    if not request.user.has_perm("moons.view_moonscan"):
+        return 403, "Permission Denied!"
+    return 200, models.OreTaxRates.objects.filter(show_in_moon_values=True).order_by("id")
+
+
+def _submitter(user):
+    try:
+        return user.profile.main_character.character_name
+    except AttributeError:
+        return user.username if user else None
+
+
+@api.get(
+    "/scans/values",
+    response={200: schema.ScannedMoonValues, 403: str, 404: str},
+    tags=["Scans"]
+)
+def get_scan_values(request, tax_rate: int):
+    if not request.user.has_perm("moons.view_moonscan"):
+        return 403, "Permission Denied!"
+    profile = models.OreTaxRates.objects.filter(id=tax_rate, show_in_moon_values=True).first()
+    if not profile:
+        return 404, "Tax profile not offered for moon values"
+    prices_updated = models.OrePrice.objects.order_by("-last_update").values_list(
+        "last_update", flat=True).first()
+    return 200, {"prices_updated": prices_updated, "moons": [
+        {
+            "moon": {"id": v.moon_id, "name": v.name},
+            "system": v.system,
+            "region": v.region,
+            "value": v.value_30d,
+            "tax": v.tax_30d,
+            "total_fraction": v.total_fraction,
+            "ores": [{"type_id": t, "name": n, "fraction": f} for t, n, f in v.ores],
+            "unpriced": v.unpriced,
+            "added_at": v.added_at,
+            "added_by": _submitter(v.added_by),
+        }
+        for v in scans.moon_values(profile)
+    ]}

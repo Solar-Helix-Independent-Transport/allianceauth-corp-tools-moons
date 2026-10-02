@@ -117,3 +117,15 @@ export async function postScanImport(text: string) {
 
   return api.data;
 }
+
+export async function getScanProfiles() {
+  const api = await axios.get(`/m/api/scans/profiles`);
+
+  return api.data;
+}
+
+export async function getScanValues(taxRate: number) {
+  const api = await axios.get(`/m/api/scans/values`, { params: { tax_rate: taxRate } });
+
+  return api.data;
+}

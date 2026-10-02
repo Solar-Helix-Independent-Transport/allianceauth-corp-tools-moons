@@ -69,3 +69,19 @@ export interface scanResult {
   flagged: Array<string>;
   ores: Array<scanOre>;
 }
+export interface taxProfile {
+  id: number;
+  tag: string;
+}
+export interface scannedMoonValue {
+  moon: KeyVal;
+  system: string;
+  region: string;
+  value: number;
+  tax: number;
+  total_fraction: number;
+  ores: Array<{ type_id: number; name: string; fraction: number }>;
+  unpriced: Array<string>;
+  added_at: string;
+  added_by: string | null;
+}

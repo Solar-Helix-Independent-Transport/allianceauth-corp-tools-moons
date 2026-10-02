@@ -156,6 +156,9 @@ class MoonValue:
     unpriced: list
     added_at: object
     added_by: object
+    system: str = ""
+    region: str = ""
+    ores: list = field(default_factory=list)  # (ore id, name, fraction)
 
 
 def moon_values(tax_rate):
@@ -178,7 +181,9 @@ def moon_values(tax_rate):
         }
 
     values = []
-    scans = MoonScan.objects.select_related("moon", "added_by").prefetch_related("ores__ore")
+    scans = MoonScan.objects.select_related(
+        "moon__solar_system__constellation__region", "added_by__profile__main_character",
+    ).prefetch_related("ores__ore")
     for scan in scans:
         value = tax = total = Decimal(0)
         unpriced = []
@@ -191,6 +196,10 @@ def moon_values(tax_rate):
                 continue
             value += units * prices[priced_as] * refine
             tax += units * taxes.get(o.ore_id, 0)
+        system = scan.moon.solar_system
         values.append(MoonValue(
-            scan.moon_id, scan.moon.name, value, tax, total, unpriced, scan.added_at, scan.added_by))
+            scan.moon_id, scan.moon.name, value, tax, total, unpriced, scan.added_at, scan.added_by,
+            system=system.name, region=system.constellation.region.name,
+            ores=[(o.ore_id, o.ore.name, o.fraction) for o in scan.ores.all()],
+        ))
     return values

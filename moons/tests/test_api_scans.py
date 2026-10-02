@@ -12,7 +12,7 @@ from django.utils import timezone
 from allianceauth.tests.auth_utils import AuthUtils
 
 from moons.api import api
-from moons.models import MoonScan
+from moons.models import MoonScan, OrePrice, OreTax, OreTaxRates
 
 MOON_1 = 40161708
 CINNABAR, BITUMENS = 45506, 45492
@@ -99,3 +99,68 @@ class TestScanImportApi(TestCase):
                 data = self.client.get("/user/permissions", user=user).json()
                 self.assertEqual(
                     (data["import_scans"], data["change_scans"], data["view_scans"]), expected)
+
+
+def _profile(tag, flagged):
+    return OreTaxRates.objects.create(
+        tag=tag, refine_rate=Decimal("100"), ore_rate=0, ubiquitous_rate=0, common_rate=0,
+        uncommon_rate=0, rare_rate=10, exceptional_rate=0, show_in_moon_values=flagged)
+
+
+class TestMoonValuesApi(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        region = Region.objects.create(id=10000001, name="Test Region")
+        constellation = Constellation.objects.create(id=20000001, name="Test Constellation", region=region)
+        system = SolarSystem.objects.create(id=30002542, name="Auga", constellation=constellation)
+        moon = Moon.objects.create(id=MOON_1, name="Auga V - Moon 1", solar_system=system)
+        rare = ItemGroup.objects.create(id=1922, name="Rare Moon Asteroids")
+        cinnabar = ItemType.objects.create(id=CINNABAR, name="Cinnabar", group=rare)
+
+        cls.viewer = AuthUtils.create_user("scan_viewer")
+        cls.viewer.user_permissions.add(_perm("view_moonscan"))
+        AuthUtils.add_main_character_2(cls.viewer, "Scout Main", 2112000001, corp_id=2112000002, corp_name="Scouts")
+        cls.nobody = AuthUtils.create_user("no_scan_perms")
+
+        cls.flagged = _profile("Rental", True)
+        cls.hidden = _profile("Internal", False)
+        OrePrice.objects.create(item=cinnabar, price=Decimal("1000"))
+        OreTax.objects.create(item=cinnabar, tax=cls.flagged, price=Decimal("100"))
+
+        scan = MoonScan.objects.create(moon=moon, added_by=cls.viewer, added_at=timezone.now())
+        scan.ores.create(ore=cinnabar, fraction=Decimal("0.5"))
+
+    def setUp(self):
+        self.client = TestClient(api)
+
+    def test_value_endpoints_need_view_permission(self):
+        for path in ("/scans/profiles", f"/scans/values?tax_rate={self.flagged.id}"):
+            with self.subTest(path):
+                self.assertEqual(self.client.get(path, user=self.nobody).status_code, 403)
+
+    def test_profiles_lists_only_flagged_tax_profiles(self):
+        response = self.client.get("/scans/profiles", user=self.viewer)
+
+        self.assertEqual(response.json(), [{"id": self.flagged.id, "tag": "Rental"}])
+
+    def test_values_for_a_flagged_profile(self):
+        response = self.client.get(f"/scans/values?tax_rate={self.flagged.id}", user=self.viewer)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNotNone(response.json()["prices_updated"])
+        [moon] = response.json()["moons"]
+        # 1,440,000 units at 1000 (100% refine), tax 100 per unit
+        self.assertEqual((moon["moon"]["id"], moon["moon"]["name"]), (MOON_1, "Auga V - Moon 1"))
+        self.assertEqual(moon["system"], "Auga")
+        self.assertEqual(moon["region"], "Test Region")
+        self.assertEqual(moon["value"], 1440000000)
+        self.assertEqual(moon["tax"], 144000000)
+        self.assertEqual(moon["total_fraction"], 0.5)
+        self.assertEqual(moon["ores"], [{"type_id": CINNABAR, "name": "Cinnabar", "fraction": 0.5}])
+        self.assertEqual(moon["unpriced"], [])
+        self.assertEqual(moon["added_by"], "Scout Main")
+
+    def test_values_for_unflagged_profile_is_not_found(self):
+        response = self.client.get(f"/scans/values?tax_rate={self.hidden.id}", user=self.viewer)
+
+        self.assertEqual(response.status_code, 404)

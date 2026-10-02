@@ -99,3 +99,32 @@ class ScanImportResult(Schema):
     reason: str
     flagged: List[str]
     ores: List[ScanOre]
+
+
+class TaxProfile(Schema):
+    id: int
+    tag: str
+
+
+class MoonScanOre(Schema):
+    type_id: int
+    name: str
+    fraction: float
+
+
+class ScannedMoonValue(Schema):
+    moon: IdName
+    system: str
+    region: str
+    value: float  # ISK per 30 days
+    tax: float  # ISK per 30 days under the selected profile
+    total_fraction: float
+    ores: List[MoonScanOre]
+    unpriced: List[str]
+    added_at: datetime
+    added_by: Optional[str]
+
+
+class ScannedMoonValues(Schema):
+    prices_updated: Optional[datetime]
+    moons: List[ScannedMoonValue]
