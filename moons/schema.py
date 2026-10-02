@@ -13,6 +13,7 @@ class MoonPermisions(Schema):
     view_observations: bool = False
     view_rentals: bool = False
     edit_rentals: bool = False
+    add_rentals: bool = False
     import_scans: bool = False
     change_scans: bool = False
     view_scans: bool = False
@@ -79,6 +80,7 @@ class NewMoonRental(Schema):
     contact_id: int
     corporation_id: int
     price: Decimal
+    note: str = ""
 
 
 class ScanText(Schema):
@@ -128,3 +130,7 @@ class ScannedMoonValue(Schema):
 class ScannedMoonValues(Schema):
     prices_updated: Optional[datetime]
     moons: List[ScannedMoonValue]
+
+
+class RentalSuggestion(Schema):
+    price: Optional[int]  # None when the moon has no scan

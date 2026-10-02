@@ -43,6 +43,7 @@ def get_user_permissions(request):
         "view_observations": request.user.has_perm('moons.view_all'),
         "view_rentals": request.user.has_perm('moons.view_moonrental'),
         "edit_rentals": request.user.has_perm('moons.change_moonrental'),
+        "add_rentals": request.user.has_perm('moons.add_moonrental'),
         "import_scans": request.user.has_perm('moons.add_moonscan'),
         "change_scans": request.user.has_perm('moons.change_moonscan'),
         "view_scans": request.user.has_perm('moons.view_moonscan'),
@@ -458,6 +459,7 @@ def post_moon_rental_new(request, rental: schema.NewMoonRental = Form(...)):
         contact=char,
         corporation=corp,
         price=rental.price,
+        note=rental.note,
         start_date=timezone.now()
     )
     return 200, {"moon": {
@@ -630,13 +632,19 @@ def post_scan_import(request, body: schema.ScanText):
     return 200, _scan_results(results)
 
 
+def _can_see_rental_suggestions(user):
+    return user.has_perm("moons.add_moonrental") or user.has_perm("moons.change_moonrental")
+
+
 @api.get(
     "/scans/profiles",
     response={200: List[schema.TaxProfile], 403: str},
     tags=["Scans"]
 )
 def get_scan_profiles(request):
-    if not request.user.has_perm("moons.view_moonscan"):
+    # rental admins pick a profile for price suggestions without needing scan access
+    if not (request.user.has_perm("moons.view_moonscan")
+            or _can_see_rental_suggestions(request.user)):
         return 403, "Permission Denied!"
     return 200, models.OreTaxRates.objects.filter(show_in_moon_values=True).order_by("id")
 
@@ -676,3 +684,19 @@ def get_scan_values(request, tax_rate: int):
         }
         for v in scans.moon_values(profile)
     ]}
+
+
+@api.get(
+    "/scans/suggestion",
+    response={200: schema.RentalSuggestion, 403: str, 404: str},
+    tags=["Scans", "Rentals"]
+)
+def get_rental_suggestion(request, moon_id: int, tax_rate: int):
+    if not _can_see_rental_suggestions(request.user):
+        return 403, "Permission Denied!"
+    profile = models.OreTaxRates.objects.filter(id=tax_rate, show_in_moon_values=True).first()
+    if not profile:
+        return 404, "Tax profile not offered for moon values"
+    values = scans.moon_values(profile, moon_ids=[moon_id])
+    # a suggestion only: rounded like invoices, never written to the rental
+    return 200, {"price": int(round(values[0].tax_30d, -6)) if values else None}

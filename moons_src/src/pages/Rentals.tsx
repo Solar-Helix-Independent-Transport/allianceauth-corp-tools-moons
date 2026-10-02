@@ -1,12 +1,13 @@
 import BaseTable from "../components/BaseTable/BaseTable";
 import ErrorBoundary from "../components/ErrorBoundary";
 import { ErrorLoader } from "../components/Loaders/Loaders";
+import { NewRentalModal } from "../components/NewRentalModal";
 import { TimeAndSince } from "../components/TimeAndSince";
-import { getRentals } from "../helpers/Api";
+import { getPerms, getRentals } from "../helpers/Api";
 import { moonRental } from "../types";
 import { createColumnHelper } from "@tanstack/react-table";
 import { useState } from "react";
-import { Badge, Form } from "react-bootstrap";
+import { Badge, Button, Form } from "react-bootstrap";
 import { useQuery } from "react-query";
 
 const col: any = createColumnHelper<moonRental>();
@@ -68,6 +69,8 @@ const columns = [
 
 const Rentals = () => {
   const [showInvalidOnly, setShowInvalidOnly] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const perms = useQuery(["perms"], () => getPerms(), { refetchOnWindowFocus: false });
 
   const { isFetching, error, data } = useQuery(["rentals"], () => getRentals(), {
     initialData: [],
@@ -84,7 +87,12 @@ const Rentals = () => {
 
   return (
     <ErrorBoundary>
-      <div className="mb-3 d-flex justify-content-end">
+      <div className="mb-3 d-flex justify-content-end gap-3 align-items-center">
+        {perms.data?.add_rentals && (
+          <Button size="sm" onClick={() => setShowNew(true)}>
+            + New Rental
+          </Button>
+        )}
         <Form.Check
           type="switch"
           id="no-auth-filter"
@@ -94,6 +102,7 @@ const Rentals = () => {
         />
       </div>
       <BaseTable {...{ isFetching, columns }} data={filteredData} exportFileName="MoonRentals" />
+      {showNew && <NewRentalModal show={showNew} onHide={() => setShowNew(false)} />}
     </ErrorBoundary>
   );
 };

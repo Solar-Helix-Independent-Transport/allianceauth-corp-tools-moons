@@ -129,3 +129,25 @@ export async function getScanValues(taxRate: number) {
 
   return api.data;
 }
+
+export async function getRentalSuggestion(moonId: number, taxRate: number) {
+  const api = await axios.get(`/m/api/scans/suggestion`, {
+    params: { moon_id: moonId, tax_rate: taxRate },
+  });
+
+  return api.data;
+}
+
+export async function postNewRental(rental: {
+  moon_id: number;
+  contact_id: number;
+  corporation_id: number;
+  price: number;
+  note: string;
+}) {
+  const form = new URLSearchParams();
+  Object.entries(rental).forEach(([k, v]) => form.append(k, String(v)));
+  const api = await axios.post(`/m/api/rental/new`, form, csrf());
+
+  return api.data;
+}

@@ -161,8 +161,8 @@ class MoonValue:
     ores: list = field(default_factory=list)  # (ore id, name, fraction)
 
 
-def moon_values(tax_rate):
-    """Every scanned moon's 30 day value and tax under one OreTaxRates profile.
+def moon_values(tax_rate, moon_ids=None):
+    """Each scanned moon's 30 day value and tax under one OreTaxRates profile.
     Fractions are used as stored, never scaled up to 100%."""
     units_per_fraction = Decimal(
         HOURS_30D * app_settings.drill_m3_per_hour() / MOON_ORE_M3_PER_UNIT)
@@ -184,6 +184,8 @@ def moon_values(tax_rate):
     scans = MoonScan.objects.select_related(
         "moon__solar_system__constellation__region", "added_by__profile__main_character",
     ).prefetch_related("ores__ore")
+    if moon_ids is not None:
+        scans = scans.filter(moon_id__in=moon_ids)
     for scan in scans:
         value = tax = total = Decimal(0)
         unpriced = []
