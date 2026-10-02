@@ -13,6 +13,13 @@ const col: any = createColumnHelper<scannedMoonValue>();
 
 // R-rating -> moon ore group, to reuse the ore colour key
 const RARITY_GROUP: Record<number, number> = { 4: 1884, 8: 1920, 16: 1921, 32: 1922, 64: 1923 };
+const RARITY_NAME: Record<number, string> = {
+  4: "Ubiquitous",
+  8: "Common",
+  16: "Uncommon",
+  32: "Rare",
+  64: "Exceptional",
+};
 
 const isk = (n: number) => `${Math.round(n).toLocaleString()} ISK`;
 
@@ -41,7 +48,7 @@ const columns = [
       }
       return (
         <Badge className={`${(OreColourMap as any)[RARITY_GROUP[rarity]]} fw-normal`}>
-          R{rarity}
+          R{rarity} {RARITY_NAME[rarity]}
         </Badge>
       );
     },
