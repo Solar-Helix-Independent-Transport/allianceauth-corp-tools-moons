@@ -3,6 +3,9 @@
 # Update this file:
 #   pre-commit autoupdate
 
+# real probe-scanner pastes; CRLF, tabs and missing final newlines are the test input
+exclude: ^moons/tests/fixtures/scans/
+
 repos:
   # Code Upgrades
   # - repo: https://github.com/asottile/pyupgrade

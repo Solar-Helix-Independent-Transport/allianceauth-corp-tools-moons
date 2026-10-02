@@ -623,3 +623,24 @@ class MoonRental(models.Model):
             send_message(msg, app_settings.get_rental_discord_channel())
 
         return f"Invoiced Moon Rentals, {total_known} to known Users, and {total_unknown} to unknown Users."
+
+
+class MoonScan(models.Model):
+    """The current probe scan of a moon. Compositions only change after big
+    game patches, so a moon keeps a single scan that re-imports replace."""
+    moon = models.OneToOneField(Moon, on_delete=models.CASCADE, related_name="scan")
+    added_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    added_at = models.DateTimeField()
+
+    def __str__(self):
+        return f"{self.moon.name} scan"
+
+
+class MoonScanOre(models.Model):
+    scan = models.ForeignKey(MoonScan, on_delete=models.CASCADE, related_name="ores")
+    ore = models.ForeignKey(ItemType, on_delete=models.CASCADE)
+    # stored exactly as pasted; compositions under 100% are normal and never scaled
+    fraction = models.DecimalField(max_digits=13, decimal_places=12)
+
+    class Meta:
+        unique_together = ("scan", "ore")
