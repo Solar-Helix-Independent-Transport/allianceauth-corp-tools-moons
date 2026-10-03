@@ -179,8 +179,9 @@ class MoonsCog(commands.Cog):
             moon__name__icontains=ctx.value).values_list("moon__name", flat=True)[:10])
 
     async def search_ore_taxes(ctx: AutocompleteContext):
+        # same choices as the Moon Values page
         return list(OreTaxRates.objects.filter(
-            tag__icontains=ctx.value).values_list("tag", flat=True)[:25])
+            show_in_moon_values=True, tag__icontains=ctx.value).values_list("tag", flat=True)[:25])
 
     async def search_scanned_regions(ctx: AutocompleteContext):
         return list(MoonScan.objects.filter(
@@ -190,10 +191,9 @@ class MoonsCog(commands.Cog):
 
     @staticmethod
     def _ore_tax(tag):
-        # any ore tax can be picked; the default is the first one offered on Moon Values
-        if tag:
-            return OreTaxRates.objects.filter(tag=tag).first()
-        return OreTaxRates.objects.filter(show_in_moon_values=True).order_by("id").first()
+        # only ore taxes shown on Moon Values, defaulting to the first, as the page does
+        offered = OreTaxRates.objects.filter(show_in_moon_values=True).order_by("id")
+        return offered.filter(tag=tag).first() if tag else offered.first()
 
     @staticmethod
     async def _fuel_for(tax_rate):
@@ -204,7 +204,7 @@ class MoonsCog(commands.Cog):
 
     @pinger_commands.command(name='price', guild_ids=get_all_servers())
     @option("moon", description="A scanned moon", autocomplete=search_scanned_moons)
-    @option("ore_tax", description="Ore tax to price with (default: first shown on Moon Values)", autocomplete=search_ore_taxes, required=False)
+    @option("ore_tax", description="Ore tax shown on Moon Values (default: the first)", autocomplete=search_ore_taxes, required=False)
     @option("explain", description="Show every input step by step", required=False)
     async def price_moon(self, ctx, moon: str, ore_tax: str = None, explain: bool = False):
         """
@@ -217,8 +217,8 @@ class MoonsCog(commands.Cog):
         tax_rate = self._ore_tax(ore_tax)
         if not tax_rate:
             if ore_tax:
-                return await ctx.respond(f"No ore tax called `{ore_tax}`.")
-            return await ctx.respond("Pick an ore tax, or tick 'show in moon values' on one to make it the default.")
+                return await ctx.respond(f"`{ore_tax}` isn't an ore tax shown on Moon Values.")
+            return await ctx.respond("No ore taxes are shown on Moon Values. Tick 'show in moon values' on one in admin.")
         moon_id = Moon.objects.filter(name=moon).values_list("id", flat=True).first()
         values = scans.moon_values(tax_rate, moon_ids=[moon_id]) if moon_id else []
         if not values:
@@ -269,7 +269,7 @@ class MoonsCog(commands.Cog):
 
     @pinger_commands.command(name='rental_recalc', guild_ids=get_all_servers())
     @option("region", description="Region of the rented moons", autocomplete=search_scanned_regions)
-    @option("ore_tax", description="Ore tax to price with (default: first shown on Moon Values)", autocomplete=search_ore_taxes, required=False)
+    @option("ore_tax", description="Ore tax shown on Moon Values (default: the first)", autocomplete=search_ore_taxes, required=False)
     @option("exclude_corp", description="Skip rentals by this corporation", autocomplete=search_corp_names, required=False)
     async def rental_recalc(self, ctx, region: str, ore_tax: str = None, exclude_corp: str = None):
         """
@@ -282,8 +282,8 @@ class MoonsCog(commands.Cog):
         tax_rate = self._ore_tax(ore_tax)
         if not tax_rate:
             if ore_tax:
-                return await ctx.respond(f"No ore tax called `{ore_tax}`.")
-            return await ctx.respond("Pick an ore tax, or tick 'show in moon values' on one to make it the default.")
+                return await ctx.respond(f"`{ore_tax}` isn't an ore tax shown on Moon Values.")
+            return await ctx.respond("No ore taxes are shown on Moon Values. Tick 'show in moon values' on one in admin.")
         rentals = MoonRental.objects.filter(
             moon__solar_system__constellation__region__name=region,
             end_date__isnull=True, price__gte=1,

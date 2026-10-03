@@ -119,8 +119,8 @@ When creating a rental from **Moons > Rentals > New Rental**, the 30 day tax und
 
 ### Discord commands
 
-- `/moons price <moon> [ore_tax] [explain]` values a scanned moon under any ore tax (default: the first shown on Moon Values) and suggests its rent. `explain` shows every input per ore.
-- `/moons rental_recalc <region> [ore_tax] [exclude_corp]` lists every active rental in a region with its current and suggested rent. It changes nothing.
+- `/moons price <moon> [ore_tax] [explain]` values a scanned moon under one of the ore taxes shown on Moon Values (default: the first) and suggests its rent. `explain` shows every input per ore.
+- `/moons rental_recalc <region> [ore_tax] [exclude_corp]` (same ore tax choices) lists every active rental in a region with its current and suggested rent. It changes nothing.
 
 These rent suggestions can go further than the New Rental form's (which is plain 30 day tax). Each tax profile can set:
 
