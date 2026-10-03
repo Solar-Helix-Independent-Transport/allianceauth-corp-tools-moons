@@ -178,9 +178,9 @@ class MoonsCog(commands.Cog):
         return list(MoonScan.objects.filter(
             moon__name__icontains=ctx.value).values_list("moon__name", flat=True)[:10])
 
-    async def search_value_profiles(ctx: AutocompleteContext):
+    async def search_ore_taxes(ctx: AutocompleteContext):
         return list(OreTaxRates.objects.filter(
-            show_in_moon_values=True, tag__icontains=ctx.value).values_list("tag", flat=True)[:10])
+            tag__icontains=ctx.value).values_list("tag", flat=True)[:25])
 
     async def search_scanned_regions(ctx: AutocompleteContext):
         return list(MoonScan.objects.filter(
@@ -189,22 +189,24 @@ class MoonsCog(commands.Cog):
             .distinct()[:10])
 
     @staticmethod
-    def _value_profile(tag):
-        profiles = OreTaxRates.objects.filter(show_in_moon_values=True).order_by("id")
-        return profiles.filter(tag=tag).first() if tag else profiles.first()
+    def _ore_tax(tag):
+        # any ore tax can be picked; the default is the first one offered on Moon Values
+        if tag:
+            return OreTaxRates.objects.filter(tag=tag).first()
+        return OreTaxRates.objects.filter(show_in_moon_values=True).order_by("id").first()
 
     @staticmethod
-    async def _fuel_for(profile):
-        if not profile.rent_subtract_metenox_fuel:
+    async def _fuel_for(tax_rate):
+        if not tax_rate.rent_subtract_metenox_fuel:
             return None
         gas, blocks = await asyncio.to_thread(rent.fetch_fuel_prices)
         return rent.metenox_fuel_30d(gas, blocks)
 
     @pinger_commands.command(name='price', guild_ids=get_all_servers())
     @option("moon", description="A scanned moon", autocomplete=search_scanned_moons)
-    @option("profile", description="Tax profile (default: first offered)", autocomplete=search_value_profiles, required=False)
+    @option("ore_tax", description="Ore tax to price with (default: first shown on Moon Values)", autocomplete=search_ore_taxes, required=False)
     @option("explain", description="Show every input step by step", required=False)
-    async def price_moon(self, ctx, moon: str, profile: str = None, explain: bool = False):
+    async def price_moon(self, ctx, moon: str, ore_tax: str = None, explain: bool = False):
         """
         Value a scanned moon and suggest its rent.
         """
@@ -212,9 +214,11 @@ class MoonsCog(commands.Cog):
             return await ctx.respond("You do not have permission to use this command.", ephemeral=True)
         await ctx.defer()
 
-        tax_rate = self._value_profile(profile)
+        tax_rate = self._ore_tax(ore_tax)
         if not tax_rate:
-            return await ctx.respond(f"No moon value profile `{profile or ''}`. Tick 'show in moon values' on a tax profile.")
+            if ore_tax:
+                return await ctx.respond(f"No ore tax called `{ore_tax}`.")
+            return await ctx.respond("Pick an ore tax, or tick 'show in moon values' on one to make it the default.")
         moon_id = Moon.objects.filter(name=moon).values_list("id", flat=True).first()
         values = scans.moon_values(tax_rate, moon_ids=[moon_id]) if moon_id else []
         if not values:
@@ -226,7 +230,7 @@ class MoonsCog(commands.Cog):
 
         msg = Paginator()
         msg.add_line(f"{v.name}  ({v.system} / {v.region})  R{v.rarity or '-'}")
-        msg.add_line(f"Profile `{tax_rate.tag}`, 30 days at {m3_per_hour:,} m3/h")
+        msg.add_line(f"Ore tax `{tax_rate.tag}`, 30 days at {m3_per_hour:,} m3/h")
         msg.add_line("-" * 60)
         for line in v.ore_lines:
             msg.add_line(f"{line.name.ljust(24)}{line.fraction * 100:6.2f}%")
@@ -265,9 +269,9 @@ class MoonsCog(commands.Cog):
 
     @pinger_commands.command(name='rental_recalc', guild_ids=get_all_servers())
     @option("region", description="Region of the rented moons", autocomplete=search_scanned_regions)
-    @option("profile", description="Tax profile (default: first offered)", autocomplete=search_value_profiles, required=False)
+    @option("ore_tax", description="Ore tax to price with (default: first shown on Moon Values)", autocomplete=search_ore_taxes, required=False)
     @option("exclude_corp", description="Skip rentals by this corporation", autocomplete=search_corp_names, required=False)
-    async def rental_recalc(self, ctx, region: str, profile: str = None, exclude_corp: str = None):
+    async def rental_recalc(self, ctx, region: str, ore_tax: str = None, exclude_corp: str = None):
         """
         Compare every active rental in a region with its suggested rent. Changes nothing.
         """
@@ -275,9 +279,11 @@ class MoonsCog(commands.Cog):
             return await ctx.respond("You do not have permission to use this command.", ephemeral=True)
         await ctx.defer()
 
-        tax_rate = self._value_profile(profile)
+        tax_rate = self._ore_tax(ore_tax)
         if not tax_rate:
-            return await ctx.respond(f"No moon value profile `{profile or ''}`. Tick 'show in moon values' on a tax profile.")
+            if ore_tax:
+                return await ctx.respond(f"No ore tax called `{ore_tax}`.")
+            return await ctx.respond("Pick an ore tax, or tick 'show in moon values' on one to make it the default.")
         rentals = MoonRental.objects.filter(
             moon__solar_system__constellation__region__name=region,
             end_date__isnull=True, price__gte=1,
@@ -289,7 +295,7 @@ class MoonsCog(commands.Cog):
         fuel = await self._fuel_for(tax_rate)
 
         msg = Paginator()
-        msg.add_line(f"Rental recalculation: {region}, profile `{tax_rate.tag}`")
+        msg.add_line(f"Rental recalculation: {region}, ore tax `{tax_rate.tag}`")
         if fuel:
             msg.add_line(f"Metenox fuel 30d Ƶ{fuel.total_30d:,.0f} (gas Ƶ{fuel.gas_adjusted:,.0f}, blocks Ƶ{fuel.block_average:,.0f})")
         msg.add_line(f"{'Moon'.ljust(30)}{'Current'.rjust(16)}{'Suggested'.rjust(16)}{'Delta'.rjust(16)}")
