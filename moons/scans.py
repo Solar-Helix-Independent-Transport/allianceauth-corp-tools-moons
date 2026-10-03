@@ -150,6 +150,15 @@ def commit_import(text, user):
 
 
 @dataclass
+class OreLine:
+    name: str
+    fraction: Decimal
+    units: Decimal  # per 30 days
+    unit_value: Decimal  # None when unpriced
+    unit_tax: Decimal
+
+
+@dataclass
 class MoonValue:
     moon_id: int
     name: str
@@ -163,6 +172,7 @@ class MoonValue:
     region: str = ""
     ores: list = field(default_factory=list)  # (ore id, name, fraction)
     rarity: int = None  # R4..R64 from the rarest moon ore; None with no moon ores
+    ore_lines: list = field(default_factory=list)  # OreLine per ore, for explanations
 
 
 def moon_values(tax_rate, moon_ids=None, region_id=None):
@@ -213,6 +223,7 @@ def moon_values(tax_rate, moon_ids=None, region_id=None):
     ).iterator(chunk_size=10000):
         value = tax = total = Decimal(0)
         unpriced = []
+        lines = []
         ores = ores_by_scan.get(scan_id, [])
         for ore_id, fraction in ores:
             units = fraction * units_per_fraction
@@ -220,13 +231,18 @@ def moon_values(tax_rate, moon_ids=None, region_id=None):
             priced_as = base_ore.get(ore_id, ore_id)
             if priced_as not in prices:
                 unpriced.append(ore_names[ore_id])
+                lines.append(OreLine(ore_names[ore_id], fraction, units, None, Decimal(0)))
                 continue
-            value += units * prices[priced_as] * refine
-            tax += units * taxes.get(ore_id, 0)
+            unit_value = prices[priced_as] * refine
+            unit_tax = taxes.get(ore_id, Decimal(0))
+            value += units * unit_value
+            tax += units * unit_tax
+            lines.append(OreLine(ore_names[ore_id], fraction, units, unit_value, unit_tax))
         values.append(MoonValue(
             moon_id, moon_name, value, tax, total, unpriced, added_at, main_name or username,
             system=system, region=region,
             ores=[(ore_id, ore_names[ore_id], fraction) for ore_id, fraction in ores],
             rarity=max((ore_rating[o] for o, _ in ores if o in ore_rating), default=None),
+            ore_lines=lines,
         ))
     return values

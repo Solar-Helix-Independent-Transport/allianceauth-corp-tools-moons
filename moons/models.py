@@ -312,6 +312,14 @@ class OreTaxRates(models.Model):
         help_text="Moon value extraction rate. Blank uses MOONS_DRILL_M3_PER_HOUR (40,000 for an "
                   "Athanor/Tatara). A Metenox harvests 30,000 at 40% refine, moon materials only."
     )
+    # Discord rent commands only; the New Rental suggestion stays plain 30 day tax
+    rent_subtract_metenox_fuel = models.BooleanField(
+        default=False, help_text="Rent commands: subtract 30 days of Metenox fuel from the tax.")
+    rent_profit_share = models.DecimalField(
+        max_digits=5, decimal_places=2, default=100,
+        help_text="Rent commands: percent of (tax - fuel) charged as rent.")
+    rent_minimum = models.BigIntegerField(
+        default=0, help_text="Rent commands: lowest rent suggested, in ISK.")
     def __str__(self):
         try:
             return self.tag

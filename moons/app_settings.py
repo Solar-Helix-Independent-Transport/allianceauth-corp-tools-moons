@@ -58,3 +58,20 @@ MOONS_LIMITED_FUTURE_DAYS = getattr(settings, "MOONS_LIMITED_FUTURE_DAYS", 7)
 def drill_m3_per_hour():
     # Athanor/Tatara moon drill rate since patch 19.11 (Dec 2021); rigs don't change it
     return getattr(settings, "MOONS_DRILL_M3_PER_HOUR", 40000)
+
+
+# Metenox fuel pricing for the Discord rent commands
+def fuel_buy_sell():
+    return getattr(settings, "MOONS_FUEL_BUY_SELL", "buy")
+
+
+def fuel_bucket():
+    return getattr(settings, "MOONS_FUEL_BUCKET", "percentile")
+
+
+def fuel_gas_factor():
+    return getattr(settings, "MOONS_FUEL_GAS_FACTOR", 2)
+
+
+def metenox_gas_per_hour():
+    return getattr(settings, "MOONS_METENOX_GAS_PER_HOUR", 200)

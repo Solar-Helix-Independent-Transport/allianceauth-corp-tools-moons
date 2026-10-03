@@ -281,6 +281,12 @@ class TestMoonValues(TestCase):
         self.assertEqual(moon.tax_30d, Decimal("264600000"))
         self.assertEqual(moon.added_by, "valuer")  # no main character: username
         self.assertEqual(moon.unpriced, [])
+        # per ore: name, fraction, units, value per unit, tax per unit
+        self.assertEqual(
+            [(l.name, l.units, l.unit_value, l.unit_tax) for l in moon.ore_lines],
+            [("Cinnabar", Decimal("1440000"), Decimal("875"), Decimal("175")),
+             ("Bitumens", Decimal("1440000"), Decimal("87.5"), Decimal("8.75"))],
+        )
 
     def test_profile_ignoring_ores_in_refine_uses_goo_only_price(self):
         self._scan({CINNABAR: "0.5"})
