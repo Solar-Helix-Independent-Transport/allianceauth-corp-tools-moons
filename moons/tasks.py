@@ -417,8 +417,10 @@ def update_ore_prices():
 
 
 @shared_task
-def update_tax_prices():
+def update_tax_prices(tax_id=None):
     taxes = OreTaxRates.objects.all()
+    if tax_id is not None:
+        taxes = taxes.filter(id=tax_id)
     ores = OreHelper.get_ore_array_with_value()
     for tax in taxes:
         for id, o in ores.items():

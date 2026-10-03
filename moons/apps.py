@@ -10,6 +10,9 @@ class MoonsConfig(AppConfig):
 
     verbose_name = f"Moons v{__version__}"
 
+    def ready(self):
+        from . import signals  # noqa: F401
+
 
 @register()
 def check_settings(app_configs, **kwargs):
