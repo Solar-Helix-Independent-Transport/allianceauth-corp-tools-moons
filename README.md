@@ -12,6 +12,16 @@ moon frack monitoring and taxation, taxation is calculated ( default, but config
 - Constellation Filter
 - System Filter
 - Moon Filter
+- Jackpot ore taxed like plain ore (see below)
+
+### Jackpot moon ore
+
+Jackpot ore (Glistening, Shining and so on) refines into twice the minerals of its base ore, so it is worth, and taxed at, twice as much. To tax it like the plain ore instead:
+
+- Variable rates: tick **Tax on base ore value** on the Ore Tax Rates profile.
+- Flat rates: tick **Flat tax on base ore value** on the Mining Tax.
+
+Either way, every variant of an ore is taxed at its base ore's value, while the mined value shown on invoices stays the real one.
 
 ## installation
 

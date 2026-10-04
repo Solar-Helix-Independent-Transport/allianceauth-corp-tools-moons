@@ -3,7 +3,9 @@ from datetime import datetime, timedelta
 from corptools.models import (
     CorporationAudit, EveLocation, EveName, Notification,
 )
-from eve_sde.models import Constellation, ItemType, Moon, Region, SolarSystem
+from eve_sde.models import (
+    Constellation, ItemType, Moon, Region, SolarSystem, TypeDogma,
+)
 from invoices.models import Invoice
 from solo.models import SingletonModel
 
@@ -11,9 +13,10 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.models import (
-    ExpressionWrapper, F, FloatField, OuterRef, Subquery,
+    ExpressionWrapper, F, FloatField, IntegerField, OuterRef, Subquery,
 )
 from django.db.models.deletion import DO_NOTHING, SET_NULL
+from django.db.models.functions import Cast, Coalesce
 from django.utils import timezone
 
 from allianceauth.authentication.models import CharacterOwnership
@@ -183,6 +186,23 @@ class MiningObservation(models.Model):
         tax_data["taxes"] = list(tax_data["taxes"].values())
         return tax_data
 
+    @staticmethod
+    def _annotate_base_ore_value(observed, goo_only):
+        """base_isk_value: the quantity at its base ore's price, so a jackpot ore is
+        valued as its plain ore. Ores without a priced base ore keep their own price."""
+        from .helpers import OreHelper
+
+        base_type = TypeDogma.objects.filter(
+            item_type_id=OuterRef('type_id'),
+            dogma_attribute_id=OreHelper.base_ore_dogma_attribute_id,
+        ).values('value')[:1]
+        observed = observed.annotate(base_type_id=Cast(Subquery(base_type), IntegerField()))
+        base_price = OrePrice.objects.filter(item_id=OuterRef('base_type_id'), goo_only=goo_only)
+        own_price = OrePrice.objects.filter(item_id=OuterRef('type_id'), goo_only=goo_only)
+        return observed.annotate(base_isk_value=ExpressionWrapper(
+            Coalesce(Subquery(base_price.values('price')), Subquery(own_price.values('price'))) * F('quantity'),
+            output_field=FloatField()))
+
     @classmethod
     def tax_moons(cls, start, end):
         # get all tax items and return the tax for the time period.
@@ -237,6 +257,9 @@ class MiningObservation(models.Model):
             if tax.moon:
                 observed = observed.filter(moon=tax.moon)
 
+            if not tax.use_variable_tax and tax.flat_tax_on_base_ore_value:
+                observed = cls._annotate_base_ore_value(observed, goo_only)
+
             rate = float(tax.flat_tax_rate)
             # do the ranks
             observed = observed.exclude(structure__in=observers_taxed)
@@ -265,7 +288,8 @@ class MiningObservation(models.Model):
                     if tax.use_variable_tax:
                         player_data[i.character_name.eve_id]['tax_isk'] = player_data[i.character_name.eve_id]['tax_isk'] + i.tax_value
                     else:
-                        player_data[i.character_name.eve_id]['tax_isk'] = player_data[i.character_name.eve_id]['tax_isk'] + i.isk_value * rate
+                        taxable = i.base_isk_value if tax.flat_tax_on_base_ore_value else i.isk_value
+                        player_data[i.character_name.eve_id]['tax_isk'] = player_data[i.character_name.eve_id]['tax_isk'] + taxable * rate
 
                     if i.type_name not in player_data[i.character_name.eve_id]['ores']:
                         player_data[i.character_name.eve_id]['ores'][i.type_name.name] = {
@@ -355,6 +379,10 @@ class MiningTax(models.Model):
     use_variable_tax = models.BooleanField(default=False)
     flat_tax_rate = models.DecimalField(
         max_digits=5, decimal_places=2, default=0.0)  # best
+    flat_tax_on_base_ore_value = models.BooleanField(
+        default=False,
+        help_text="Flat rate only: tax every variant of an ore (e.g. jackpot moon ore) at its base ore's value. "
+                  "Variable rates use their Ore Tax Rates' 'Tax on base ore value' instead.")
     region = models.ForeignKey(
         Region, on_delete=models.CASCADE, related_name='tax_region', null=True, default=None, blank=True)
     constellation = models.ForeignKey(
@@ -386,6 +414,8 @@ class MiningTax(models.Model):
             rate = "Variable ({})".format(self.tax_rate.tag)
         else:
             rate = "of {}%".format(self.flat_tax_rate*100)
+            if self.flat_tax_on_base_ore_value:
+                rate += " on base ore value"
         return "Rank {3}: Mining Tax {0} for all `{1}` structures within, {2}".format(rate, corp, area, self.rank)
 
 

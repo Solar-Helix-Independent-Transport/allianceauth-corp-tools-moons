@@ -4,6 +4,7 @@ from allianceauth import hooks
 from allianceauth.services.hooks import MenuItemHook, UrlHook
 
 from . import urls
+from .views import can_view_moon_board
 
 
 class MoonsBetaHook(MenuItemHook):
@@ -15,10 +16,7 @@ class MoonsBetaHook(MenuItemHook):
                               navactive=['moons:r'])
 
     def render(self, request):
-        if (request.user.has_perm('moons.view_available') or
-            request.user.has_perm('moons.view_corp') or
-            request.user.has_perm('moons.view_alliance') or
-                request.user.has_perm('moons.view_all')):
+        if can_view_moon_board(request.user):
             return MenuItemHook.render(self, request)
         return ''
 

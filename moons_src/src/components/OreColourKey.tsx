@@ -3,8 +3,8 @@ import Badge from "react-bootstrap/Badge";
 
 export const OreColourMap = {
   1884: Styles.ore1884,
-  1921: Styles.ore1920,
-  1920: Styles.ore1921,
+  1920: Styles.ore1920,
+  1921: Styles.ore1921,
   1922: Styles.ore1922,
   1923: Styles.ore1923,
 };
