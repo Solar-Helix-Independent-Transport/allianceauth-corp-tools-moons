@@ -557,3 +557,36 @@ def invoice_single_moon(mrid):
             rental.contact.id, [rental.moon.name], partial_price, due, single=True)
         inv.save()
         MoonRental.ping_invoice(inv)
+
+
+def _send_pages(lines, **target):
+    from aadiscordbot.tasks import send_message
+    from discord.ext.commands import Paginator
+
+    pages = Paginator()
+    for line in lines:
+        pages.add_line(line)
+    for page in pages.pages:
+        send_message(message=page, **target)
+
+
+@shared_task
+def reprice_rentals():
+    """Set every active rental with a reprice method to that ore tax's suggested rent."""
+    from . import repricing as rp
+    from .models import RentalRepricing
+
+    settings = RentalRepricing.get()
+    result = rp.reprice(settings)
+    settings.last_run = timezone.now()
+    settings.save(update_fields=["last_run"])
+    summary = (f"{len(result.changes)} rentals repriced, {len(result.skipped)} skipped,"
+               f" Ƶ{result.total_old:,} -> Ƶ{result.total_new:,}{' (dry run)' if settings.dry_run else ''}")
+    logger.info(f"Repriced rentals: {summary}")
+    if app_settings.discord_bot_active():
+        if settings.notify_renters and not settings.dry_run:
+            for owner, lines in rp.renter_lines(result).items():
+                _send_pages(lines, user_pk=owner)
+        if settings.channel_id:
+            _send_pages(rp.summary_lines(result), channel_id=settings.channel_id)
+    return summary

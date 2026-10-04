@@ -561,6 +561,30 @@ class ExtendedJsonEncoder(DjangoJSONEncoder):
         return super().default(o)
 
 
+class RentalRepricing(models.Model):
+    """Run settings for the reprice_rentals task. Which rentals get repriced, and
+    under which ore tax, is each rental's reprice method."""
+    dry_run = models.BooleanField(
+        default=False, help_text="Only post the projected prices: change no rentals and message no renters.")
+    notify_renters = models.BooleanField(
+        default=True, help_text="DM each renter their moons' new prices (needs the Discord bot).")
+    channel_id = models.BigIntegerField(
+        null=True, blank=True, help_text="Discord channel ID for the run summary (needs the Discord bot).")
+    last_run = models.DateTimeField(null=True, blank=True, editable=False)
+
+    class Meta:
+        verbose_name = "rental repricing settings"
+        verbose_name_plural = "rental repricing settings"
+
+    def __str__(self):
+        return "Rental repricing settings"
+
+    @classmethod
+    def get(cls):
+        """The one settings row, made with the defaults on first use."""
+        return cls.objects.order_by("pk").first() or cls.objects.create()
+
+
 class MoonRental(models.Model):
     note = models.TextField()
     contact = models.ForeignKey(EveCharacter, on_delete=models.CASCADE)
@@ -570,6 +594,10 @@ class MoonRental(models.Model):
     price = models.BigIntegerField(default=100000000)
     start_date = models.DateTimeField()
     end_date = models.DateTimeField(default=None, null=True, blank=True)
+    reprice_method = models.ForeignKey(
+        OreTaxRates, on_delete=SET_NULL, null=True, blank=True, default=None, related_name="+",
+        help_text="The reprice_rentals task sets the price to this ore tax's suggested rent. "
+                  "Empty: never repriced.")
     last_invoice = models.ForeignKey(
         Invoice, on_delete=SET_NULL, default=None, null=True, blank=True)
 

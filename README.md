@@ -133,6 +133,17 @@ Moon Values, New Rental and these commands all suggest rent the same way: the 30
 - **Rent profit share**: the percent of what is left that is charged as rent.
 - **Rent minimum**: the lowest rent ever suggested.
 
+#### Repricing rentals
+
+Each rental has a **reprice method**: the ore tax profile whose suggested rent it should be charged, or empty to leave its price alone. Set it when creating a rental, in the Rentals table's **Reprice** column (`moons.change_moonrental`), or in admin.
+
+The `moons.tasks.reprice_rentals` task sets every active rental (price at least 1 ISK) that has a reprice method to that profile's suggested rent. Schedule it as a periodic task, e.g. monthly before invoicing. Its run settings are in admin under **Rental repricing settings** (created with the defaults on the first run):
+
+- **Dry run**: only post the projected prices.
+- **Notify renters** and **Channel ID**: DM each renter their new prices and post a run summary (needs the Discord bot).
+
+Each changed rental gets `YYYY/MM/DD - Old: x - New: y` added to its notes. Rentals whose contact isn't owned by an auth user, or whose moon has no scan, are listed in the summary and left alone.
+
 Fuel pricing settings: `MOONS_FUEL_BUY_SELL` (`"buy"`), `MOONS_FUEL_BUCKET` (`"percentile"`), `MOONS_FUEL_GAS_FACTOR` (`2`, softens gas above 10,000 ISK) and `MOONS_METENOX_GAS_PER_HOUR` (`200`).
 
 ### Permissions

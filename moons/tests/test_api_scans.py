@@ -345,7 +345,9 @@ class TestRentalSuggestionApi(TestCase):
         }])
 
 
-class TestEndRentalApi(TestCase):
+class _ActiveRentalApiTestCase(TestCase):
+    """One active rental, a user who can change rentals and one who can only add them."""
+
     @classmethod
     def setUpTestData(cls):
         region = Region.objects.create(id=10000001, name="Test Region")
@@ -373,6 +375,9 @@ class TestEndRentalApi(TestCase):
     def setUp(self):
         self.client = TestClient(api)
 
+
+
+class TestEndRentalApi(_ActiveRentalApiTestCase):
     def _end(self, user, note, rental_id=None):
         return self.client.post(f"/rental/{rental_id or self.rental.id}/end", data={"note": note}, user=user)
 
@@ -451,3 +456,49 @@ class TestScanCoverageApi(TestCase):
             {"id": 40161709, "name": "Auga V - Moon 2", "system": "Auga", "constellation": "Test Constellation"},
             {"id": 40161800, "name": "Bodgal I - Moon 1", "system": "Bodgal", "constellation": "Test Constellation"},
         ])
+
+
+class TestRepriceMethodApi(_ActiveRentalApiTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.profile = _profile("Rental", True)
+
+    def _set(self, user, method_id=None):
+        data = {"reprice_method_id": method_id} if method_id else {}
+        return self.client.post(f"/rental/{self.rental.id}/reprice_method", data=data, user=user)
+
+    def test_set_and_clear_reprice_method(self):
+        self.assertEqual(self._set(self.editor, self.profile.id).status_code, 200)
+        self.rental.refresh_from_db()
+        self.assertEqual(self.rental.reprice_method, self.profile)
+
+        self.assertEqual(self._set(self.editor).status_code, 200)
+        self.rental.refresh_from_db()
+        self.assertIsNone(self.rental.reprice_method)
+
+    def test_setting_reprice_method_needs_change_permission(self):
+        self.assertEqual(self._set(self.adder, self.profile.id).status_code, 403)
+
+    def test_unknown_reprice_method_is_rejected(self):
+        self.assertEqual(self._set(self.editor, 999999).status_code, 400)
+
+    def test_rental_list_shows_reprice_method(self):
+        self.rental.reprice_method = self.profile
+        self.rental.save()
+
+        [rental] = self.client.get("/rental/list", user=self.adder).json()
+
+        self.assertEqual(rental["reprice_method"], {"id": self.profile.id, "tag": "Rental"})
+
+    def test_new_rental_with_reprice_method(self):
+        self.rental.end_date = timezone.now()
+        self.rental.save()
+
+        response = self.client.post("/rental/new", data={
+            "moon_id": MOON_1, "contact_id": 2112000001, "corporation_id": 2112000002,
+            "price": 100000000, "reprice_method_id": self.profile.id,
+        }, user=self.adder)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["reprice_method"], {"id": self.profile.id, "tag": "Rental"})

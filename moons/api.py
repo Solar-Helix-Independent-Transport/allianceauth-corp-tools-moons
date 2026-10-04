@@ -327,7 +327,7 @@ def get_moon_rentals(request):
     rentals = models.MoonRental.objects.filter(end_date__isnull=True).select_related(
         "moon", "moon__solar_system", "moon__solar_system__constellation",
         "moon__solar_system__constellation__region", "contact", "corporation",
-        "contact__character_ownership__user__profile__main_character"
+        "contact__character_ownership__user__profile__main_character", "reprice_method",
     )
     out = []
     for r in rentals:
@@ -354,6 +354,7 @@ def get_moon_rentals(request):
                 "price": r.price,
                 "start_date": r.start_date,
                 "note": r.note,
+                "reprice_method": r.reprice_method,
             }
         )
 
@@ -378,7 +379,8 @@ def get_moon_rentals(request):
         "moon__solar_system__constellation",
         "moon__solar_system__constellation__region",
         "contact",
-        "corporation"
+        "corporation",
+        "reprice_method",
     )
     out = []
     for r in rentals:
@@ -400,6 +402,7 @@ def get_moon_rentals(request):
                 "price": r.price,
                 "start_date": r.start_date,
                 "note": r.note,
+                "reprice_method": r.reprice_method,
             }
         )
 
@@ -458,7 +461,10 @@ def post_moon_rental_new(request, rental: schema.NewMoonRental = Form(...)):
             corporation_id=rental.corporation_id)
     except EveCorporationInfo.DoesNotExist:
         return 403, "Corporation Unknown to Auth"
+    if rental.reprice_method_id and not models.OreTaxRates.objects.filter(id=rental.reprice_method_id).exists():
+        return 403, "Unknown reprice method"
     new_rental = models.MoonRental.objects.create(
+        reprice_method_id=rental.reprice_method_id,
         moon_id=rental.moon_id,
         contact=char,
         corporation=corp,
@@ -481,7 +487,31 @@ def post_moon_rental_new(request, rental: schema.NewMoonRental = Form(...)):
         "price": new_rental.price,
         "start_date": new_rental.start_date,
         "note": new_rental.note,
+        "reprice_method": new_rental.reprice_method,
     }
+
+
+@api.post(
+    "/rental/{rental_id}/reprice_method",
+    response={200: str, 400: str, 403: str, 404: str},
+    tags=["Rentals"]
+)
+def post_moon_rental_reprice_method(request, rental_id: int, body: schema.SetRepriceMethod = Form(...)):
+    """Pick the ore tax the reprice_rentals task prices this rental under, or none to leave it alone."""
+    if not request.user.has_perm("moons.change_moonrental"):
+        return 403, "Permission Denied!"
+    rental = models.MoonRental.objects.filter(id=rental_id, end_date__isnull=True).select_related("moon").first()
+    if not rental:
+        return 404, "No active rental found."
+    method = None
+    if body.reprice_method_id:
+        method = models.OreTaxRates.objects.filter(id=body.reprice_method_id).first()
+        if not method:
+            return 400, "Unknown reprice method"
+    rental.reprice_method = method
+    rental.save(update_fields=["reprice_method"])
+    logger.info(f"{request.user} set {rental.moon.name} reprice method to {method or 'none'}")
+    return 200, f"{rental.moon.name} {'reprices with ' + method.tag if method else 'is not repriced'}"
 
 
 @api.post(

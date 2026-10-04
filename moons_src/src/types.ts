@@ -55,6 +55,7 @@ export interface moonRental {
   price: number;
   start_date: string;
   note: string;
+  reprice_method: { id: number; tag: string } | null;
 }
 export type scanStatus = "new" | "unchanged" | "changed" | "needs_change_perm" | "rejected";
 export interface scanOre {

@@ -44,6 +44,7 @@ export const NewRentalModal = ({
   const [moon, setMoon] = useState<Option>(initialMoon);
   const [price, setPrice] = useState(initialPrice !== undefined ? String(initialPrice) : "");
   const [note, setNote] = useState("");
+  const [repriceMethodId, setRepriceMethodId] = useState<number | null>(null);
   const [profileId, setProfileId] = useState<number | null>(initialProfileId ?? rememberedProfile);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -80,6 +81,7 @@ export const NewRentalModal = ({
         corporation_id: corp!.value,
         price: Number(price),
         note,
+        reprice_method_id: repriceMethodId,
       });
       queryClient.invalidateQueries(["rentals"]);
       queryClient.invalidateQueries(["scan-values"]);
@@ -123,6 +125,23 @@ export const NewRentalModal = ({
             value={price}
             onChange={(e) => setPrice(e.target.value)}
           />
+        </Form.Group>
+        <Form.Group className="mb-2">
+          <Form.Label>Reprice with</Form.Label>
+          <Form.Select
+            value={repriceMethodId ?? ""}
+            onChange={(e) => setRepriceMethodId(e.target.value ? Number(e.target.value) : null)}
+          >
+            <option value="">Don&apos;t reprice</option>
+            {offered.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.tag}
+              </option>
+            ))}
+          </Form.Select>
+          <Form.Text>
+            The rental repricing task sets the price to this ore tax&apos;s suggested rent.
+          </Form.Text>
         </Form.Group>
         {moon && offered.length > 0 && suggested !== null && (
           <div className="d-flex gap-2 align-items-center small">

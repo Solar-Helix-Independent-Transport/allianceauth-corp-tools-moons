@@ -3,6 +3,7 @@ from django.contrib import admin
 # Register your models here.
 from .models import (
     InvoiceRecord, MiningTax, MoonFrack, MoonRental, OreTaxRates,
+    RentalRepricing,
 )
 from .tasks import invoice_single_moon
 
@@ -74,9 +75,10 @@ def invoice_send_action(RentalAdmin, request, queryset):
 class RentalAdmin(admin.ModelAdmin):
     list_select_related = (
         'corporation', 'contact', 'moon',
-        'moon__solar_system__constellation__region',
+        'moon__solar_system__constellation__region', 'reprice_method',
     )
     raw_id_fields = ('corporation', 'contact', 'moon')
+    list_filter = ('reprice_method',)
     search_fields = (
         'corporation__corporation_name', 'contact__character_name', 'moon__name',
         'moon__solar_system__constellation__name',
@@ -120,4 +122,14 @@ class RentalAdmin(admin.ModelAdmin):
         super().__init__(*args, **kwargs)
 
     list_display = ['moon', 'constellation', 'region', 'contact', 'corporation',
-                    'start_date', 'end_date', ('price', "{:,}")]
+                    'start_date', 'end_date', ('price', "{:,}"), 'reprice_method']
+
+
+@admin.register(RentalRepricing)
+class RentalRepricingAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'dry_run', 'notify_renters', 'channel_id', 'last_run')
+    readonly_fields = ('last_run',)
+
+    def has_add_permission(self, request):
+        # one settings row
+        return not RentalRepricing.objects.exists() and super().has_add_permission(request)

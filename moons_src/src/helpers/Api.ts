@@ -152,9 +152,10 @@ export async function postNewRental(rental: {
   corporation_id: number;
   price: number;
   note: string;
+  reprice_method_id: number | null;
 }) {
   const form = new URLSearchParams();
-  Object.entries(rental).forEach(([k, v]) => form.append(k, String(v)));
+  Object.entries(rental).forEach(([k, v]) => v !== null && form.append(k, String(v)));
   const api = await axios.post(`/m/api/rental/new`, form, csrf());
 
   return api.data;
@@ -176,6 +177,14 @@ export async function getScanCoverage() {
 
 export async function getMissingScans(regionId: number) {
   const api = await axios.get(`/m/api/scans/coverage/${regionId}`);
+
+  return api.data;
+}
+
+export async function postRepriceMethod(rentalId: number, repriceMethodId: number | null) {
+  const form = new URLSearchParams();
+  if (repriceMethodId !== null) form.append("reprice_method_id", String(repriceMethodId));
+  const api = await axios.post(`/m/api/rental/${rentalId}/reprice_method`, form, csrf());
 
   return api.data;
 }

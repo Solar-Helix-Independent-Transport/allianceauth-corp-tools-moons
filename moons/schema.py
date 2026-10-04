@@ -63,6 +63,11 @@ class ExtractionEvent(Schema):
     value: Decimal
 
 
+class RepriceMethod(Schema):
+    id: int
+    tag: str
+
+
 class MoonRental(Schema):
     id: int
     moon: IdName
@@ -75,6 +80,7 @@ class MoonRental(Schema):
     price: Decimal
     start_date: datetime
     note: str = ""
+    reprice_method: Optional[RepriceMethod] = None  # ore tax the reprice task uses; None: not repriced
 
 
 class NewMoonRental(Schema):
@@ -83,10 +89,15 @@ class NewMoonRental(Schema):
     corporation_id: int
     price: Decimal
     note: str = ""
+    reprice_method_id: Optional[int] = None
 
 
 class EndMoonRental(Schema):
     note: str
+
+
+class SetRepriceMethod(Schema):
+    reprice_method_id: Optional[int] = None  # None: stop repricing
 
 
 class ScanText(Schema):
