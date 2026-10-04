@@ -79,7 +79,9 @@ class TestRepricing(TestCase):
         cls.ended.end_date = timezone.now()
         cls.ended.save()
 
-        cls.settings = RentalRepricing.objects.create(channel_id=123)
+        cls.settings = RentalRepricing.get_solo()
+        cls.settings.channel_id = 123
+        cls.settings.save()
 
     def _prices(self):
         return {r.pk: r.price for r in MoonRental.objects.all()}

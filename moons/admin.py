@@ -1,3 +1,5 @@
+from solo.admin import SingletonModelAdmin
+
 from django.contrib import admin
 
 # Register your models here.
@@ -126,10 +128,5 @@ class RentalAdmin(admin.ModelAdmin):
 
 
 @admin.register(RentalRepricing)
-class RentalRepricingAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'dry_run', 'notify_renters', 'channel_id', 'last_run')
+class RentalRepricingAdmin(SingletonModelAdmin):
     readonly_fields = ('last_run',)
-
-    def has_add_permission(self, request):
-        # one settings row
-        return not RentalRepricing.objects.exists() and super().has_add_permission(request)

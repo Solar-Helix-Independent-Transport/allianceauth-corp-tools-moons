@@ -5,6 +5,7 @@ from corptools.models import (
 )
 from eve_sde.models import Constellation, ItemType, Moon, Region, SolarSystem
 from invoices.models import Invoice
+from solo.models import SingletonModel
 
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
@@ -561,7 +562,7 @@ class ExtendedJsonEncoder(DjangoJSONEncoder):
         return super().default(o)
 
 
-class RentalRepricing(models.Model):
+class RentalRepricing(SingletonModel):
     """Run settings for the reprice_rentals task. Which rentals get repriced, and
     under which ore tax, is each rental's reprice method."""
     dry_run = models.BooleanField(
@@ -578,11 +579,6 @@ class RentalRepricing(models.Model):
 
     def __str__(self):
         return "Rental repricing settings"
-
-    @classmethod
-    def get(cls):
-        """The one settings row, made with the defaults on first use."""
-        return cls.objects.order_by("pk").first() or cls.objects.create()
 
 
 class MoonRental(models.Model):

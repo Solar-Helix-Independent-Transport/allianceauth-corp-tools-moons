@@ -576,7 +576,7 @@ def reprice_rentals():
     from . import repricing as rp
     from .models import RentalRepricing
 
-    settings = RentalRepricing.get()
+    settings = RentalRepricing.get_solo()
     result = rp.reprice(settings)
     settings.last_run = timezone.now()
     settings.save(update_fields=["last_run"])
