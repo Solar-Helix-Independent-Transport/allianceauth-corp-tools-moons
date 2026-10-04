@@ -403,3 +403,51 @@ class TestEndRentalApi(TestCase):
         rentals = self.client.get("/rental/list", user=self.adder).json()
 
         self.assertEqual([(r["id"], r["note"]) for r in rentals], [(self.rental.id, "rented by someone")])
+
+
+class TestScanCoverageApi(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        region = Region.objects.create(id=10000001, name="Test Region")
+        constellation = Constellation.objects.create(id=20000001, name="Test Constellation", region=region)
+        auga = SolarSystem.objects.create(id=30002542, name="Auga", constellation=constellation)
+        bodgal = SolarSystem.objects.create(id=30002543, name="Bodgal", constellation=constellation)
+        scanned = Moon.objects.create(id=MOON_1, name="Auga V - Moon 1", solar_system=auga)
+        Moon.objects.create(id=40161709, name="Auga V - Moon 2", solar_system=auga)
+        Moon.objects.create(id=40161800, name="Bodgal I - Moon 1", solar_system=bodgal)
+        empty = Region.objects.create(id=10000002, name="Unscanned Region")
+        far = SolarSystem.objects.create(
+            id=30000002, name="Elsewhere",
+            constellation=Constellation.objects.create(id=20000002, name="Far", region=empty))
+        Moon.objects.create(id=40000099, name="Elsewhere I - Moon 1", solar_system=far)
+        MoonScan.objects.create(moon=scanned, added_at=timezone.now())
+
+        cls.importer = AuthUtils.create_user("scan_importer")
+        cls.importer.user_permissions.add(_perm("add_moonscan"))
+        cls.viewer = AuthUtils.create_user("scan_viewer")
+        cls.viewer.user_permissions.add(_perm("view_moonscan"))
+        cls.nobody = AuthUtils.create_user("no_scan_perms")
+
+    def setUp(self):
+        self.client = TestClient(api)
+
+    def test_coverage_needs_import_or_view_permission(self):
+        for path in ("/scans/coverage", "/scans/coverage/10000001"):
+            self.assertEqual(self.client.get(path, user=self.nobody).status_code, 403)
+            self.assertEqual(self.client.get(path, user=self.viewer).status_code, 200)
+
+    def test_coverage_counts_every_region_with_moons_including_unscanned(self):
+        response = self.client.get("/scans/coverage", user=self.importer)
+
+        self.assertEqual(response.json(), [
+            {"id": 10000001, "name": "Test Region", "moons": 3, "scanned": 1},
+            {"id": 10000002, "name": "Unscanned Region", "moons": 1, "scanned": 0},
+        ])
+
+    def test_missing_moons_by_constellation_and_system(self):
+        response = self.client.get("/scans/coverage/10000001", user=self.importer)
+
+        self.assertEqual(response.json(), [
+            {"id": 40161709, "name": "Auga V - Moon 2", "system": "Auga", "constellation": "Test Constellation"},
+            {"id": 40161800, "name": "Bodgal I - Moon 1", "system": "Bodgal", "constellation": "Test Constellation"},
+        ])

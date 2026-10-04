@@ -696,6 +696,50 @@ def get_scanned_regions(request):
     ]
 
 
+def _can_see_scan_coverage(user):
+    return user.has_perm("moons.add_moonscan") or user.has_perm("moons.view_moonscan")
+
+
+@api.get(
+    "/scans/coverage",
+    response={200: List[schema.RegionCoverage], 403: str},
+    tags=["Scans"]
+)
+def get_scan_coverage(request):
+    """Every region with moons: how many it has and how many are scanned."""
+    if not _can_see_scan_coverage(request.user):
+        return 403, "Permission Denied!"
+    region = "solar_system__constellation__region"
+    scanned = dict(
+        models.MoonScan.objects.values(f"moon__{region}_id")
+        .annotate(n=Count("id")).values_list(f"moon__{region}_id", "n")
+    )
+    return 200, [
+        {"id": r[f"{region}_id"], "name": r[f"{region}__name"], "moons": r["moons"],
+         "scanned": scanned.get(r[f"{region}_id"], 0)}
+        for r in Moon.objects.values(f"{region}_id", f"{region}__name")
+        .annotate(moons=Count("id")).order_by(f"{region}__name")
+    ]
+
+
+@api.get(
+    "/scans/coverage/{region_id}",
+    response={200: List[schema.MissingMoon], 403: str},
+    tags=["Scans"]
+)
+def get_missing_scans(request, region_id: int):
+    """Moons in a region with no scan, by constellation, system, then moon."""
+    if not _can_see_scan_coverage(request.user):
+        return 403, "Permission Denied!"
+    return 200, [
+        {"id": moon_id, "name": name, "system": system, "constellation": constellation}
+        for moon_id, name, system, constellation in Moon.objects.filter(
+            solar_system__constellation__region_id=region_id, scan__isnull=True,
+        ).order_by("solar_system__constellation__name", "solar_system__name", "id").values_list(
+            "id", "name", "solar_system__name", "solar_system__constellation__name")
+    ]
+
+
 @api.get(
     "/scans/values",
     response={200: schema.ScannedMoonValues, 403: str, 404: str, 503: str},

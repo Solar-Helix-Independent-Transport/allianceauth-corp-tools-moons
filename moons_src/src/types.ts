@@ -100,3 +100,15 @@ export interface scannedRegion {
   name: string;
   moons: number;
 }
+export interface regionCoverage {
+  id: number;
+  name: string;
+  moons: number;
+  scanned: number;
+}
+export interface missingMoon {
+  id: number;
+  name: string;
+  system: string;
+  constellation: string;
+}

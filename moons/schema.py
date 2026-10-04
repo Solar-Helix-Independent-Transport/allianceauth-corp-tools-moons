@@ -151,6 +151,20 @@ class RentalSuggestion(Schema):
     price: Optional[int]  # None when the moon has no scan
 
 
+class RegionCoverage(Schema):
+    id: int
+    name: str
+    moons: int
+    scanned: int
+
+
+class MissingMoon(Schema):
+    id: int
+    name: str
+    system: str
+    constellation: str
+
+
 class ScannedRegion(Schema):
     id: int
     name: str

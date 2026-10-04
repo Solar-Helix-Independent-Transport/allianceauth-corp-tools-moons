@@ -108,6 +108,8 @@ In game, scan the moons with the probe scanner, select the results and copy them
 
 Compositions are stored exactly as scanned. Moons under 100% are normal and are never scaled up.
 
+Below the import, **Scan coverage** shows how many of a region's moons are scanned and lists the missing ones by system, so you know where to send scanners.
+
 ### Moon values and rental suggestions
 
 **Moons > Moon Values** ranks the scanned moons of one region at a time by estimated value and tax per 30 days of extraction, priced under an Ore Tax Rates profile. In admin, tick **Show in moon values** on each profile you want to offer.

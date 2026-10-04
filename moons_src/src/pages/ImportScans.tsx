@@ -1,4 +1,5 @@
 import ErrorBoundary from "../components/ErrorBoundary";
+import { ScanCoverage } from "../components/ScanCoverage";
 import { postScanImport, postScanPreview } from "../helpers/Api";
 import { scanOre, scanResult, scanStatus } from "../types";
 import { useState } from "react";
@@ -14,6 +15,7 @@ import {
   Spinner,
   Table,
 } from "react-bootstrap";
+import { useQueryClient } from "react-query";
 
 const STATUSES: Array<{ status: scanStatus; label: string; bg: string; open: boolean }> = [
   { status: "new", label: "New", bg: "success", open: true },
@@ -73,6 +75,7 @@ const ImportScans = () => {
   const [results, setResults] = useState<Array<scanResult>>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const run = async (call: (t: string) => Promise<Array<scanResult>>, next: "review" | "done") => {
     setBusy(true);
@@ -80,6 +83,11 @@ const ImportScans = () => {
     try {
       setResults(await call(text));
       setStep(next);
+      if (next === "done") {
+        // newly scanned moons drop off the coverage list
+        queryClient.invalidateQueries(["scan-coverage"]);
+        queryClient.invalidateQueries(["scan-missing"]);
+      }
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -223,6 +231,7 @@ const ImportScans = () => {
           </div>
         </Card.Footer>
       </Card>
+      <ScanCoverage />
     </ErrorBoundary>
   );
 };

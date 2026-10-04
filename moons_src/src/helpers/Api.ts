@@ -167,3 +167,15 @@ export async function postEndRental(rentalId: number, note: string) {
 
   return api.data;
 }
+
+export async function getScanCoverage() {
+  const api = await axios.get(`/m/api/scans/coverage`);
+
+  return api.data;
+}
+
+export async function getMissingScans(regionId: number) {
+  const api = await axios.get(`/m/api/scans/coverage/${regionId}`);
+
+  return api.data;
+}
