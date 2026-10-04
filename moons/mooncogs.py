@@ -20,7 +20,7 @@ from django.utils import timezone
 
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 
-from moons import app_settings, rent, scans
+from moons import app_settings, explain as moon_explain, rent, scans
 from moons.models import (
     InvoiceRecord, MoonFrack, MoonRental, MoonScan, OreTaxRates,
 )
@@ -195,12 +195,23 @@ class MoonsCog(commands.Cog):
         offered = OreTaxRates.objects.filter(show_in_moon_values=True).order_by("id")
         return offered.filter(tag=tag).first() if tag else offered.first()
 
+    @classmethod
+    def _scanned_moon_value(cls, moon, ore_tax):
+        """(tax rate, MoonValue, None), or (.., .., why not) to respond with."""
+        tax_rate = cls._ore_tax(ore_tax)
+        if not tax_rate:
+            if ore_tax:
+                return None, None, f"`{ore_tax}` isn't an ore tax shown on Moon Values."
+            return None, None, "No ore taxes are shown on Moon Values. Tick 'show in moon values' on one in admin."
+        moon_id = Moon.objects.filter(name=moon).values_list("id", flat=True).first()
+        values = scans.moon_values(tax_rate, moon_ids=[moon_id]) if moon_id else []
+        if not values:
+            return tax_rate, None, f"No scan for `{moon}`."
+        return tax_rate, values[0], None
+
     @staticmethod
     async def _fuel_for(tax_rate):
-        if not tax_rate.rent_subtract_metenox_fuel:
-            return None
-        gas, blocks = await asyncio.to_thread(rent.fetch_fuel_prices)
-        return rent.metenox_fuel_30d(gas, blocks)
+        return await asyncio.to_thread(rent.fuel_for, tax_rate)
 
     @pinger_commands.command(name='price', guild_ids=get_all_servers())
     @option("moon", description="A scanned moon", autocomplete=search_scanned_moons)
@@ -214,17 +225,14 @@ class MoonsCog(commands.Cog):
             return await ctx.respond("You do not have permission to use this command.", ephemeral=True)
         await ctx.defer()
 
-        tax_rate = self._ore_tax(ore_tax)
-        if not tax_rate:
-            if ore_tax:
-                return await ctx.respond(f"`{ore_tax}` isn't an ore tax shown on Moon Values.")
-            return await ctx.respond("No ore taxes are shown on Moon Values. Tick 'show in moon values' on one in admin.")
-        moon_id = Moon.objects.filter(name=moon).values_list("id", flat=True).first()
-        values = scans.moon_values(tax_rate, moon_ids=[moon_id]) if moon_id else []
-        if not values:
-            return await ctx.respond(f"No scan for `{moon}`.")
-        v = values[0]
-        fuel = await self._fuel_for(tax_rate)
+        tax_rate, v, problem = self._scanned_moon_value(moon, ore_tax)
+        if problem:
+            return await ctx.respond(problem)
+        moon_id = v.moon_id
+        try:
+            fuel = await self._fuel_for(tax_rate)
+        except rent.FuelPricesUnavailable as e:
+            return await ctx.respond(f"{e}, try again later.")
         r = rent.rent_breakdown(v.tax_30d, tax_rate, fuel)
         m3_per_hour = tax_rate.drill_m3_per_hour or app_settings.drill_m3_per_hour()
 
@@ -267,6 +275,34 @@ class MoonsCog(commands.Cog):
         for page in msg.pages:
             await ctx.send(page)
 
+    @pinger_commands.command(name='explain', guild_ids=get_all_servers())
+    @option("moon", description="A scanned moon", autocomplete=search_scanned_moons)
+    @option("ore_tax", description="Ore tax shown on Moon Values (default: the first)", autocomplete=search_ore_taxes, required=False)
+    async def explain_moon(self, ctx, moon: str, ore_tax: str = None):
+        """
+        Step by step working of a scanned moon's value, tax and rent with every input.
+        """
+        if not self.sender_can_price_moons(ctx):
+            return await ctx.respond("You do not have permission to use this command.", ephemeral=True)
+        await ctx.defer()
+
+        tax_rate, v, problem = self._scanned_moon_value(moon, ore_tax)
+        if problem:
+            return await ctx.respond(problem)
+        try:
+            fuel = await self._fuel_for(tax_rate)
+        except rent.FuelPricesUnavailable as e:
+            return await ctx.respond(f"{e}, try again later.")
+        rental = MoonRental.objects.filter(
+            moon_id=v.moon_id, end_date__isnull=True).select_related("contact").first()
+
+        msg = Paginator()
+        for line in moon_explain.explain_moon(v, tax_rate, fuel, rental):
+            msg.add_line(line)
+        await ctx.respond(f"Explaining `{v.name}`")
+        for page in msg.pages:
+            await ctx.send(page)
+
     @pinger_commands.command(name='rental_recalc', guild_ids=get_all_servers())
     @option("region", description="Region of the rented moons", autocomplete=search_scanned_regions)
     @option("ore_tax", description="Ore tax shown on Moon Values (default: the first)", autocomplete=search_ore_taxes, required=False)
@@ -292,7 +328,10 @@ class MoonsCog(commands.Cog):
             rentals = rentals.exclude(corporation__corporation_name=exclude_corp)
         rentals = list(rentals)
         values = {v.moon_id: v for v in scans.moon_values(tax_rate, moon_ids=[r.moon_id for r in rentals])}
-        fuel = await self._fuel_for(tax_rate)
+        try:
+            fuel = await self._fuel_for(tax_rate)
+        except rent.FuelPricesUnavailable as e:
+            return await ctx.respond(f"{e}, try again later.")
 
         msg = Paginator()
         msg.add_line(f"Rental recalculation: {region}, ore tax `{tax_rate.tag}`")

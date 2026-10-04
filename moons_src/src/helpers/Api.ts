@@ -159,3 +159,11 @@ export async function postNewRental(rental: {
 
   return api.data;
 }
+
+export async function postEndRental(rentalId: number, note: string) {
+  const form = new URLSearchParams();
+  form.append("note", note);
+  const api = await axios.post(`/m/api/rental/${rentalId}/end`, form, csrf());
+
+  return api.data;
+}

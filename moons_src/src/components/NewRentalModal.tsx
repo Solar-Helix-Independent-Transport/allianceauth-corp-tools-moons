@@ -24,14 +24,27 @@ const rememberedProfile = () => {
   }
 };
 
-export const NewRentalModal = ({ show, onHide }: { show: boolean; onHide: () => void }) => {
+export const NewRentalModal = ({
+  show,
+  onHide,
+  initialMoon = null,
+  initialPrice,
+  initialProfileId,
+}: {
+  show: boolean;
+  onHide: () => void;
+  // prefilled when renting from Moon Values
+  initialMoon?: Option;
+  initialPrice?: number;
+  initialProfileId?: number;
+}) => {
   const queryClient = useQueryClient();
   const [contact, setContact] = useState<Option>(null);
   const [corp, setCorp] = useState<Option>(null);
-  const [moon, setMoon] = useState<Option>(null);
-  const [price, setPrice] = useState("");
+  const [moon, setMoon] = useState<Option>(initialMoon);
+  const [price, setPrice] = useState(initialPrice !== undefined ? String(initialPrice) : "");
   const [note, setNote] = useState("");
-  const [profileId, setProfileId] = useState<number | null>(rememberedProfile);
+  const [profileId, setProfileId] = useState<number | null>(initialProfileId ?? rememberedProfile);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -69,6 +82,7 @@ export const NewRentalModal = ({ show, onHide }: { show: boolean; onHide: () => 
         note,
       });
       queryClient.invalidateQueries(["rentals"]);
+      queryClient.invalidateQueries(["scan-values"]);
       onHide();
     } catch (e: any) {
       setError(e?.response?.data ?? e.message);
@@ -95,7 +109,7 @@ export const NewRentalModal = ({ show, onHide }: { show: boolean; onHide: () => 
         </Form.Group>
         <Form.Group className="mb-2">
           <Form.Label>Moon</Form.Label>
-          <ApiSelect apiLookup={searchMoons} setValue={setMoon} />
+          <ApiSelect apiLookup={searchMoons} setValue={setMoon} defaultValue={initialMoon} />
         </Form.Group>
         <Form.Group className="mb-2">
           <Form.Label>Note</Form.Label>
@@ -137,6 +151,12 @@ export const NewRentalModal = ({ show, onHide }: { show: boolean; onHide: () => 
                 </Button>
               </>
             )}
+          </div>
+        )}
+        {moon && !!suggestion.error && (
+          <div className="small text-danger">
+            No suggestion:{" "}
+            {(suggestion.error as any)?.response?.data ?? (suggestion.error as Error).message}
           </div>
         )}
         {moon && suggested === null && (

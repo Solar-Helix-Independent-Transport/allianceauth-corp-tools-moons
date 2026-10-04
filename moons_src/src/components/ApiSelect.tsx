@@ -9,7 +9,7 @@ const colourStyles = {
   },
 };
 
-export const ApiSelect = ({ setValue, apiLookup }: any) => {
+export const ApiSelect = ({ setValue, apiLookup, defaultValue }: any) => {
   function handleChange(newValue: any) {
     setValue(newValue);
   }
@@ -20,6 +20,7 @@ export const ApiSelect = ({ setValue, apiLookup }: any) => {
       styles={colourStyles}
       loadOptions={apiLookup}
       defaultOptions={[]}
+      defaultValue={defaultValue}
       onChange={handleChange}
     />
   );

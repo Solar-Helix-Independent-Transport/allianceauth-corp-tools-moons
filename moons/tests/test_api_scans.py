@@ -1,11 +1,12 @@
 from decimal import Decimal
+from unittest import mock
 
 from eve_sde.models import (
     Constellation, ItemGroup, ItemType, Moon, Region, SolarSystem,
 )
 from ninja.testing import TestClient
 
-from django.contrib.auth.models import Permission
+from django.contrib.auth.models import Permission, User
 from django.test import TestCase
 from django.utils import timezone
 
@@ -14,6 +15,7 @@ from allianceauth.tests.auth_utils import AuthUtils
 
 from moons.api import api
 from moons.models import MoonRental, MoonScan, OrePrice, OreTax, OreTaxRates
+from moons.rent import FuelPricesUnavailable
 
 MOON_1 = 40161708
 CINNABAR, BITUMENS = 45506, 45492
@@ -114,7 +116,7 @@ class TestMoonValuesApi(TestCase):
         region = Region.objects.create(id=10000001, name="Test Region")
         constellation = Constellation.objects.create(id=20000001, name="Test Constellation", region=region)
         system = SolarSystem.objects.create(id=30002542, name="Auga", constellation=constellation)
-        moon = Moon.objects.create(id=MOON_1, name="Auga V - Moon 1", solar_system=system)
+        moon = cls.moon = Moon.objects.create(id=MOON_1, name="Auga V - Moon 1", solar_system=system)
         rare = ItemGroup.objects.create(id=1922, name="Rare Moon Asteroids")
         cinnabar = ItemType.objects.create(id=CINNABAR, name="Cinnabar", group=rare)
 
@@ -142,7 +144,10 @@ class TestMoonValuesApi(TestCase):
     def test_profiles_lists_only_flagged_tax_profiles(self):
         response = self.client.get("/scans/profiles", user=self.viewer)
 
-        self.assertEqual(response.json(), [{"id": self.flagged.id, "tag": "Rental"}])
+        self.assertEqual(response.json(), [{
+            "id": self.flagged.id, "tag": "Rental", "rent_subtract_metenox_fuel": False,
+            "rent_profit_share": 100.0, "rent_minimum": 0,
+        }])
 
     def test_values_for_a_flagged_profile(self):
         response = self.client.get(f"/scans/values?tax_rate={self.flagged.id}&region_id=10000001", user=self.viewer)
@@ -156,11 +161,50 @@ class TestMoonValuesApi(TestCase):
         self.assertEqual(moon["region"], "Test Region")
         self.assertEqual(moon["value"], 1440000000)
         self.assertEqual(moon["tax"], 144000000)
+        self.assertEqual(moon["rent"], 144000000)  # no rent options: tax rounded to a million
+        self.assertIsNone(response.json()["fuel_30d"])
         self.assertEqual(moon["total_fraction"], 0.5)
         self.assertEqual(moon["ores"], [{"type_id": CINNABAR, "name": "Cinnabar", "fraction": 0.5}])
         self.assertEqual(moon["unpriced"], [])
         self.assertEqual(moon["added_by"], "Scout Main")
         self.assertEqual(moon["rarity"], 32)
+        self.assertEqual((moon["rented"], moon["rented_by"], moon["rental_price"]), (False, None, None))
+
+    def _rent(self, end_date=None):
+        char = EveCharacter.objects.create(
+            character_id=2112000011, character_name="Renter", corporation_id=2112000012,
+            corporation_name="Renters", corporation_ticker="RENT")
+        corp = EveCorporationInfo.objects.create(
+            corporation_id=2112000012, corporation_name="Renters", corporation_ticker="RENT",
+            member_count=1)
+        MoonRental.objects.create(moon=self.moon, contact=char, corporation=corp, price=250_000_000,
+                                  start_date=timezone.now(), end_date=end_date)
+
+    def _values_moon(self, user):
+        return self.client.get(
+            f"/scans/values?tax_rate={self.flagged.id}&region_id=10000001", user=user).json()["moons"][0]
+
+    def test_rented_moon_shows_rented_without_who_or_price(self):
+        self._rent()
+
+        moon = self._values_moon(self.viewer)
+
+        self.assertEqual((moon["rented"], moon["rented_by"], moon["rental_price"]), (True, None, None))
+
+    def test_rented_moon_shows_who_and_price_with_rental_view_permission(self):
+        self._rent()
+        self.viewer.user_permissions.add(
+            Permission.objects.get_by_natural_key("view_moonrental", "moons", "moonrental"))
+
+        moon = self._values_moon(User.objects.get(pk=self.viewer.pk))  # fresh permission cache
+
+        self.assertEqual((moon["rented"], moon["rented_by"], moon["rental_price"]),
+                         (True, "Renter", 250_000_000))
+
+    def test_ended_rental_is_available(self):
+        self._rent(end_date=timezone.now())
+
+        self.assertFalse(self._values_moon(self.viewer)["rented"])
 
     def test_scanned_regions_with_moon_counts(self):
         response = self.client.get("/scans/regions", user=self.viewer)
@@ -179,6 +223,28 @@ class TestMoonValuesApi(TestCase):
             f"/scans/values?tax_rate={self.flagged.id}&region_id=10000002", user=self.viewer)
 
         self.assertEqual([m["moon"]["id"] for m in response.json()["moons"]], [40000099])
+
+    def test_values_rent_follows_the_profile_rent_options(self):
+        self.flagged.rent_subtract_metenox_fuel = True
+        self.flagged.rent_profit_share = 50
+        self.flagged.save()
+        with mock.patch("moons.rent.cached_fuel_prices", return_value=(1000, {"A": 10000})):
+            response = self.client.get(
+                f"/scans/values?tax_rate={self.flagged.id}&region_id=10000001", user=self.viewer)
+
+        # fuel: 1,000 x 720 x 200 + 10,000 x 720 x 5 = 180,000,000
+        # (144,000,000 - 180,000,000) x 50% rounds to -18m, floored at the 0 minimum
+        self.assertEqual(response.json()["fuel_30d"], 180000000)
+        self.assertEqual(response.json()["moons"][0]["rent"], 0)
+
+    def test_values_without_fuel_prices_is_unavailable(self):
+        self.flagged.rent_subtract_metenox_fuel = True
+        self.flagged.save()
+        with mock.patch("moons.rent.cached_fuel_prices", side_effect=FuelPricesUnavailable("No fuel")):
+            response = self.client.get(
+                f"/scans/values?tax_rate={self.flagged.id}&region_id=10000001", user=self.viewer)
+
+        self.assertEqual(response.status_code, 503)
 
     def test_values_for_unflagged_profile_is_not_found(self):
         response = self.client.get(f"/scans/values?tax_rate={self.hidden.id}&region_id=10000001", user=self.viewer)
@@ -224,6 +290,24 @@ class TestRentalSuggestionApi(TestCase):
         # 1,440,000 units * 100.4 = 144,576,000
         self.assertEqual(response.json(), {"price": 145000000})
 
+    def test_suggestion_is_the_suggested_rent_of_the_profile(self):
+        self.flagged.rent_profit_share = 50
+        self.flagged.rent_minimum = 100_000_000
+        self.flagged.save()
+
+        response = self._suggest(self.moon, self.flagged, self.renter)
+
+        # 144,576,000 x 50% = 72,288,000 -> 72m, raised to the 100m minimum
+        self.assertEqual(response.json(), {"price": 100000000})
+
+    def test_suggestion_without_fuel_prices_is_unavailable(self):
+        self.flagged.rent_subtract_metenox_fuel = True
+        self.flagged.save()
+        with mock.patch("moons.rent.cached_fuel_prices", side_effect=FuelPricesUnavailable("No fuel")):
+            response = self._suggest(self.moon, self.flagged, self.renter)
+
+        self.assertEqual(response.status_code, 503)
+
     def test_unscanned_moon_has_no_suggestion(self):
         self.assertEqual(self._suggest(self.unscanned, self.flagged, self.renter).json(), {"price": None})
 
@@ -255,4 +339,67 @@ class TestRentalSuggestionApi(TestCase):
     def test_rental_admin_without_scan_view_can_list_profiles(self):
         response = self.client.get("/scans/profiles", user=self.renter)
 
-        self.assertEqual(response.json(), [{"id": self.flagged.id, "tag": "Rental"}])
+        self.assertEqual(response.json(), [{
+            "id": self.flagged.id, "tag": "Rental", "rent_subtract_metenox_fuel": False,
+            "rent_profit_share": 100.0, "rent_minimum": 0,
+        }])
+
+
+class TestEndRentalApi(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        region = Region.objects.create(id=10000001, name="Test Region")
+        constellation = Constellation.objects.create(id=20000001, name="Test Constellation", region=region)
+        system = SolarSystem.objects.create(id=30002542, name="Auga", constellation=constellation)
+        moon = Moon.objects.create(id=MOON_1, name="Auga V - Moon 1", solar_system=system)
+        char = EveCharacter.objects.create(
+            character_id=2112000001, character_name="Renter", corporation_id=2112000002,
+            corporation_name="Renters", corporation_ticker="RENT")
+        corp = EveCorporationInfo.objects.create(
+            corporation_id=2112000002, corporation_name="Renters", corporation_ticker="RENT",
+            member_count=1)
+        cls.rental = MoonRental.objects.create(
+            moon=moon, contact=char, corporation=corp, price=100_000_000,
+            start_date=timezone.now(), note="rented by someone")
+
+        cls.editor = AuthUtils.create_user("rental_editor")
+        cls.editor.user_permissions.add(
+            Permission.objects.get_by_natural_key("change_moonrental", "moons", "moonrental"))
+        AuthUtils.add_main_character_2(cls.editor, "Editor Main", 2112000003, corp_id=2112000002, corp_name="Renters")
+        cls.adder = AuthUtils.create_user("rental_adder")
+        cls.adder.user_permissions.add(
+            Permission.objects.get_by_natural_key("add_moonrental", "moons", "moonrental"))
+
+    def setUp(self):
+        self.client = TestClient(api)
+
+    def _end(self, user, note, rental_id=None):
+        return self.client.post(f"/rental/{rental_id or self.rental.id}/end", data={"note": note}, user=user)
+
+    def test_unrent_ends_rental_and_appends_note_with_who_did_it(self):
+        response = self._end(self.editor, "Stopped paying")
+
+        self.assertEqual(response.status_code, 200)
+        self.rental.refresh_from_db()
+        self.assertIsNotNone(self.rental.end_date)
+        self.assertEqual(self.rental.note, "rented by someone\nUnrented, completed by Editor Main: Stopped paying")
+
+    def test_unrent_needs_change_permission(self):
+        self.assertEqual(self._end(self.adder, "Stopped paying").status_code, 403)
+        self.rental.refresh_from_db()
+        self.assertIsNone(self.rental.end_date)
+
+    def test_unrent_needs_a_note(self):
+        self.assertEqual(self._end(self.editor, "   ").status_code, 400)
+        self.rental.refresh_from_db()
+        self.assertIsNone(self.rental.end_date)
+
+    def test_unrent_of_an_ended_rental_is_not_found(self):
+        self._end(self.editor, "Stopped paying")
+
+        self.assertEqual(self._end(self.editor, "Again").status_code, 404)
+
+    def test_rental_list_carries_the_rental_id_and_note(self):
+        rentals = self.client.get("/rental/list", user=self.adder).json()
+
+        self.assertEqual([(r["id"], r["note"]) for r in rentals], [(self.rental.id, "rented by someone")])

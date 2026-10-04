@@ -156,6 +156,9 @@ class OreLine:
     units: Decimal  # per 30 days
     unit_value: Decimal  # None when unpriced
     unit_tax: Decimal
+    ore_id: int = None
+    priced_as: int = None  # ore whose OrePrice was used: the base ore when the profile says so
+    price: Decimal = None  # that OrePrice before refine; None when unpriced
 
 
 @dataclass
@@ -231,13 +234,15 @@ def moon_values(tax_rate, moon_ids=None, region_id=None):
             priced_as = base_ore.get(ore_id, ore_id)
             if priced_as not in prices:
                 unpriced.append(ore_names[ore_id])
-                lines.append(OreLine(ore_names[ore_id], fraction, units, None, Decimal(0)))
+                lines.append(OreLine(ore_names[ore_id], fraction, units, None, Decimal(0),
+                                     ore_id=ore_id, priced_as=priced_as))
                 continue
             unit_value = prices[priced_as] * refine
             unit_tax = taxes.get(ore_id, Decimal(0))
             value += units * unit_value
             tax += units * unit_tax
-            lines.append(OreLine(ore_names[ore_id], fraction, units, unit_value, unit_tax))
+            lines.append(OreLine(ore_names[ore_id], fraction, units, unit_value, unit_tax,
+                                 ore_id=ore_id, priced_as=priced_as, price=prices[priced_as]))
         values.append(MoonValue(
             moon_id, moon_name, value, tax, total, unpriced, added_at, main_name or username,
             system=system, region=region,

@@ -19,7 +19,7 @@ from esi.models import Token
 
 from moons.helpers import OreHelper, what_frack_id
 
-from . import app_settings, models, scans, schema
+from . import app_settings, models, rent, scans, schema
 
 logger = logging.getLogger(__name__)
 
@@ -337,6 +337,7 @@ def get_moon_rentals(request):
             main_char = None
         out.append(
             {
+                "id": r.id,
                 "moon": {
                     "id": r.moon.id,
                     "name": r.moon.name
@@ -351,7 +352,8 @@ def get_moon_rentals(request):
                 "corporation": r.corporation,
                 "main_character": main_char,
                 "price": r.price,
-                "start_date": r.start_date
+                "start_date": r.start_date,
+                "note": r.note,
             }
         )
 
@@ -382,6 +384,7 @@ def get_moon_rentals(request):
     for r in rentals:
         out.append(
             {
+                "id": r.id,
                 "moon": {
                     "id": r.moon.id,
                     "name": r.moon.name
@@ -395,7 +398,8 @@ def get_moon_rentals(request):
                 "contact": r.contact,
                 "corporation": r.corporation,
                 "price": r.price,
-                "start_date": r.start_date
+                "start_date": r.start_date,
+                "note": r.note,
             }
         )
 
@@ -462,7 +466,7 @@ def post_moon_rental_new(request, rental: schema.NewMoonRental = Form(...)):
         note=rental.note,
         start_date=timezone.now()
     )
-    return 200, {"moon": {
+    return 200, {"id": new_rental.id, "moon": {
         "id": new_rental.moon.id,
         "name": new_rental.moon.name
     },
@@ -475,8 +479,35 @@ def post_moon_rental_new(request, rental: schema.NewMoonRental = Form(...)):
         "contact": new_rental.contact,
         "corporation": new_rental.corporation,
         "price": new_rental.price,
-        "start_date": new_rental.start_date
+        "start_date": new_rental.start_date,
+        "note": new_rental.note,
     }
+
+
+@api.post(
+    "/rental/{rental_id}/end",
+    response={200: str, 400: str, 403: str, 404: str},
+    tags=["Rentals"]
+)
+def post_moon_rental_end(request, rental_id: int, body: schema.EndMoonRental = Form(...)):
+    # same permission and note trail as the Discord unrent command
+    if not request.user.has_perm("moons.change_moonrental"):
+        return 403, "Permission Denied!"
+    note = body.note.strip()
+    if not note:
+        return 400, "A note is required to unrent a moon."
+    rental = models.MoonRental.objects.filter(id=rental_id, end_date__isnull=True).select_related("moon").first()
+    if not rental:
+        return 404, "No active rental found."
+    try:
+        who = request.user.profile.main_character.character_name
+    except AttributeError:
+        who = request.user.username
+    rental.end_date = timezone.now()
+    rental.note += f"\nUnrented, completed by {who}: {note}"
+    rental.save()
+    logger.info(f"{request.user} unrented {rental.moon.name}: {note}")
+    return 200, f"Unrented {rental.moon.name}"
 
 
 @api.get(
@@ -667,7 +698,7 @@ def get_scanned_regions(request):
 
 @api.get(
     "/scans/values",
-    response={200: schema.ScannedMoonValues, 403: str, 404: str},
+    response={200: schema.ScannedMoonValues, 403: str, 404: str, 503: str},
     tags=["Scans"]
 )
 def get_scan_values(request, tax_rate: int, region_id: int):
@@ -676,21 +707,36 @@ def get_scan_values(request, tax_rate: int, region_id: int):
     profile = models.OreTaxRates.objects.filter(id=tax_rate, show_in_moon_values=True).first()
     if not profile:
         return 404, "Tax profile not offered for moon values"
+    try:
+        fuel = rent.fuel_for(profile)
+    except rent.FuelPricesUnavailable as e:
+        return 503, str(e)
     prices_updated = models.OrePrice.objects.order_by("-last_update").values_list(
         "last_update", flat=True).first()
-    return 200, {"prices_updated": prices_updated, "moons": [
+    rentals = {
+        moon_id: (contact, price) for moon_id, contact, price in models.MoonRental.objects.filter(
+            end_date__isnull=True, moon__solar_system__constellation__region_id=region_id,
+        ).values_list("moon_id", "contact__character_name", "price")
+    }
+    # whether a moon is taken is fine to show; who rents it and for how much is not
+    see_rentals = request.user.has_perm("moons.view_moonrental")
+    return 200, {"prices_updated": prices_updated, "fuel_30d": fuel.total_30d if fuel else None, "moons": [
         {
             "moon": {"id": v.moon_id, "name": v.name},
             "system": v.system,
             "region": v.region,
             "value": v.value_30d,
             "tax": v.tax_30d,
+            "rent": rent.rent_breakdown(v.tax_30d, profile, fuel).final,
             "total_fraction": v.total_fraction,
             "ores": [{"type_id": t, "name": n, "fraction": f} for t, n, f in v.ores],
             "unpriced": v.unpriced,
             "added_at": v.added_at,
             "added_by": v.added_by,
             "rarity": v.rarity,
+            "rented": v.moon_id in rentals,
+            "rented_by": rentals[v.moon_id][0] if see_rentals and v.moon_id in rentals else None,
+            "rental_price": rentals[v.moon_id][1] if see_rentals and v.moon_id in rentals else None,
         }
         # one region at a time: tens of thousands of scanned moons won't fit in one response
         for v in scans.moon_values(profile, region_id=region_id)
@@ -699,7 +745,7 @@ def get_scan_values(request, tax_rate: int, region_id: int):
 
 @api.get(
     "/scans/suggestion",
-    response={200: schema.RentalSuggestion, 403: str, 404: str},
+    response={200: schema.RentalSuggestion, 403: str, 404: str, 503: str},
     tags=["Scans", "Rentals"]
 )
 def get_rental_suggestion(request, moon_id: int, tax_rate: int):
@@ -709,5 +755,11 @@ def get_rental_suggestion(request, moon_id: int, tax_rate: int):
     if not profile:
         return 404, "Tax profile not offered for moon values"
     values = scans.moon_values(profile, moon_ids=[moon_id])
-    # a suggestion only: rounded like invoices, never written to the rental
-    return 200, {"price": int(round(values[0].tax_30d, -6)) if values else None}
+    if not values:
+        return 200, {"price": None}
+    try:
+        fuel = rent.fuel_for(profile)
+    except rent.FuelPricesUnavailable as e:
+        return 503, str(e)
+    # a suggestion only, never written to the rental
+    return 200, {"price": rent.rent_breakdown(values[0].tax_30d, profile, fuel).final}

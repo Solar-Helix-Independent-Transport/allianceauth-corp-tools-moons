@@ -114,17 +114,20 @@ Compositions are stored exactly as scanned. Moons under 100% are normal and are 
 
 - Value: ore price at the profile's refine rate (honouring "ignore ores in refine" and "tax on base ore value").
 - Tax: what the profile would tax that ore.
+- Rent: the suggested monthly rent under the profile's rent options (below).
+- Rental: whether the moon is rented (who rents it and for how much with `moons.view_moonrental`). Available moons have a **Rent** button for `moons.add_moonrental` that opens New Rental with the moon and the suggested rent filled in.
 
-When creating a rental from **Moons > Rentals > New Rental**, the 30 day tax under a chosen profile is shown as a suggested monthly price. It is only a suggestion; the price you enter is what gets invoiced.
+When creating a rental from **Moons > Rentals > New Rental**, the same suggested rent under a chosen profile is shown. It is only a suggestion; the price you enter is what gets invoiced.
 
 ### Discord commands
 
 - `/moons price <moon> [ore_tax] [explain]` values a scanned moon under one of the ore taxes shown on Moon Values (default: the first) and suggests its rent. `explain` shows every input per ore.
+- `/moons explain <moon> [ore_tax]` (same ore tax choices) works through the price step by step: the profile's inputs, then for each ore its units, OrePrice, value and tax (flagging stored ore taxes that no longer match prices), then Metenox fuel and the rent.
 - `/moons rental_recalc <region> [ore_tax] [exclude_corp]` (same ore tax choices) lists every active rental in a region with its current and suggested rent. It changes nothing.
 
-These rent suggestions can go further than the New Rental form's (which is plain 30 day tax). Each tax profile can set:
+Moon Values, New Rental and these commands all suggest rent the same way: the 30 day tax, rounded to the nearest million, adjusted by these options on each tax profile:
 
-- **Rent subtract Metenox fuel**: subtract 30 days of Metenox fuel (magmatic gas and fuel blocks, Jita prices from Fuzzwork) from the tax.
+- **Rent subtract Metenox fuel**: subtract 30 days of Metenox fuel (magmatic gas and fuel blocks, Jita prices from Fuzzwork, cached for an hour) from the tax.
 - **Rent profit share**: the percent of what is left that is charged as rent.
 - **Rent minimum**: the lowest rent ever suggested.
 
@@ -138,7 +141,7 @@ Fuel pricing settings: `MOONS_FUEL_BUY_SELL` (`"buy"`), `MOONS_FUEL_BUCKET` (`"p
 | `moons.change_moonscan`   | Overwrite a moon's scan when a re-import differs              |
 | `moons.view_moonscan`     | See scan compositions and the Moon Values ranking (all moons) |
 | `moons.add_moonrental`    | Create rentals and see price suggestions                      |
-| `moons.change_moonrental` | See price suggestions                                         |
+| `moons.change_moonrental` | See price suggestions, unrent moons (a note is required)      |
 
 ### MOONS_DRILL_M3_PER_HOUR
 

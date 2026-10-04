@@ -1,10 +1,12 @@
-"""Rent pricing used by the Discord commands: a profile's 30 day tax, less Metenox
-fuel if the profile says so, times its profit share, rounded, with a minimum.
-The New Rental form's suggestion stays plain tax_30d."""
+"""Suggested rent: a profile's 30 day tax, less Metenox fuel if the profile says so,
+times its profit share, rounded, with a minimum. Moon Values, the New Rental
+suggestion and the Discord commands all price rent this way."""
 from dataclasses import dataclass
 from decimal import Decimal
 
 import requests
+
+from django.core.cache import cache
 
 from . import app_settings
 
@@ -19,6 +21,12 @@ FUEL_BLOCK_TYPE_IDS = {
 }
 GAS_SOFT_CAP = 10000
 BLOCKS_PER_HOUR = 5
+FUEL_PRICES_CACHE_KEY = "moons:metenox_fuel_prices"
+FUEL_PRICES_CACHE_SECONDS = 60 * 60
+
+
+class FuelPricesUnavailable(Exception):
+    pass
 
 
 @dataclass
@@ -51,6 +59,25 @@ def fetch_fuel_prices():
         for type_id, name in FUEL_BLOCK_TYPE_IDS.items()
     }
     return gas, blocks
+
+
+def cached_fuel_prices():
+    """fetch_fuel_prices, kept for an hour so pages and commands agree and Fuzzwork isn't hit per request."""
+    prices = cache.get(FUEL_PRICES_CACHE_KEY)
+    if prices is None:
+        try:
+            prices = fetch_fuel_prices()
+        except (requests.RequestException, KeyError, TypeError, ValueError) as e:
+            raise FuelPricesUnavailable("Couldn't get Metenox fuel prices from Fuzzwork") from e
+        cache.set(FUEL_PRICES_CACHE_KEY, prices, FUEL_PRICES_CACHE_SECONDS)
+    return prices
+
+
+def fuel_for(tax_rate):
+    """30 days of Metenox fuel when the profile subtracts it, else None."""
+    if not tax_rate.rent_subtract_metenox_fuel:
+        return None
+    return metenox_fuel_30d(*cached_fuel_prices())
 
 
 def metenox_fuel_30d(gas_price, block_prices, gas_factor=None):

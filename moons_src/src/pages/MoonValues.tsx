@@ -1,12 +1,13 @@
 import BaseTable from "../components/BaseTable/BaseTable";
 import ErrorBoundary from "../components/ErrorBoundary";
 import { ErrorLoader, PanelLoader } from "../components/Loaders/Loaders";
+import { NewRentalModal } from "../components/NewRentalModal";
 import { OreColourMap } from "../components/OreColourKey";
-import { getScanProfiles, getScanRegions, getScanValues } from "../helpers/Api";
+import { getPerms, getScanProfiles, getScanRegions, getScanValues } from "../helpers/Api";
 import { scannedMoonValue, scannedRegion, taxProfile } from "../types";
 import { createColumnHelper } from "@tanstack/react-table";
-import { useState } from "react";
-import { Alert, Badge, Form } from "react-bootstrap";
+import { useMemo, useState } from "react";
+import { Alert, Badge, Button, Form } from "react-bootstrap";
 import { useQuery } from "react-query";
 
 const col: any = createColumnHelper<scannedMoonValue>();
@@ -26,7 +27,48 @@ const rarityLabel = (rarity: number | null) =>
 
 const isk = (n: number) => `${Math.round(n).toLocaleString()} ISK`;
 
-const columns = [
+// how the profile turns tax into rent, e.g. "Rent: 65% of (tax - 795,600,000 ISK fuel), at least 100,000,000 ISK"
+const rentRule = (profile: taxProfile, fuel: number | null | undefined) => {
+  let taxed = "tax";
+  if (profile.rent_subtract_metenox_fuel) {
+    taxed = fuel != null ? `(tax - ${isk(fuel)} Metenox fuel)` : "(tax - Metenox fuel)";
+  }
+  const share =
+    profile.rent_profit_share === 100 ? taxed : `${profile.rent_profit_share}% of ${taxed}`;
+  const minimum = profile.rent_minimum > 0 ? `, at least ${isk(profile.rent_minimum)}` : "";
+  return `Rent: ${share}, rounded to a million${minimum}`;
+};
+
+const rentalCell = (row: scannedMoonValue, onRent?: (row: scannedMoonValue) => void) => {
+  if (row.rented) {
+    return (
+      <span>
+        <Badge bg="secondary">Rented</Badge>
+        {row.rented_by && (
+          <>
+            <br />
+            <span className="text-muted small">
+              {row.rented_by}
+              {row.rental_price != null && ` · ${isk(row.rental_price)}`}
+            </span>
+          </>
+        )}
+      </span>
+    );
+  }
+  return (
+    <span className="d-flex gap-2 align-items-center">
+      <Badge bg="success">Available</Badge>
+      {onRent && (
+        <Button size="sm" variant="outline-primary" onClick={() => onRent(row)}>
+          Rent
+        </Button>
+      )}
+    </span>
+  );
+};
+
+const makeColumns = (onRent?: (row: scannedMoonValue) => void) => [
   col.accessor("moon.name", {
     header: "Moon",
     cell: (props: any) => {
@@ -91,6 +133,17 @@ const columns = [
     cell: (props: any) => <span>{isk(props.getValue())}</span>,
     enableColumnFilter: false,
   }),
+  col.accessor("rent", {
+    header: "Rent / 30d",
+    cell: (props: any) => <span>{isk(props.getValue())}</span>,
+    enableColumnFilter: false,
+  }),
+  // filter on "Rented" / "Available"
+  col.accessor((row: scannedMoonValue) => (row.rented ? "Rented" : "Available"), {
+    id: "rental",
+    header: "Rental",
+    cell: (props: any) => rentalCell(props.cell.row.original, onRent),
+  }),
   col.accessor("added_by", {
     header: "Scanned",
     cell: (props: any) => {
@@ -117,6 +170,11 @@ const MoonValues = () => {
     refetchOnWindowFocus: false,
   });
   const selected: number | undefined = profileId ?? profiles.data?.[0]?.id;
+  const profile: taxProfile | undefined = profiles.data?.find((p: taxProfile) => p.id === selected);
+  const perms = useQuery(["perms"], () => getPerms(), { refetchOnWindowFocus: false });
+  const [renting, setRenting] = useState<scannedMoonValue | null>(null);
+  const canRent: boolean = !!perms.data?.add_rentals;
+  const columns = useMemo(() => makeColumns(canRent ? setRenting : undefined), [canRent]);
 
   // one region at a time: all scanned moons together is far too much for one page
   const values = useQuery(
@@ -132,7 +190,10 @@ const MoonValues = () => {
     return (
       <ErrorLoader
         title="Failed to load moon values"
-        message={((profiles.error || regions.error || values.error) as Error).message}
+        message={
+          ((profiles.error || regions.error || values.error) as any)?.response?.data ??
+          ((profiles.error || regions.error || values.error) as Error).message
+        }
       />
     );
   }
@@ -179,6 +240,9 @@ const MoonValues = () => {
             ` · prices updated ${new Date(values.data.prices_updated).toLocaleString()}`}
         </span>
       </div>
+      {profile && (
+        <div className="text-muted small mb-2">{rentRule(profile, values.data?.fuel_30d)}</div>
+      )}
       {regionId === null ? (
         <Alert variant="secondary">Pick a region to rank its scanned moons.</Alert>
       ) : (
@@ -191,6 +255,15 @@ const MoonValues = () => {
             { sorting: [{ id: "value", desc: true }], pagination: { pageSize: 25 } } as any
           }
           exportFileName="MoonValues"
+        />
+      )}
+      {renting && (
+        <NewRentalModal
+          show
+          onHide={() => setRenting(null)}
+          initialMoon={{ label: renting.moon.name, value: Number(renting.moon.id) }}
+          initialPrice={renting.rent}
+          initialProfileId={selected}
         />
       )}
     </ErrorBoundary>

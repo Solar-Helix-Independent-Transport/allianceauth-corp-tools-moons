@@ -64,6 +64,7 @@ class ExtractionEvent(Schema):
 
 
 class MoonRental(Schema):
+    id: int
     moon: IdName
     system: IdName
     constellation: str
@@ -73,6 +74,7 @@ class MoonRental(Schema):
     main_character: Optional[Character] = None
     price: Decimal
     start_date: datetime
+    note: str = ""
 
 
 class NewMoonRental(Schema):
@@ -81,6 +83,10 @@ class NewMoonRental(Schema):
     corporation_id: int
     price: Decimal
     note: str = ""
+
+
+class EndMoonRental(Schema):
+    note: str
 
 
 class ScanText(Schema):
@@ -106,6 +112,9 @@ class ScanImportResult(Schema):
 class TaxProfile(Schema):
     id: int
     tag: str
+    rent_subtract_metenox_fuel: bool
+    rent_profit_share: float  # percent
+    rent_minimum: int
 
 
 class MoonScanOre(Schema):
@@ -120,16 +129,21 @@ class ScannedMoonValue(Schema):
     region: str
     value: float  # ISK per 30 days
     tax: float  # ISK per 30 days under the selected profile
+    rent: int  # suggested monthly rent: tax less fuel, times share, rounded, with a minimum
     total_fraction: float
     ores: List[MoonScanOre]
     unpriced: List[str]
     added_at: datetime
     added_by: Optional[str]
     rarity: Optional[int]  # R-rating: 4, 8, 16, 32 or 64
+    rented: bool  # has an active rental
+    rented_by: Optional[str]  # contact; only with moons.view_moonrental
+    rental_price: Optional[int]  # only with moons.view_moonrental
 
 
 class ScannedMoonValues(Schema):
     prices_updated: Optional[datetime]
+    fuel_30d: Optional[float]  # Metenox fuel subtracted from each tax; None when the profile doesn't
     moons: List[ScannedMoonValue]
 
 

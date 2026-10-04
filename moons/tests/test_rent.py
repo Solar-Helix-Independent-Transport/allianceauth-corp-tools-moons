@@ -1,10 +1,16 @@
 from decimal import Decimal
 from unittest import mock
 
+import requests
+
+from django.core.cache import cache
 from django.test import SimpleTestCase, override_settings
 
 from moons.models import OreTaxRates
-from moons.rent import fetch_fuel_prices, metenox_fuel_30d, rent_breakdown
+from moons.rent import (
+    FuelPricesUnavailable, cached_fuel_prices, fetch_fuel_prices, fuel_for,
+    metenox_fuel_30d, rent_breakdown,
+)
 
 
 def _profile(**kwargs):
@@ -76,3 +82,29 @@ class TestRentBreakdown(SimpleTestCase):
         # (900m - 795.6m) * 0.65 = 67.86m -> 68m, raised to the 100m minimum
         self.assertEqual(rent.rounded, 68_000_000)
         self.assertEqual(rent.final, 100_000_000)
+
+
+class TestCachedFuelPrices(SimpleTestCase):
+    def setUp(self):
+        cache.clear()
+
+    def test_fetched_once_then_cached(self):
+        with mock.patch("moons.rent.fetch_fuel_prices", return_value=(9000, {"A": 20000})) as fetch:
+            first = cached_fuel_prices()
+            second = cached_fuel_prices()
+
+        self.assertEqual(first, (9000, {"A": 20000}))
+        self.assertEqual(second, first)
+        fetch.assert_called_once()
+
+    def test_fuzzwork_failure_is_unavailable_and_not_cached(self):
+        with mock.patch("moons.rent.fetch_fuel_prices", side_effect=requests.ConnectionError):
+            with self.assertRaises(FuelPricesUnavailable):
+                cached_fuel_prices()
+        with mock.patch("moons.rent.fetch_fuel_prices", return_value=(9000, {"A": 20000})):
+            self.assertEqual(cached_fuel_prices()[0], 9000)
+
+    def test_no_fuel_for_profile_that_does_not_subtract_it(self):
+        with mock.patch("moons.rent.fetch_fuel_prices") as fetch:
+            self.assertIsNone(fuel_for(_profile()))
+        fetch.assert_not_called()

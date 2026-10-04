@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
             model_name="oretaxrates",
             name="rent_minimum",
             field=models.BigIntegerField(
-                default=0, help_text="Rent commands: lowest rent suggested, in ISK."
+                default=0, help_text="Suggested rent: lowest rent suggested, in ISK."
             ),
         ),
         migrations.AddField(
@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
             field=models.DecimalField(
                 decimal_places=2,
                 default=100,
-                help_text="Rent commands: percent of (tax - fuel) charged as rent.",
+                help_text="Suggested rent: percent of (tax - fuel) charged as rent.",
                 max_digits=5,
             ),
         ),
@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
             name="rent_subtract_metenox_fuel",
             field=models.BooleanField(
                 default=False,
-                help_text="Rent commands: subtract 30 days of Metenox fuel from the tax.",
+                help_text="Suggested rent: subtract 30 days of Metenox fuel from the tax.",
             ),
         ),
     ]

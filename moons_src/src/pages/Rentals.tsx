@@ -3,16 +3,17 @@ import ErrorBoundary from "../components/ErrorBoundary";
 import { ErrorLoader } from "../components/Loaders/Loaders";
 import { NewRentalModal } from "../components/NewRentalModal";
 import { TimeAndSince } from "../components/TimeAndSince";
+import { UnrentModal } from "../components/UnrentModal";
 import { getPerms, getRentals } from "../helpers/Api";
 import { moonRental } from "../types";
 import { createColumnHelper } from "@tanstack/react-table";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Badge, Button, Form } from "react-bootstrap";
 import { useQuery } from "react-query";
 
 const col: any = createColumnHelper<moonRental>();
 
-const columns = [
+const makeColumns = (onUnrent?: (rental: moonRental) => void) => [
   col.accessor("moon.name", {
     header: "Moon",
     width: "col-md-2",
@@ -44,11 +45,11 @@ const columns = [
   }),
   col.accessor("contact.character_name", {
     header: "Contact",
-    width: "col-md-2",
+    width: "col-md-1",
   }),
   col.accessor("corporation.corporation_name", {
     header: "Corporation",
-    width: "col-md-3",
+    width: "col-md-2",
   }),
   col.accessor("price", {
     header: "Monthly Price",
@@ -61,16 +62,47 @@ const columns = [
   }),
   col.accessor("start_date", {
     header: "Renting Since",
-    width: "col-md-2",
+    width: "col-md-1",
     cell: (props: any) => <TimeAndSince stringDate={props.getValue()} />,
     enableColumnFilter: false,
   }),
+  col.accessor("note", {
+    header: "Notes",
+    width: "col-md-2",
+    // notes gain a line per change (e.g. unrents), so keep the line breaks
+    cell: (props: any) => (
+      <span className="small" style={{ whiteSpace: "pre-line" }}>
+        {props.getValue()}
+      </span>
+    ),
+  }),
+  ...(onUnrent
+    ? [
+        col.display({
+          id: "actions",
+          header: "",
+          width: "col-md-1",
+          cell: (props: any) => (
+            <Button
+              size="sm"
+              variant="outline-danger"
+              onClick={() => onUnrent(props.cell.row.original)}
+            >
+              Unrent
+            </Button>
+          ),
+        }),
+      ]
+    : []),
 ];
 
 const Rentals = () => {
   const [showInvalidOnly, setShowInvalidOnly] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const perms = useQuery(["perms"], () => getPerms(), { refetchOnWindowFocus: false });
+  const [unrenting, setUnrenting] = useState<moonRental | null>(null);
+  const canUnrent: boolean = !!perms.data?.edit_rentals;
+  const columns = useMemo(() => makeColumns(canUnrent ? setUnrenting : undefined), [canUnrent]);
 
   const { isFetching, error, data } = useQuery(["rentals"], () => getRentals(), {
     initialData: [],
@@ -103,6 +135,7 @@ const Rentals = () => {
       </div>
       <BaseTable {...{ isFetching, columns }} data={filteredData} exportFileName="MoonRentals" />
       {showNew && <NewRentalModal show={showNew} onHide={() => setShowNew(false)} />}
+      {unrenting && <UnrentModal rental={unrenting} onHide={() => setUnrenting(null)} />}
     </ErrorBoundary>
   );
 };

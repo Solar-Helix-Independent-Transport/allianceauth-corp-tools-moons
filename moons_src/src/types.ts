@@ -44,6 +44,7 @@ export interface rentalCorporation {
   alliance_id?: number;
 }
 export interface moonRental {
+  id: number;
   moon: KeyVal;
   system: KeyVal;
   constellation: string;
@@ -53,6 +54,7 @@ export interface moonRental {
   main_character?: rentalCharacter;
   price: number;
   start_date: string;
+  note: string;
 }
 export type scanStatus = "new" | "unchanged" | "changed" | "needs_change_perm" | "rejected";
 export interface scanOre {
@@ -72,6 +74,9 @@ export interface scanResult {
 export interface taxProfile {
   id: number;
   tag: string;
+  rent_subtract_metenox_fuel: boolean;
+  rent_profit_share: number;
+  rent_minimum: number;
 }
 export interface scannedMoonValue {
   moon: KeyVal;
@@ -79,12 +84,16 @@ export interface scannedMoonValue {
   region: string;
   value: number;
   tax: number;
+  rent: number;
   total_fraction: number;
   ores: Array<{ type_id: number; name: string; fraction: number }>;
   unpriced: Array<string>;
   added_at: string;
   added_by: string | null;
   rarity: number | null;
+  rented: boolean;
+  rented_by: string | null;
+  rental_price: number | null;
 }
 export interface scannedRegion {
   id: number;
