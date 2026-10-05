@@ -3,7 +3,8 @@ from datetime import timedelta
 from corptools.models import CorporationAudit, EveLocation
 
 from django.contrib.auth.models import Permission
-from django.test import TestCase
+from django.test import TestCase, override_settings
+from django.urls import reverse
 from django.utils import timezone
 
 from allianceauth.authentication.models import CharacterOwnership
@@ -341,3 +342,48 @@ class TestInvoicesAccessPerms(TestCase):
         self.assertIn(self.mf2, cs)
         self.assertIn(self.mf3, cs)
         self.assertIn(self.mf4, cs)
+
+
+# the test settings' manifest static storage has no manifest to render pages with
+@override_settings(STORAGES={
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+})
+class TestMoonBoardAccess(TestCase):
+    def _user_with(self, codename=None):
+        user = AuthUtils.create_user(f"board_{codename or 'none'}")
+        # without a main character AA sends users to the dashboard first
+        AuthUtils.add_main_character_2(
+            user, f"Board {codename or 'none'}", 9100000 + user.pk, corp_id=1, corp_name="Board Corp")
+        if codename:
+            user.user_permissions.add(
+                Permission.objects.filter(content_type__app_label="moons", codename=codename).first())
+        return user
+
+    def test_each_moon_board_permission_opens_it(self):
+        for perm in ("view_available", "view_corp", "view_alliance", "view_all",
+                     "view_moonscan", "add_moonscan", "add_moonrental", "change_moonrental"):
+            with self.subTest(perm):
+                self.client.force_login(self._user_with(perm))
+
+                response = self.client.get(reverse("moons:r"))
+
+                self.assertEqual(response.status_code, 200)
+
+    def test_no_permission_is_forbidden_not_sent_back_to_login(self):
+        self.client.force_login(self._user_with())
+
+        response = self.client.get(reverse("moons:r"))
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_menu_item_shows_for_the_same_users(self):
+        from django.test import RequestFactory
+
+        from ..auth_hooks import MoonsBetaHook
+
+        request = RequestFactory().get("/")
+        request.user = self._user_with("view_all")
+        self.assertNotEqual(MoonsBetaHook().render(request), "")
+        request.user = self._user_with()
+        self.assertEqual(MoonsBetaHook().render(request), "")

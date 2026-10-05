@@ -3,16 +3,20 @@ from datetime import datetime, timedelta
 from corptools.models import (
     CorporationAudit, EveLocation, EveName, Notification,
 )
-from eve_sde.models import Constellation, ItemType, Moon, Region, SolarSystem
+from eve_sde.models import (
+    Constellation, ItemType, Moon, Region, SolarSystem, TypeDogma,
+)
 from invoices.models import Invoice
+from solo.models import SingletonModel
 
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.models import (
-    ExpressionWrapper, F, FloatField, OuterRef, Subquery,
+    ExpressionWrapper, F, FloatField, IntegerField, OuterRef, Subquery,
 )
 from django.db.models.deletion import DO_NOTHING, SET_NULL
+from django.db.models.functions import Cast, Coalesce
 from django.utils import timezone
 
 from allianceauth.authentication.models import CharacterOwnership
@@ -182,6 +186,23 @@ class MiningObservation(models.Model):
         tax_data["taxes"] = list(tax_data["taxes"].values())
         return tax_data
 
+    @staticmethod
+    def _annotate_base_ore_value(observed, goo_only):
+        """base_isk_value: the quantity at its base ore's price, so a jackpot ore is
+        valued as its plain ore. Ores without a priced base ore keep their own price."""
+        from .helpers import OreHelper
+
+        base_type = TypeDogma.objects.filter(
+            item_type_id=OuterRef('type_id'),
+            dogma_attribute_id=OreHelper.base_ore_dogma_attribute_id,
+        ).values('value')[:1]
+        observed = observed.annotate(base_type_id=Cast(Subquery(base_type), IntegerField()))
+        base_price = OrePrice.objects.filter(item_id=OuterRef('base_type_id'), goo_only=goo_only)
+        own_price = OrePrice.objects.filter(item_id=OuterRef('type_id'), goo_only=goo_only)
+        return observed.annotate(base_isk_value=ExpressionWrapper(
+            Coalesce(Subquery(base_price.values('price')), Subquery(own_price.values('price'))) * F('quantity'),
+            output_field=FloatField()))
+
     @classmethod
     def tax_moons(cls, start, end):
         # get all tax items and return the tax for the time period.
@@ -236,6 +257,9 @@ class MiningObservation(models.Model):
             if tax.moon:
                 observed = observed.filter(moon=tax.moon)
 
+            if not tax.use_variable_tax and tax.flat_tax_on_base_ore_value:
+                observed = cls._annotate_base_ore_value(observed, goo_only)
+
             rate = float(tax.flat_tax_rate)
             # do the ranks
             observed = observed.exclude(structure__in=observers_taxed)
@@ -264,7 +288,8 @@ class MiningObservation(models.Model):
                     if tax.use_variable_tax:
                         player_data[i.character_name.eve_id]['tax_isk'] = player_data[i.character_name.eve_id]['tax_isk'] + i.tax_value
                     else:
-                        player_data[i.character_name.eve_id]['tax_isk'] = player_data[i.character_name.eve_id]['tax_isk'] + i.isk_value * rate
+                        taxable = i.base_isk_value if tax.flat_tax_on_base_ore_value else i.isk_value
+                        player_data[i.character_name.eve_id]['tax_isk'] = player_data[i.character_name.eve_id]['tax_isk'] + taxable * rate
 
                     if i.type_name not in player_data[i.character_name.eve_id]['ores']:
                         player_data[i.character_name.eve_id]['ores'][i.type_name.name] = {
@@ -303,6 +328,23 @@ class OreTaxRates(models.Model):
         default=False,
         help_text="Calculate Tax on the base ore value for all variants of an ore."
     )
+    show_in_moon_values = models.BooleanField(
+        default=False,
+        help_text="Offer this profile when valuing scanned moons and suggesting rental prices."
+    )
+    drill_m3_per_hour = models.PositiveIntegerField(
+        null=True, blank=True, default=None,
+        help_text="Moon value extraction rate. Blank uses MOONS_DRILL_M3_PER_HOUR (40,000 for an "
+                  "Athanor/Tatara). A Metenox harvests 30,000 at 40% refine, moon materials only."
+    )
+    # suggested rent, on Moon Values, New Rental and the Discord commands
+    rent_subtract_metenox_fuel = models.BooleanField(
+        default=False, help_text="Suggested rent: subtract 30 days of Metenox fuel from the tax.")
+    rent_profit_share = models.DecimalField(
+        max_digits=5, decimal_places=2, default=100,
+        help_text="Suggested rent: percent of (tax - fuel) charged as rent.")
+    rent_minimum = models.BigIntegerField(
+        default=0, help_text="Suggested rent: lowest rent suggested, in ISK.")
     def __str__(self):
         try:
             return self.tag
@@ -337,6 +379,10 @@ class MiningTax(models.Model):
     use_variable_tax = models.BooleanField(default=False)
     flat_tax_rate = models.DecimalField(
         max_digits=5, decimal_places=2, default=0.0)  # best
+    flat_tax_on_base_ore_value = models.BooleanField(
+        default=False,
+        help_text="Flat rate only: tax every variant of an ore (e.g. jackpot moon ore) at its base ore's value. "
+                  "Variable rates use their Ore Tax Rates' 'Tax on base ore value' instead.")
     region = models.ForeignKey(
         Region, on_delete=models.CASCADE, related_name='tax_region', null=True, default=None, blank=True)
     constellation = models.ForeignKey(
@@ -368,6 +414,8 @@ class MiningTax(models.Model):
             rate = "Variable ({})".format(self.tax_rate.tag)
         else:
             rate = "of {}%".format(self.flat_tax_rate*100)
+            if self.flat_tax_on_base_ore_value:
+                rate += " on base ore value"
         return "Rank {3}: Mining Tax {0} for all `{1}` structures within, {2}".format(rate, corp, area, self.rank)
 
 
@@ -544,6 +592,25 @@ class ExtendedJsonEncoder(DjangoJSONEncoder):
         return super().default(o)
 
 
+class RentalRepricing(SingletonModel):
+    """Run settings for the reprice_rentals task. Which rentals get repriced, and
+    under which ore tax, is each rental's reprice method."""
+    dry_run = models.BooleanField(
+        default=False, help_text="Only post the projected prices: change no rentals and message no renters.")
+    notify_renters = models.BooleanField(
+        default=True, help_text="DM each renter their moons' new prices (needs the Discord bot).")
+    channel_id = models.BigIntegerField(
+        null=True, blank=True, help_text="Discord channel ID for the run summary (needs the Discord bot).")
+    last_run = models.DateTimeField(null=True, blank=True, editable=False)
+
+    class Meta:
+        verbose_name = "rental repricing settings"
+        verbose_name_plural = "rental repricing settings"
+
+    def __str__(self):
+        return "Rental repricing settings"
+
+
 class MoonRental(models.Model):
     note = models.TextField()
     contact = models.ForeignKey(EveCharacter, on_delete=models.CASCADE)
@@ -553,6 +620,10 @@ class MoonRental(models.Model):
     price = models.BigIntegerField(default=100000000)
     start_date = models.DateTimeField()
     end_date = models.DateTimeField(default=None, null=True, blank=True)
+    reprice_method = models.ForeignKey(
+        OreTaxRates, on_delete=SET_NULL, null=True, blank=True, default=None, related_name="+",
+        help_text="The reprice_rentals task sets the price to this ore tax's suggested rent. "
+                  "Empty: never repriced.")
     last_invoice = models.ForeignKey(
         Invoice, on_delete=SET_NULL, default=None, null=True, blank=True)
 
@@ -623,3 +694,48 @@ class MoonRental(models.Model):
             send_message(msg, app_settings.get_rental_discord_channel())
 
         return f"Invoiced Moon Rentals, {total_known} to known Users, and {total_unknown} to unknown Users."
+
+
+class MoonScan(models.Model):
+    """The current probe scan of a moon. Compositions only change after big
+    game patches, so a moon keeps a single scan that re-imports replace."""
+    moon = models.OneToOneField(Moon, on_delete=models.CASCADE, related_name="scan")
+    added_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    added_at = models.DateTimeField()
+
+    def __str__(self):
+        return f"{self.moon.name} scan"
+
+
+class MoonScanOre(models.Model):
+    scan = models.ForeignKey(MoonScan, on_delete=models.CASCADE, related_name="ores")
+    ore = models.ForeignKey(ItemType, on_delete=models.CASCADE)
+    # stored exactly as pasted; compositions under 100% are normal and never scaled
+    fraction = models.DecimalField(max_digits=13, decimal_places=12)
+
+    class Meta:
+        unique_together = ("scan", "ore")
+
+
+class MoonAvailability(models.Model):
+    """Whether a moon is offered for rent. Moons without a row are unavailable.
+    Separate from renting: a rented moon's availability applies once its rental ends."""
+    moon = models.OneToOneField(Moon, on_delete=models.CASCADE, related_name="rental_availability")
+    available = models.BooleanField(default=False)
+    note = models.TextField(blank=True, default="")
+    changed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    changed_at = models.DateTimeField()
+
+    class Meta:
+        verbose_name_plural = "moon availability"
+
+    def __str__(self):
+        return f"{self.moon.name}: {'available' if self.available else 'unavailable'}"
+
+    @classmethod
+    def available_ids(cls, moon_ids=None):
+        """Ids of moons marked available, of `moon_ids` if given."""
+        qs = cls.objects.filter(available=True)
+        if moon_ids is not None:
+            qs = qs.filter(moon_id__in=moon_ids)
+        return set(qs.values_list("moon_id", flat=True))

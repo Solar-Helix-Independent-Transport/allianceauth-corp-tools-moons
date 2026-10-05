@@ -1,0 +1,10 @@
+<localized hint="OE-9UF IV - Moon 14">OE-9UF IV - Lune 14</localized>
+    <localized hint="Pollucite">Pollucite</localized>    0.334263443947    45504    30002008    40128163    40128179
+    <localized hint="Sperrylite">Sperrylite</localized>    0.284777760506    45499    30002008    40128163    40128179
+    <localized hint="Titanite">Titanite</localized>    0.162188977003    45496    30002008    40128163    40128179
+    <localized hint="Zeolites">Zeolites</localized>    0.218769803643    45490    30002008    40128163    40128179
+<localized hint="PFU-LH IV - Moon 8">PFU-LH IV - Lune 8</localized>
+    <localized hint="Scheelite">Scheelite</localized>    0.215440452099    45497    30002009    40128217    40128225
+    <localized hint="Sylvite">Sylvite</localized>    0.212406739593    45491    30002009    40128217    40128225
+    <localized hint="Titanite">Titanite</localized>    0.397391051054    45496    30002009    40128217    40128225
+    <localized hint="Zeolites">Zeolites</localized>    0.174761772156    45490    30002009    40128217    40128225

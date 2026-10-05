@@ -1,23 +1,23 @@
 {
-  "_@libs-rfllBq4_.js": {
-    "file": "assets/@libs-rfllBq4_.js",
+  "_@libs-BS9u3p7B.js": {
+    "file": "assets/@libs-BS9u3p7B.js",
     "name": "@libs"
   },
-  "_@react-router-BiKtSVvI.js": {
-    "file": "assets/@react-router-BiKtSVvI.js",
+  "_@react-router-ZMHK-D4k.js": {
+    "file": "assets/@react-router-ZMHK-D4k.js",
     "name": "@react-router",
     "imports": [
-      "_@libs-rfllBq4_.js"
+      "_@libs-BS9u3p7B.js"
     ]
   },
   "index.html": {
-    "file": "assets/index-DB5y5nSW.js",
+    "file": "assets/index-CJK65GUG.js",
     "name": "index",
     "src": "index.html",
     "isEntry": true,
     "imports": [
-      "_@libs-rfllBq4_.js",
-      "_@react-router-BiKtSVvI.js"
+      "_@libs-BS9u3p7B.js",
+      "_@react-router-ZMHK-D4k.js"
     ],
     "css": [
       "static/moons/css/index-Dx_0aYek.css"

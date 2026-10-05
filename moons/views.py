@@ -52,9 +52,23 @@ def observers(request):
     return render(request, 'moons/observers.html', context=context)
 
 
+# any of these opens the Moon Board; the menu item shows for the same users
+MOON_BOARD_PERMS = (
+    "moons.view_available", "moons.view_corp", "moons.view_alliance", "moons.view_all",
+    "moons.view_limited_future", "moons.view_moonscan", "moons.add_moonscan",
+    "moons.view_moonrental", "moons.add_moonrental", "moons.change_moonrental",
+)
+
+
+def can_view_moon_board(user):
+    return any(user.has_perm(perm) for perm in MOON_BOARD_PERMS)
+
+
 @login_required
-@permission_required("moons.view_available")
 def react(request):
+    # permission_required would send logged in users back to login, round and round
+    if not can_view_moon_board(request.user):
+        raise PermissionDenied("You do not have permission to view the Moon Board.")
     context = {
         "version": __version__,
         "app_name": "moons",

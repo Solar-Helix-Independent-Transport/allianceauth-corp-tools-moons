@@ -1,0 +1,5 @@
+Moon    Moon Product    Quantity    Ore TypeID    SolarSystemID    PlanetID    MoonID
+Helgatild IX - Moon 12
+    Euxenite    0.111999601126    45495    30002063    40131683    40131695
+    Sylvite    0.211025685072    45491    30002063    40131683    40131695
+    Xenotime    0.176974713802    45510    30002063    40131683    40131695

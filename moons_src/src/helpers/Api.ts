@@ -1,4 +1,5 @@
 import axios from "axios";
+import Cookies from "js-cookie";
 
 axios.defaults.xsrfHeaderName = "X-CSRFToken";
 
@@ -98,6 +99,140 @@ export async function getAdminOutstanding() {
 
 export async function getRentals() {
   const api = await axios.get(`/m/api/rental/list`);
+
+  return api.data;
+}
+
+// ninja's django_auth enforces CSRF on POST
+const csrf = () => ({ headers: { "X-CSRFToken": Cookies.get("csrftoken") ?? "" } });
+
+export async function postScanPreview(text: string) {
+  const api = await axios.post(`/m/api/scans/preview`, { text }, csrf());
+
+  return api.data;
+}
+
+export async function postScanImport(text: string) {
+  const api = await axios.post(`/m/api/scans/import`, { text }, csrf());
+
+  return api.data;
+}
+
+export async function getScanProfiles() {
+  const api = await axios.get(`/m/api/scans/profiles`);
+
+  return api.data;
+}
+
+export async function getScanRegions() {
+  const api = await axios.get(`/m/api/scans/regions`);
+
+  return api.data;
+}
+
+export async function getScanValues(taxRate: number, regionId: number) {
+  const api = await axios.get(`/m/api/scans/values`, {
+    params: { tax_rate: taxRate, region_id: regionId },
+  });
+
+  return api.data;
+}
+
+export async function getRentalSuggestion(moonId: number, taxRate: number) {
+  const api = await axios.get(`/m/api/scans/suggestion`, {
+    params: { moon_id: moonId, tax_rate: taxRate },
+  });
+
+  return api.data;
+}
+
+export async function postNewRental(rental: {
+  moon_id: number;
+  contact_id: number;
+  corporation_id: number;
+  price: number;
+  note: string;
+  reprice_method_id: number | null;
+  allow_unavailable?: boolean;
+}) {
+  const form = new URLSearchParams();
+  Object.entries(rental).forEach(([k, v]) => v != null && form.append(k, String(v)));
+  const api = await axios.post(`/m/api/rental/new`, form, csrf());
+
+  return api.data;
+}
+
+export async function getScanCoverage() {
+  const api = await axios.get(`/m/api/scans/coverage`);
+
+  return api.data;
+}
+
+export async function getMissingScans(regionId: number) {
+  const api = await axios.get(`/m/api/scans/coverage/${regionId}`);
+
+  return api.data;
+}
+
+export async function postRepriceMethod(rentalId: number, repriceMethodId: number | null) {
+  const form = new URLSearchParams();
+  if (repriceMethodId !== null) form.append("reprice_method_id", String(repriceMethodId));
+  const api = await axios.post(`/m/api/rental/${rentalId}/reprice_method`, form, csrf());
+
+  return api.data;
+}
+
+export async function postEndRentals(rentalIds: Array<number>, note: string) {
+  const api = await axios.post(`/m/api/rental/end`, { rental_ids: rentalIds, note }, csrf());
+
+  return api.data;
+}
+
+export async function postNewRentals(body: {
+  contact_id: number;
+  corporation_id: number;
+  note: string;
+  reprice_method_id: number | null;
+  moons: Array<{ moon_id: number; price: number }>;
+  allow_unavailable: boolean;
+}) {
+  const api = await axios.post(`/m/api/rental/new/bulk`, body, csrf());
+
+  return api.data;
+}
+
+export async function postMoonLookup(taxRate: number, names: Array<string>) {
+  const api = await axios.post(
+    `/m/api/scans/values/lookup`,
+    { names },
+    { ...csrf(), params: { tax_rate: taxRate } }
+  );
+
+  return api.data;
+}
+
+export async function postMoonAvailability(
+  moonIds: Array<number>,
+  available: boolean,
+  note: string
+) {
+  const api = await axios.post(
+    `/m/api/rental/availability`,
+    { moon_ids: moonIds, available, note },
+    csrf()
+  );
+
+  return api.data;
+}
+
+export async function getMyRentals(taxRate: number) {
+  const api = await axios.get(`/m/api/rental/mine`, { params: { tax_rate: taxRate } });
+
+  return api.data;
+}
+
+export async function getAvailableMoons(taxRate: number) {
+  const api = await axios.get(`/m/api/rental/available`, { params: { tax_rate: taxRate } });
 
   return api.data;
 }

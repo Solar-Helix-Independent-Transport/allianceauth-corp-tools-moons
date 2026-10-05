@@ -51,7 +51,8 @@ export const OreProgress = ({
             {ore.type.cat}
           </Badge>
         </div>
-        <div className="progress my-1 w-100">
+        {/* taller than Bootstrap's 1rem so the percentage inside is readable (#12) */}
+        <div className="progress my-1 w-100" style={{ height: "1.5rem", fontSize: "0.9rem" }}>
           <div
             className={`progress-bar progress-bar-striped bg-info fw-bold ${
               OreColourMap[ore.type.cat_id as keyof typeof OreColourMap]

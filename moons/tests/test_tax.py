@@ -189,3 +189,49 @@ class TestVariableTaxMoons(TestCase):
         result = MiningObservation.tax_moons(self.start, self.end)
         # isk_value = OrePrice.price * quantity = 100 * 1000
         self.assertAlmostEqual(result['player_data'][9020]['totals_isk'], 100_000.0)
+
+
+class TestFlatTaxOnBaseOreValue(TestCase):
+    """Twinkling Scheelite (46295) is the jackpot variant of Scheelite (45497):
+    it refines into twice the minerals, so it is worth twice as much."""
+    fixtures = ["moons_sde"]
+
+    def setUp(self):
+        corp_info = EveCorporationInfo.objects.create(
+            corporation_id=1, corporation_name="Test Corp",
+            corporation_ticker="TST", member_count=10, ceo_id=1,
+        )
+        corp_audit = CorporationAudit.objects.create(corporation=corp_info)
+        structure = EveLocation.objects.create(location_id=1000000, location_name="Test Refinery")
+        char = EveName.objects.create(eve_id=9001, name="Test Miner", category="character")
+        jackpot = ItemType.objects.get(pk=46295)
+        self.scheelite = ItemType.objects.create(id=45497, name="Scheelite", group_id=jackpot.group_id)
+        OrePrice.objects.create(item=jackpot, price=200, goo_only=False)
+        self.base_price = OrePrice.objects.create(item=self.scheelite, price=100, goo_only=False)
+        self.tax = MiningTax.objects.create(
+            use_variable_tax=False, flat_tax_rate=0.10, rank=1, flat_tax_on_base_ore_value=True)
+
+        self.start = timezone.now() - timedelta(days=30)
+        self.end = timezone.now() + timedelta(days=1)
+        _make_observation(corp_audit, structure, char, jackpot, quantity=1000, last_updated=timezone.now())
+
+    def _player(self):
+        return MiningObservation.tax_moons(self.start, self.end)['player_data'][9001]
+
+    def test_jackpot_taxed_at_base_ore_value(self):
+        # 1,000 units at Scheelite's 100 x 10%, not Twinkling Scheelite's 200
+        self.assertAlmostEqual(self._player()['tax_isk'], 10_000.0)
+
+    def test_mined_value_stays_the_jackpot_value(self):
+        self.assertAlmostEqual(self._player()['totals_isk'], 200_000.0)
+
+    def test_without_the_option_jackpot_is_taxed_at_its_own_value(self):
+        self.tax.flat_tax_on_base_ore_value = False
+        self.tax.save()
+
+        self.assertAlmostEqual(self._player()['tax_isk'], 20_000.0)
+
+    def test_unpriced_base_ore_falls_back_to_own_value(self):
+        self.base_price.delete()
+
+        self.assertAlmostEqual(self._player()['tax_isk'], 20_000.0)

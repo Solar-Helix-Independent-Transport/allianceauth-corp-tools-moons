@@ -12,6 +12,16 @@ moon frack monitoring and taxation, taxation is calculated ( default, but config
 - Constellation Filter
 - System Filter
 - Moon Filter
+- Jackpot ore taxed like plain ore (see below)
+
+### Jackpot moon ore
+
+Jackpot ore (Glistening, Shining and so on) refines into twice the minerals of its base ore, so it is worth, and taxed at, twice as much. To tax it like the plain ore instead:
+
+- Variable rates: tick **Tax on base ore value** on the Ore Tax Rates profile.
+- Flat rates: tick **Flat tax on base ore value** on the Mining Tax.
+
+Either way, every variant of an ore is taxed at its base ore's value, while the mined value shown on invoices stays the real one.
 
 ## installation
 
@@ -92,3 +102,86 @@ Sets the bucket used in buy/sell ore calculations:
 - `MOONS_ORE_RATE_BUCKET="stddev"`
 - `MOONS_ORE_RATE_BUCKET="median"`
 - `MOONS_ORE_RATE_BUCKET="percentile"`
+
+## Moon Scans
+
+Import probe-scanner moon scans to rank moons by value and get rental price suggestions.
+
+### Importing
+
+In game, scan the moons with the probe scanner, select the results and copy them (Ctrl+C). Paste them into **Moons > Import Scans**, review, and confirm. Any client language works, and pastes relayed through Discord (tabs turned into spaces) are fine.
+
+- Moons with no scan yet are imported.
+- A re-import that matches the stored scan (to 4 decimal places) changes nothing; the original submitter keeps the credit.
+- A re-import that differs replaces the stored scan, but only for users with the change permission.
+- Unknown moons or ore types are rejected; ores that are no longer moon ores are kept and flagged.
+
+Compositions are stored exactly as scanned. Moons under 100% are normal and are never scaled up.
+
+Below the import, **Scan coverage** shows how many of a region's moons are scanned and lists the missing ones by system, so you know where to send scanners.
+
+### Moon values and rental suggestions
+
+**Moons > Moon Values** ranks the scanned moons of one region at a time by estimated value and tax per 30 days of extraction, priced under an Ore Tax Rates profile. In admin, tick **Show in moon values** on each profile you want to offer.
+
+- Value: ore price at the profile's refine rate (honouring "ignore ores in refine" and "tax on base ore value").
+- Tax: what the profile would tax that ore.
+- Rent: the suggested monthly rent under the profile's rent options (below).
+- Rental: **Rented** (who rents it and for how much, for rental admins), **Available** or **Unavailable**. Available moons have a **Rent** button for `moons.add_moonrental` that opens New Rental with the moon and the suggested rent filled in.
+
+#### Availability
+
+Moons are **unavailable** for rent until marked available. With `moons.change_moonrental`, tick moons on Moon Values and **Mark available** / **Mark unavailable** (optional note), or use **Mark from paste**. Who changed it and when is kept (see admin, Moon availability). Availability is separate from renting: a rented moon's availability applies once its rental ends. Renting an unavailable moon is allowed, after a warning and **Rent anyway**.
+
+#### Renters
+
+Users with only `moons.view_moonrental` see a renter view on **Rentals**: their own active rentals (contact is one of their characters) and every available, unrented moon, with value, tax and suggested rent under the Moon Values profile they pick. No notes or other renters are shown.
+
+To rent several moons to one renter, tick them and press **Rent N selected**: one contact, corporation, note and reprice method, with each moon's price starting at its suggested rent (editable). On **Rentals**, `moons.change_moonrental` can tick rentals and **Unrent N selected** with one required note. Ticking the header box selects every row matching the current filters. Both are all or nothing: if any moon was rented, or any rental ended, in the meantime, nothing changes and the error says which.
+
+Both pages also take a pasted list, one moon per line (e.g. `FM-JK5 IX - Moon 12`): **Rent from paste** on Moon Values finds the moons in any region and prices them under the selected profile (moons without a scan need a price typed in), and **Unrent from paste** on Rentals finds their active rentals. Lines that aren't moons, or are already rented / not rented, are listed and left out before you continue to the same bulk rent or unrent.
+
+When creating a rental from **Moons > Rentals > New Rental**, the same suggested rent under a chosen profile is shown. It is only a suggestion; the price you enter is what gets invoiced.
+
+### Discord commands
+
+- `/moons price <moon> [ore_tax] [explain]` values a scanned moon under one of the ore taxes shown on Moon Values (default: the first) and suggests its rent. `explain` shows every input per ore.
+- `/moons explain <moon> [ore_tax]` (same ore tax choices) works through the price step by step: the profile's inputs, then for each ore its units, OrePrice, value and tax (flagging stored ore taxes that no longer match prices), then Metenox fuel and the rent.
+- `/moons rental_recalc <region> [ore_tax] [exclude_corp]` (same ore tax choices) lists every active rental in a region with its current and suggested rent. It changes nothing.
+
+Moon Values, New Rental and these commands all suggest rent the same way: the 30 day tax, rounded to the nearest million, adjusted by these options on each tax profile:
+
+- **Rent subtract Metenox fuel**: subtract 30 days of Metenox fuel (magmatic gas and fuel blocks, Jita prices from Fuzzwork, cached for an hour) from the tax.
+- **Rent profit share**: the percent of what is left that is charged as rent.
+- **Rent minimum**: the lowest rent ever suggested.
+
+#### Repricing rentals
+
+Each rental has a **reprice method**: the ore tax profile whose suggested rent it should be charged, or empty to leave its price alone. Set it when creating a rental, in the Rentals table's **Reprice** column (`moons.change_moonrental`), or in admin.
+
+The `moons.tasks.reprice_rentals` task sets every active rental (price at least 1 ISK) that has a reprice method to that profile's suggested rent. Schedule it as a periodic task, e.g. monthly before invoicing. Its run settings are in admin under **Rental repricing settings** (created with the defaults on the first run):
+
+- **Dry run**: only post the projected prices.
+- **Notify renters** and **Channel ID**: DM each renter their new prices and post a run summary (needs the Discord bot).
+
+Each changed rental gets `YYYY/MM/DD - Old: x - New: y` added to its notes. Rentals whose contact isn't owned by an auth user, or whose moon has no scan, are listed in the summary and left alone.
+
+Fuel pricing settings: `MOONS_FUEL_BUY_SELL` (`"buy"`), `MOONS_FUEL_BUCKET` (`"percentile"`), `MOONS_FUEL_GAS_FACTOR` (`2`, softens gas above 10,000 ISK) and `MOONS_METENOX_GAS_PER_HOUR` (`200`).
+
+### Permissions
+
+| Permission                | Allows                                                        |
+| ------------------------- | ------------------------------------------------------------- |
+| `moons.add_moonscan`      | Import scans for moons that have none                         |
+| `moons.change_moonscan`   | Overwrite a moon's scan when a re-import differs              |
+| `moons.view_moonscan`     | See scan compositions and the Moon Values ranking (all moons) |
+| `moons.view_moonrental`   | Renter view: own rentals and available moons with prices      |
+| `moons.add_moonrental`    | Create rentals and see price suggestions                      |
+| `moons.change_moonrental` | Unrent (note required), set reprice method and availability   |
+
+### MOONS_DRILL_M3_PER_HOUR
+
+`MOONS_DRILL_M3_PER_HOUR = 40000`
+
+- The moon drill extraction rate used for values. 40,000 m3/h has applied to every Athanor and Tatara since December 2021; structure rigs don't change it.
+- A tax profile can set its own **Drill m3 per hour**, which wins over this setting. For Metenox moon drills, make a profile with drill m3 per hour `30000`, refine rate `40` and **ignore ores in refine** ticked (a Metenox outputs moon materials only, at 40% efficiency).
