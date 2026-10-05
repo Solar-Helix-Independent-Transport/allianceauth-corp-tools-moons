@@ -153,9 +153,10 @@ export async function postNewRental(rental: {
   price: number;
   note: string;
   reprice_method_id: number | null;
+  allow_unavailable?: boolean;
 }) {
   const form = new URLSearchParams();
-  Object.entries(rental).forEach(([k, v]) => v !== null && form.append(k, String(v)));
+  Object.entries(rental).forEach(([k, v]) => v != null && form.append(k, String(v)));
   const api = await axios.post(`/m/api/rental/new`, form, csrf());
 
   return api.data;
@@ -193,6 +194,7 @@ export async function postNewRentals(body: {
   note: string;
   reprice_method_id: number | null;
   moons: Array<{ moon_id: number; price: number }>;
+  allow_unavailable: boolean;
 }) {
   const api = await axios.post(`/m/api/rental/new/bulk`, body, csrf());
 
@@ -205,6 +207,32 @@ export async function postMoonLookup(taxRate: number, names: Array<string>) {
     { names },
     { ...csrf(), params: { tax_rate: taxRate } }
   );
+
+  return api.data;
+}
+
+export async function postMoonAvailability(
+  moonIds: Array<number>,
+  available: boolean,
+  note: string
+) {
+  const api = await axios.post(
+    `/m/api/rental/availability`,
+    { moon_ids: moonIds, available, note },
+    csrf()
+  );
+
+  return api.data;
+}
+
+export async function getMyRentals(taxRate: number) {
+  const api = await axios.get(`/m/api/rental/mine`, { params: { tax_rate: taxRate } });
+
+  return api.data;
+}
+
+export async function getAvailableMoons(taxRate: number) {
+  const api = await axios.get(`/m/api/rental/available`, { params: { tax_rate: taxRate } });
 
   return api.data;
 }

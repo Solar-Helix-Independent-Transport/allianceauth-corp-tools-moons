@@ -1,6 +1,6 @@
 import BaseTable from "../components/BaseTable/BaseTable";
 import ErrorBoundary from "../components/ErrorBoundary";
-import { ErrorLoader } from "../components/Loaders/Loaders";
+import { ErrorLoader, PanelLoader } from "../components/Loaders/Loaders";
 import { NewRentalModal } from "../components/NewRentalModal";
 import { PasteMoonsModal, PasteResult } from "../components/PasteMoonsModal";
 import { TimeAndSince } from "../components/TimeAndSince";
@@ -8,6 +8,7 @@ import { UnrentModal } from "../components/UnrentModal";
 import { getPerms, getRentals, getScanProfiles, postRepriceMethod } from "../helpers/Api";
 import { moonKey } from "../helpers/moonPaste";
 import { moonRental, taxProfile } from "../types";
+import RenterRentals from "./RenterRentals";
 import { RowSelectionState, createColumnHelper } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
 import { Badge, Button, Form, OverlayTrigger, Tooltip } from "react-bootstrap";
@@ -209,7 +210,7 @@ const rentalsFromPaste = (
   return result;
 };
 
-const Rentals = () => {
+const AdminRentals = () => {
   const [showInvalidOnly, setShowInvalidOnly] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const perms = useQuery(["perms"], () => getPerms(), { refetchOnWindowFocus: false });
@@ -320,6 +321,15 @@ const Rentals = () => {
       )}
     </ErrorBoundary>
   );
+};
+
+// rental admins manage every rental; renters (view_moonrental) see their own and what's on offer
+const Rentals = () => {
+  const perms = useQuery(["perms"], () => getPerms(), { refetchOnWindowFocus: false });
+  if (perms.isLoading) {
+    return <PanelLoader />;
+  }
+  return perms.data?.add_rentals || perms.data?.edit_rentals ? <AdminRentals /> : <RenterRentals />;
 };
 
 export default Rentals;

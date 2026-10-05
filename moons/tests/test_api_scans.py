@@ -10,11 +10,14 @@ from django.contrib.auth.models import Permission, User
 from django.test import TestCase
 from django.utils import timezone
 
+from allianceauth.authentication.models import CharacterOwnership
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 from allianceauth.tests.auth_utils import AuthUtils
 
 from moons.api import api
-from moons.models import MoonRental, MoonScan, OrePrice, OreTax, OreTaxRates
+from moons.models import (
+    MoonAvailability, MoonRental, MoonScan, OrePrice, OreTax, OreTaxRates,
+)
 from moons.rent import FuelPricesUnavailable
 
 MOON_1 = 40161708
@@ -191,15 +194,31 @@ class TestMoonValuesApi(TestCase):
 
         self.assertEqual((moon["rented"], moon["rented_by"], moon["rental_price"]), (True, None, None))
 
-    def test_rented_moon_shows_who_and_price_with_rental_view_permission(self):
+    def test_rented_moon_shows_who_and_price_to_rental_admins(self):
         self._rent()
         self.viewer.user_permissions.add(
-            Permission.objects.get_by_natural_key("view_moonrental", "moons", "moonrental"))
+            Permission.objects.get_by_natural_key("change_moonrental", "moons", "moonrental"))
 
         moon = self._values_moon(User.objects.get(pk=self.viewer.pk))  # fresh permission cache
 
         self.assertEqual((moon["rented"], moon["rented_by"], moon["rental_price"]),
                          (True, "Renter", 250_000_000))
+
+    def test_renters_do_not_see_who_rents_other_moons(self):
+        # view_moonrental is the renters' permission
+        self._rent()
+        self.viewer.user_permissions.add(
+            Permission.objects.get_by_natural_key("view_moonrental", "moons", "moonrental"))
+
+        moon = self._values_moon(User.objects.get(pk=self.viewer.pk))
+
+        self.assertEqual((moon["rented"], moon["rented_by"], moon["rental_price"]), (True, None, None))
+
+    def test_moons_are_unavailable_until_marked(self):
+        self.assertFalse(self._values_moon(self.viewer)["available"])
+        MoonAvailability.objects.create(moon=self.moon, available=True, changed_at=timezone.now())
+
+        self.assertTrue(self._values_moon(self.viewer)["available"])
 
     def test_ended_rental_is_available(self):
         self._rent(end_date=timezone.now())
@@ -315,6 +334,7 @@ class TestRentalSuggestionApi(TestCase):
         self.assertEqual(self._suggest(self.moon, self.hidden, self.renter).status_code, 404)
 
     def test_new_rental_stores_note(self):
+        MoonAvailability.objects.create(moon_id=MOON_1, available=True, changed_at=timezone.now())
         char = EveCharacter.objects.create(
             character_id=2112000001, character_name="Renter", corporation_id=2112000002,
             corporation_name="Renters", corporation_ticker="RENT")
@@ -494,6 +514,7 @@ class TestRepriceMethodApi(_ActiveRentalApiTestCase):
     def test_new_rental_with_reprice_method(self):
         self.rental.end_date = timezone.now()
         self.rental.save()
+        MoonAvailability.objects.create(moon_id=MOON_1, available=True, changed_at=timezone.now())
 
         response = self.client.post("/rental/new", data={
             "moon_id": MOON_1, "contact_id": 2112000001, "corporation_id": 2112000002,
@@ -551,7 +572,12 @@ class TestBulkRentalApi(_ActiveRentalApiTestCase):
         self.assertEqual(self._end(self.editor, [self.rental.id], note="  ").status_code, 400)
         self.assertEqual(self._end(self.editor, []).status_code, 400)
 
+    def _mark_available(self, *moons):
+        for moon in moons:
+            MoonAvailability.objects.create(moon=moon, available=True, changed_at=timezone.now())
+
     def test_bulk_rent_creates_each_moon_at_its_own_price(self):
+        self._mark_available(self.moon3, self.moon4)
         response = self._rent(self.adder, [(self.moon3, 150_000_000), (self.moon4, 90_000_000)],
                               reprice_method_id=self.profile.id)
 
@@ -630,3 +656,156 @@ class TestMoonLookupApi(TestCase):
 
     def test_lookup_needs_scan_view_permission(self):
         self.assertEqual(self._lookup(["Auga V - Moon 1"], user=AuthUtils.create_user("plain")).status_code, 403)
+
+
+class TestMoonAvailabilityApi(_ActiveRentalApiTestCase):
+    """The base rental is on Moon 1 (active); Moon 3 and 4 are free and unmarked."""
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        system = SolarSystem.objects.get(id=30002542)
+        cls.moon3 = Moon.objects.create(id=40161710, name="Auga V - Moon 3", solar_system=system)
+        cls.moon4 = Moon.objects.create(id=40161711, name="Auga V - Moon 4", solar_system=system)
+
+    def _mark(self, user, moons, available=True, note=""):
+        return self.client.post("/rental/availability", json={
+            "moon_ids": [m.id for m in moons], "available": available, "note": note}, user=user)
+
+    def _rent(self, moons, **extra):
+        return self.client.post("/rental/new/bulk", json={
+            "contact_id": 2112000001, "corporation_id": 2112000002,
+            "moons": [{"moon_id": m.id, "price": 100} for m in moons], **extra}, user=self.adder)
+
+    def test_mark_moons_available_records_who_and_note(self):
+        response = self._mark(self.editor, [self.moon3, self.moon4], note="Opening Auga")
+
+        self.assertEqual(response.status_code, 200)
+        marks = MoonAvailability.objects.filter(moon__in=[self.moon3, self.moon4])
+        self.assertEqual(
+            {(m.moon_id, m.available, m.note, m.changed_by_id) for m in marks},
+            {(self.moon3.id, True, "Opening Auga", self.editor.id),
+             (self.moon4.id, True, "Opening Auga", self.editor.id)})
+
+    def test_mark_unavailable_again_keeps_one_row(self):
+        self._mark(self.editor, [self.moon3])
+        self._mark(self.editor, [self.moon3], available=False)
+
+        self.assertEqual(list(MoonAvailability.objects.filter(moon=self.moon3).values_list("available", flat=True)),
+                         [False])
+
+    def test_marking_needs_change_permission(self):
+        self.assertEqual(self._mark(self.adder, [self.moon3]).status_code, 403)
+
+    def test_marking_unknown_moon_changes_nothing(self):
+        response = self.client.post("/rental/availability", json={
+            "moon_ids": [self.moon3.id, 999], "available": True}, user=self.editor)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(MoonAvailability.objects.exists())
+
+    def test_renting_unavailable_moons_is_refused_without_the_flag(self):
+        self._mark(self.editor, [self.moon3])
+
+        response = self._rent([self.moon3, self.moon4])
+
+        self.assertEqual(response.status_code, 409)
+        self.assertIn("Auga V - Moon 4", response.json())
+        self.assertFalse(MoonRental.objects.filter(moon__in=[self.moon3, self.moon4]).exists())
+
+    def test_renting_unavailable_moons_with_the_flag(self):
+        response = self._rent([self.moon3, self.moon4], allow_unavailable=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(MoonRental.objects.filter(moon__in=[self.moon3, self.moon4]).count(), 2)
+        # renting doesn't change availability
+        self.assertFalse(MoonAvailability.objects.exists())
+
+    def test_single_rent_of_unavailable_moon(self):
+        data = {"moon_id": self.moon3.id, "contact_id": 2112000001, "corporation_id": 2112000002,
+                "price": 100}
+
+        self.assertEqual(self.client.post("/rental/new", data=data, user=self.adder).status_code, 409)
+        response = self.client.post("/rental/new", data={**data, "allow_unavailable": True}, user=self.adder)
+        self.assertEqual(response.status_code, 200)
+
+
+class TestRenterApi(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        region = Region.objects.create(id=10000001, name="Test Region")
+        constellation = Constellation.objects.create(id=20000001, name="Test Constellation", region=region)
+        system = SolarSystem.objects.create(id=30002542, name="Auga", constellation=constellation)
+        cinnabar = ItemType.objects.create(
+            id=CINNABAR, name="Cinnabar", group=ItemGroup.objects.create(id=1922, name="Rare Moon Asteroids"))
+        cls.profile = _profile("Rental", True)
+        OrePrice.objects.create(item=cinnabar, price=Decimal("1000"))
+        OreTax.objects.create(item=cinnabar, tax=cls.profile, price=Decimal("100"))
+
+        def moon(n, scanned=True, available=False):
+            m = Moon.objects.create(id=40161700 + n, name=f"Auga V - Moon {n}", solar_system=system)
+            if scanned:
+                MoonScan.objects.create(moon=m, added_at=timezone.now()).ores.create(
+                    ore=cinnabar, fraction=Decimal("0.5"))
+            if available:
+                MoonAvailability.objects.create(moon=m, available=True, changed_at=timezone.now())
+            return m
+
+        cls.mine = moon(1)
+        cls.theirs = moon(2, available=True)  # available but rented by someone else
+        cls.offered = moon(3, available=True)
+        moon(4)  # never marked: unavailable
+        cls.offered_unscanned = moon(5, scanned=False, available=True)
+
+        corp = EveCorporationInfo.objects.create(
+            corporation_id=2112000002, corporation_name="Renters", corporation_ticker="RENT", member_count=1)
+        cls.renter = AuthUtils.create_user("renter")
+        cls.renter.user_permissions.add(
+            Permission.objects.get_by_natural_key("view_moonrental", "moons", "moonrental"))
+        alt = EveCharacter.objects.create(
+            character_id=2112000001, character_name="Renter Alt", corporation_id=2112000002,
+            corporation_name="Renters", corporation_ticker="RENT")
+        CharacterOwnership.objects.create(user=cls.renter, character=alt, owner_hash="renter-alt")
+        stranger = EveCharacter.objects.create(
+            character_id=2112000009, character_name="Stranger", corporation_id=2112000002,
+            corporation_name="Renters", corporation_ticker="RENT")
+        now = timezone.now()
+        MoonRental.objects.create(moon=cls.mine, contact=alt, corporation=corp, price=120_000_000,
+                                  start_date=now, note="secret admin note")
+        MoonRental.objects.create(moon=cls.theirs, contact=stranger, corporation=corp, price=99,
+                                  start_date=now, note="other renter")
+
+    def setUp(self):
+        self.client = TestClient(api)
+
+    def _get(self, path, user=None):
+        return self.client.get(f"{path}?tax_rate={self.profile.id}", user=user or self.renter)
+
+    def test_my_rentals_are_only_my_characters_with_value_and_no_notes(self):
+        [rental] = self._get("/rental/mine").json()
+
+        self.assertEqual(rental["moon"]["name"], "Auga V - Moon 1")
+        self.assertEqual((rental["price"], rental["value"], rental["tax"]), (120_000_000, 1_440_000_000, 144_000_000))
+        self.assertNotIn("note", rental)
+        self.assertNotIn("contact", rental)
+
+    def test_available_moons_are_marked_available_and_not_rented(self):
+        moons = {m["moon"]["name"]: m for m in self._get("/rental/available").json()}
+
+        self.assertEqual(set(moons), {"Auga V - Moon 3", "Auga V - Moon 5"})
+        offered = moons["Auga V - Moon 3"]
+        self.assertEqual((offered["value"], offered["tax"], offered["rent"], offered["rarity"]),
+                         (1_440_000_000, 144_000_000, 144_000_000, 32))
+        self.assertEqual(offered["ores"], [{"type_id": CINNABAR, "name": "Cinnabar", "fraction": 0.5}])
+        unscanned = moons["Auga V - Moon 5"]
+        self.assertEqual((unscanned["value"], unscanned["rent"], unscanned["ores"]), (None, None, []))
+
+    def test_renter_endpoints_need_view_rental_permission(self):
+        plain = AuthUtils.create_user("plain")
+        for path in ("/rental/mine", "/rental/available"):
+            self.assertEqual(self._get(path, user=plain).status_code, 403)
+
+    def test_renters_can_list_moon_values_profiles(self):
+        response = self.client.get("/scans/profiles", user=self.renter)
+
+        self.assertEqual([p["tag"] for p in response.json()], ["Rental"])

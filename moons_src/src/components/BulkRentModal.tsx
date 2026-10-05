@@ -2,7 +2,7 @@ import { getScanProfiles, postNewRentals, searchChars, searchCorps } from "../he
 import { taxProfile } from "../types";
 import { ApiSelect } from "./ApiSelect";
 import { useState } from "react";
-import { Alert, Button, Form, Modal, Table } from "react-bootstrap";
+import { Alert, Badge, Button, Form, Modal, Table } from "react-bootstrap";
 import { useQuery, useQueryClient } from "react-query";
 
 type Option = { label: string; value: number } | null;
@@ -13,6 +13,7 @@ export interface RentItem {
   name: string;
   place: string;
   suggested: number | null;
+  available: boolean;
 }
 
 export const rentItemFromValue = (m: {
@@ -20,11 +21,13 @@ export const rentItemFromValue = (m: {
   system: string;
   region: string;
   rent?: number;
+  available: boolean;
 }): RentItem => ({
   id: Number(m.moon.id),
   name: m.moon.name,
   place: `${m.system} - ${m.region}`,
   suggested: m.rent ?? null,
+  available: m.available,
 });
 
 // rent several moons to one contact, each at its own (suggested) price; all or nothing
@@ -47,6 +50,8 @@ export const BulkRentModal = ({
   );
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const unavailable = moons.filter((m) => !m.available);
+  const [rentAnyway, setRentAnyway] = useState(false);
 
   const profiles = useQuery(["scan-profiles"], () => getScanProfiles(), {
     refetchOnWindowFocus: false,
@@ -66,6 +71,7 @@ export const BulkRentModal = ({
         note,
         reprice_method_id: repriceMethodId,
         moons: moons.map((m) => ({ moon_id: m.id, price: Number(priceOf(m)) })),
+        allow_unavailable: rentAnyway,
       });
       queryClient.invalidateQueries(["rentals"]);
       queryClient.invalidateQueries(["scan-values"]);
@@ -124,6 +130,11 @@ export const BulkRentModal = ({
                 <tr key={m.id}>
                   <td>
                     {m.name}
+                    {!m.available && (
+                      <Badge bg="warning" text="dark" className="ms-1 fw-normal">
+                        unavailable
+                      </Badge>
+                    )}
                     <div className="text-muted">{m.place}</div>
                   </td>
                   <td className="text-end">
@@ -157,6 +168,20 @@ export const BulkRentModal = ({
           Prices start at each moon&apos;s suggested rent; moons without a scan need a price. If any
           moon has been rented in the meantime, nothing is rented.
         </Form.Text>
+        {unavailable.length > 0 && (
+          <Alert variant="warning" className="mt-2 mb-0">
+            {unavailable.length === moons.length ? "All" : unavailable.length} of these moons{" "}
+            {unavailable.length === 1 ? "is" : "are"} marked unavailable for rent:{" "}
+            {unavailable.map((m) => m.name).join(", ")}
+            <Form.Check
+              className="mt-2"
+              id="bulk-rent-anyway"
+              label="Rent anyway"
+              checked={rentAnyway}
+              onChange={(e) => setRentAnyway(e.target.checked)}
+            />
+          </Alert>
+        )}
         {error && (
           <Alert variant="danger" className="mt-2 mb-0">
             {error}
@@ -167,7 +192,12 @@ export const BulkRentModal = ({
         <Button variant="secondary" onClick={onHide}>
           Cancel
         </Button>
-        <Button disabled={!contact || !corp || !pricesValid || saving} onClick={rent}>
+        <Button
+          disabled={
+            !contact || !corp || !pricesValid || saving || (unavailable.length > 0 && !rentAnyway)
+          }
+          onClick={rent}
+        >
           Rent {moons.length} moons
         </Button>
       </Modal.Footer>

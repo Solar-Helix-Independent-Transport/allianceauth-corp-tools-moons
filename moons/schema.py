@@ -90,6 +90,7 @@ class NewMoonRental(Schema):
     price: Decimal
     note: str = ""
     reprice_method_id: Optional[int] = None
+    allow_unavailable: bool = False  # rent even if the moon is marked unavailable
 
 
 class EndMoonRental(Schema):
@@ -112,6 +113,13 @@ class NewMoonRentals(Schema):
     note: str = ""
     reprice_method_id: Optional[int] = None
     moons: List[BulkRentalMoon]
+    allow_unavailable: bool = False
+
+
+class SetMoonAvailability(Schema):
+    moon_ids: List[int]
+    available: bool
+    note: str = ""
 
 
 class SetRepriceMethod(Schema):
@@ -165,9 +173,10 @@ class ScannedMoonValue(Schema):
     added_at: datetime
     added_by: Optional[str]
     rarity: Optional[int]  # R-rating: 4, 8, 16, 32 or 64
+    available: bool  # marked available for rent
     rented: bool  # has an active rental
-    rented_by: Optional[str]  # contact; only with moons.view_moonrental
-    rental_price: Optional[int]  # only with moons.view_moonrental
+    rented_by: Optional[str]  # contact; only for rental admins
+    rental_price: Optional[int]  # only for rental admins
 
 
 class MoonNames(Schema):
@@ -178,6 +187,7 @@ class UnscannedMoon(Schema):
     moon: IdName
     system: str
     region: str
+    available: bool
     rented: bool
     rented_by: Optional[str]
     rental_price: Optional[int]
@@ -217,3 +227,26 @@ class ScannedRegion(Schema):
     id: int
     name: str
     moons: int
+
+
+class RenterRental(Schema):
+    """A renter's own rental: no notes."""
+    moon: IdName
+    system: str
+    region: str
+    value: Optional[float]  # 30 days under the selected profile; None without a scan
+    tax: Optional[float]
+    price: int
+    start_date: datetime
+
+
+class RenterMoon(Schema):
+    """A moon offered for rent: available and not rented."""
+    moon: IdName
+    system: str
+    region: str
+    rarity: Optional[int]
+    ores: List[MoonScanOre]
+    value: Optional[float]  # None without a scan
+    tax: Optional[float]
+    rent: Optional[int]  # suggested monthly rent

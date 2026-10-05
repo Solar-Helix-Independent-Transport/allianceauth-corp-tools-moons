@@ -92,6 +92,7 @@ export interface scannedMoonValue {
   added_at: string;
   added_by: string | null;
   rarity: number | null;
+  available: boolean;
   rented: boolean;
   rented_by: string | null;
   rental_price: number | null;
@@ -117,6 +118,7 @@ export interface unscannedMoon {
   moon: KeyVal;
   system: string;
   region: string;
+  available: boolean;
   rented: boolean;
   rented_by: string | null;
   rental_price: number | null;
@@ -125,4 +127,23 @@ export interface moonLookup {
   moons: Array<scannedMoonValue>;
   unscanned: Array<unscannedMoon>;
   unknown: Array<string>;
+}
+export interface renterRental {
+  moon: KeyVal;
+  system: string;
+  region: string;
+  value: number | null;
+  tax: number | null;
+  price: number;
+  start_date: string;
+}
+export interface renterMoon {
+  moon: KeyVal;
+  system: string;
+  region: string;
+  rarity: number | null;
+  ores: Array<{ type_id: number; name: string; fraction: number }>;
+  value: number | null;
+  tax: number | null;
+  rent: number | null;
 }

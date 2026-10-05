@@ -1,11 +1,12 @@
 from solo.admin import SingletonModelAdmin
 
 from django.contrib import admin
+from django.utils import timezone
 
 # Register your models here.
 from .models import (
-    InvoiceRecord, MiningTax, MoonFrack, MoonRental, OreTaxRates,
-    RentalRepricing,
+    InvoiceRecord, MiningTax, MoonAvailability, MoonFrack, MoonRental,
+    OreTaxRates, RentalRepricing,
 )
 from .tasks import invoice_single_moon
 
@@ -130,3 +131,18 @@ class RentalAdmin(admin.ModelAdmin):
 @admin.register(RentalRepricing)
 class RentalRepricingAdmin(SingletonModelAdmin):
     readonly_fields = ('last_run',)
+
+
+@admin.register(MoonAvailability)
+class MoonAvailabilityAdmin(admin.ModelAdmin):
+    list_display = ('moon', 'available', 'changed_by', 'changed_at', 'note')
+    list_filter = ('available', 'moon__solar_system__constellation__region')
+    list_select_related = ('moon', 'changed_by')
+    search_fields = ('moon__name', 'note')
+    raw_id_fields = ('moon',)
+    readonly_fields = ('changed_by', 'changed_at')
+
+    def save_model(self, request, obj, form, change):
+        obj.changed_by = request.user
+        obj.changed_at = timezone.now()
+        super().save_model(request, obj, form, change)

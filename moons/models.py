@@ -715,3 +715,27 @@ class MoonScanOre(models.Model):
 
     class Meta:
         unique_together = ("scan", "ore")
+
+
+class MoonAvailability(models.Model):
+    """Whether a moon is offered for rent. Moons without a row are unavailable.
+    Separate from renting: a rented moon's availability applies once its rental ends."""
+    moon = models.OneToOneField(Moon, on_delete=models.CASCADE, related_name="rental_availability")
+    available = models.BooleanField(default=False)
+    note = models.TextField(blank=True, default="")
+    changed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    changed_at = models.DateTimeField()
+
+    class Meta:
+        verbose_name_plural = "moon availability"
+
+    def __str__(self):
+        return f"{self.moon.name}: {'available' if self.available else 'unavailable'}"
+
+    @classmethod
+    def available_ids(cls, moon_ids=None):
+        """Ids of moons marked available, of `moon_ids` if given."""
+        qs = cls.objects.filter(available=True)
+        if moon_ids is not None:
+            qs = qs.filter(moon_id__in=moon_ids)
+        return set(qs.values_list("moon_id", flat=True))

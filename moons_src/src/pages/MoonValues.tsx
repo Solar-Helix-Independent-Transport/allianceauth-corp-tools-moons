@@ -2,9 +2,10 @@ import BaseTable from "../components/BaseTable/BaseTable";
 import { BulkRentModal, RentItem, rentItemFromValue } from "../components/BulkRentModal";
 import ErrorBoundary from "../components/ErrorBoundary";
 import { ErrorLoader, PanelLoader } from "../components/Loaders/Loaders";
+import { MarkAvailabilityModal, MarkItem } from "../components/MarkAvailabilityModal";
 import { NewRentalModal } from "../components/NewRentalModal";
-import { OreColourMap } from "../components/OreColourKey";
 import { PasteMoonsModal, PasteResult } from "../components/PasteMoonsModal";
+import { RarityBadge, rarityLabel } from "../components/RarityBadge";
 import {
   getPerms,
   getScanProfiles,
@@ -20,19 +21,6 @@ import { Alert, Badge, Button, Form } from "react-bootstrap";
 import { useQuery } from "react-query";
 
 const col: any = createColumnHelper<scannedMoonValue>();
-
-// R-rating -> moon ore group, to reuse the ore colour key
-const RARITY_GROUP: Record<number, number> = { 4: 1884, 8: 1920, 16: 1921, 32: 1922, 64: 1923 };
-const RARITY_NAME: Record<number, string> = {
-  4: "Ubiquitous",
-  8: "Common",
-  16: "Uncommon",
-  32: "Rare",
-  64: "Exceptional",
-};
-
-const rarityLabel = (rarity: number | null) =>
-  rarity ? `R${rarity} ${RARITY_NAME[rarity]}` : "None";
 
 const isk = (n: number) => `${Math.round(n).toLocaleString()} ISK`;
 
@@ -65,6 +53,9 @@ const rentalCell = (row: scannedMoonValue, onRent?: (row: scannedMoonValue) => v
       </span>
     );
   }
+  if (!row.available) {
+    return <Badge bg="dark">Unavailable</Badge>;
+  }
   return (
     <span className="d-flex gap-2 align-items-center">
       <Badge bg="success">Available</Badge>
@@ -76,6 +67,19 @@ const rentalCell = (row: scannedMoonValue, onRent?: (row: scannedMoonValue) => v
     </span>
   );
 };
+
+const rentalStatus = (row: { rented: boolean; available: boolean }) =>
+  row.rented ? "Rented" : row.available ? "Available" : "Unavailable";
+
+const markItemFrom = (m: {
+  moon: { id: string | number; name: string };
+  system: string;
+  region: string;
+}): MarkItem => ({
+  id: Number(m.moon.id),
+  name: m.moon.name,
+  place: `${m.system} - ${m.region}`,
+});
 
 const makeColumns = (onRent?: (row: scannedMoonValue) => void) => [
   col.accessor("moon.name", {
@@ -97,17 +101,7 @@ const makeColumns = (onRent?: (row: scannedMoonValue) => void) => [
   col.accessor((row: scannedMoonValue) => rarityLabel(row.rarity), {
     id: "rarity",
     header: "Rarity",
-    cell: (props: any) => {
-      const rarity: number | null = props.cell.row.original.rarity;
-      if (!rarity) {
-        return <span className="text-muted">-</span>;
-      }
-      return (
-        <Badge className={`${(OreColourMap as any)[RARITY_GROUP[rarity]]} fw-normal`}>
-          {rarityLabel(rarity)}
-        </Badge>
-      );
-    },
+    cell: (props: any) => <RarityBadge rarity={props.cell.row.original.rarity} />,
     sortingFn: (a: any, b: any) => (a.original.rarity ?? 0) - (b.original.rarity ?? 0),
   }),
   col.accessor((row: scannedMoonValue) => row.ores.map((o) => o.name).join(", "), {
@@ -147,8 +141,8 @@ const makeColumns = (onRent?: (row: scannedMoonValue) => void) => [
     cell: (props: any) => <span>{isk(props.getValue())}</span>,
     enableColumnFilter: false,
   }),
-  // filter on "Rented" / "Available"
-  col.accessor((row: scannedMoonValue) => (row.rented ? "Rented" : "Available"), {
+  // filter on "Rented" / "Available" / "Unavailable"
+  col.accessor(rentalStatus, {
     id: "rental",
     header: "Rental",
     cell: (props: any) => rentalCell(props.cell.row.original, onRent),
@@ -189,6 +183,19 @@ const rentablesFromPaste = (names: Array<string>, found: moonLookup): PasteResul
   return result;
 };
 
+// pasted names -> every moon found (to mark), in paste order, and names that aren't moons
+const markablesFromPaste = (names: Array<string>, found: moonLookup): PasteResult<MarkItem> => {
+  const byName = new Map<string, scannedMoonValue | unscannedMoon>();
+  [...found.moons, ...found.unscanned].forEach((m) => byName.set(moonKey(m.moon.name), m));
+  const result: PasteResult<MarkItem> = { matched: [], problems: [] };
+  names.forEach((name) => {
+    const moon = byName.get(moonKey(name));
+    if (moon) result.matched.push(markItemFrom(moon));
+    else result.problems.push({ name, why: "not a moon" });
+  });
+  return result;
+};
+
 const MoonValues = () => {
   const [profileId, setProfileId] = useState<number | null>(null);
   const [regionId, setRegionId] = useState<number | null>(null);
@@ -206,8 +213,13 @@ const MoonValues = () => {
   const [bulkRenting, setBulkRenting] = useState<Array<RentItem> | null>(null);
   // rows and suggested prices change with region and profile, so start a fresh selection
   const [selectedMoons, setSelectedMoons] = useState<RowSelectionState>({});
-  const [pasting, setPasting] = useState(false);
+  const [pasting, setPasting] = useState<"rent" | "mark" | null>(null);
+  const [marking, setMarking] = useState<{
+    moons: Array<MarkItem>;
+    available: boolean | null;
+  } | null>(null);
   const canRent: boolean = !!perms.data?.add_rentals;
+  const canMark: boolean = !!perms.data?.edit_rentals;
   const columns = useMemo(() => makeColumns(canRent ? setRenting : undefined), [canRent]);
 
   // one region at a time: all scanned moons together is far too much for one page
@@ -275,8 +287,13 @@ const MoonValues = () => {
           ))}
         </Form.Select>
         {canRent && selected !== undefined && (
-          <Button size="sm" variant="outline-primary" onClick={() => setPasting(true)}>
+          <Button size="sm" variant="outline-primary" onClick={() => setPasting("rent")}>
             Rent from paste
+          </Button>
+        )}
+        {canMark && selected !== undefined && (
+          <Button size="sm" variant="outline-secondary" onClick={() => setPasting("mark")}>
+            Mark from paste
           </Button>
         )}
         <span className="text-muted small ms-auto">
@@ -301,23 +318,58 @@ const MoonValues = () => {
           }
           exportFileName="MoonValues"
           selection={
-            canRent
+            canRent || canMark
               ? {
                   getRowId: (row: scannedMoonValue) => String(row.moon.id),
-                  canSelect: (row: scannedMoonValue) => !row.rented,
                   selected: selectedMoons,
                   onChange: setSelectedMoons,
-                  actions: (rows: Array<scannedMoonValue>) => (
-                    <Button size="sm" onClick={() => setBulkRenting(rows.map(rentItemFromValue))}>
-                      Rent {rows.length} selected
-                    </Button>
-                  ),
+                  actions: (rows: Array<scannedMoonValue>) => {
+                    // rented moons can be marked (it applies once they're free), not rented again
+                    const free = rows.filter((r) => !r.rented);
+                    return (
+                      <>
+                        {canMark && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="success"
+                              onClick={() =>
+                                setMarking({ moons: rows.map(markItemFrom), available: true })
+                              }
+                            >
+                              Mark available
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              onClick={() =>
+                                setMarking({ moons: rows.map(markItemFrom), available: false })
+                              }
+                            >
+                              Mark unavailable
+                            </Button>
+                          </>
+                        )}
+                        {canRent && free.length > 0 && (
+                          <Button
+                            size="sm"
+                            onClick={() => setBulkRenting(free.map(rentItemFromValue))}
+                          >
+                            Rent {free.length}
+                            {free.length < rows.length
+                              ? ` (${rows.length - free.length} rented)`
+                              : ""}
+                          </Button>
+                        )}
+                      </>
+                    );
+                  },
                 }
               : undefined
           }
         />
       )}
-      {pasting && (
+      {pasting === "rent" && (
         <PasteMoonsModal<RentItem>
           title="Rent moons from a list"
           help={`Paste the moons to rent; prices start at their suggested rent under ${profile?.tag}.`}
@@ -326,10 +378,33 @@ const MoonValues = () => {
             rentablesFromPaste(names, await postMoonLookup(selected!, names))
           }
           onContinue={(moons) => {
-            setPasting(false);
+            setPasting(null);
             setBulkRenting(moons);
           }}
-          onHide={() => setPasting(false)}
+          onHide={() => setPasting(null)}
+        />
+      )}
+      {pasting === "mark" && (
+        <PasteMoonsModal<MarkItem>
+          title="Set moon availability from a list"
+          help="Paste the moons to mark available or unavailable for rent."
+          continueLabel={(n) => `Choose availability for ${n} moon${n === 1 ? "" : "s"}…`}
+          resolve={async (names) =>
+            markablesFromPaste(names, await postMoonLookup(selected!, names))
+          }
+          onContinue={(moons) => {
+            setPasting(null);
+            setMarking({ moons, available: null });
+          }}
+          onHide={() => setPasting(null)}
+        />
+      )}
+      {marking && (
+        <MarkAvailabilityModal
+          moons={marking.moons}
+          initialAvailable={marking.available}
+          onHide={() => setMarking(null)}
+          onDone={() => setSelectedMoons({})}
         />
       )}
       {bulkRenting && (

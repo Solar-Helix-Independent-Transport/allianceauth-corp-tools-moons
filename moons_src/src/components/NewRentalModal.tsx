@@ -45,6 +45,9 @@ export const NewRentalModal = ({
   const [price, setPrice] = useState(initialPrice !== undefined ? String(initialPrice) : "");
   const [note, setNote] = useState("");
   const [repriceMethodId, setRepriceMethodId] = useState<number | null>(null);
+  // set once the server says the moon is marked unavailable; renting then needs "Rent anyway"
+  const [unavailable, setUnavailable] = useState(false);
+  const [rentAnyway, setRentAnyway] = useState(false);
   const [profileId, setProfileId] = useState<number | null>(initialProfileId ?? rememberedProfile);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -82,15 +85,26 @@ export const NewRentalModal = ({
         price: Number(price),
         note,
         reprice_method_id: repriceMethodId,
+        allow_unavailable: rentAnyway,
       });
       queryClient.invalidateQueries(["rentals"]);
       queryClient.invalidateQueries(["scan-values"]);
       onHide();
     } catch (e: any) {
-      setError(e?.response?.data ?? e.message);
+      if (e?.response?.status === 409 && String(e.response.data).includes("unavailable")) {
+        setUnavailable(true);
+      } else {
+        setError(e?.response?.data ?? e.message);
+      }
     } finally {
       setSaving(false);
     }
+  };
+
+  const pickMoon = (option: Option) => {
+    setMoon(option);
+    setUnavailable(false);
+    setRentAnyway(false);
   };
 
   const suggested: number | null | undefined = suggestion.data?.price;
@@ -111,7 +125,7 @@ export const NewRentalModal = ({
         </Form.Group>
         <Form.Group className="mb-2">
           <Form.Label>Moon</Form.Label>
-          <ApiSelect apiLookup={searchMoons} setValue={setMoon} defaultValue={initialMoon} />
+          <ApiSelect apiLookup={searchMoons} setValue={pickMoon} defaultValue={initialMoon} />
         </Form.Group>
         <Form.Group className="mb-2">
           <Form.Label>Note</Form.Label>
@@ -181,6 +195,18 @@ export const NewRentalModal = ({
         {moon && suggested === null && (
           <div className="small text-muted">No scan for this moon — no suggestion.</div>
         )}
+        {unavailable && (
+          <Alert variant="warning" className="mt-2 mb-0">
+            {moon?.label} is marked unavailable for rent.
+            <Form.Check
+              className="mt-2"
+              id="rent-anyway"
+              label="Rent anyway"
+              checked={rentAnyway}
+              onChange={(e) => setRentAnyway(e.target.checked)}
+            />
+          </Alert>
+        )}
         {error && (
           <Alert variant="danger" className="mt-2 mb-0">
             {error}
@@ -188,7 +214,10 @@ export const NewRentalModal = ({
         )}
       </Modal.Body>
       <Modal.Footer>
-        <Button disabled={!contact || !corp || !moon || !price || saving} onClick={create}>
+        <Button
+          disabled={!contact || !corp || !moon || !price || saving || (unavailable && !rentAnyway)}
+          onClick={create}
+        >
           Create
         </Button>
       </Modal.Footer>

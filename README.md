@@ -127,7 +127,15 @@ Below the import, **Scan coverage** shows how many of a region's moons are scann
 - Value: ore price at the profile's refine rate (honouring "ignore ores in refine" and "tax on base ore value").
 - Tax: what the profile would tax that ore.
 - Rent: the suggested monthly rent under the profile's rent options (below).
-- Rental: whether the moon is rented (who rents it and for how much with `moons.view_moonrental`). Available moons have a **Rent** button for `moons.add_moonrental` that opens New Rental with the moon and the suggested rent filled in.
+- Rental: **Rented** (who rents it and for how much, for rental admins), **Available** or **Unavailable**. Available moons have a **Rent** button for `moons.add_moonrental` that opens New Rental with the moon and the suggested rent filled in.
+
+#### Availability
+
+Moons are **unavailable** for rent until marked available. With `moons.change_moonrental`, tick moons on Moon Values and **Mark available** / **Mark unavailable** (optional note), or use **Mark from paste**. Who changed it and when is kept (see admin, Moon availability). Availability is separate from renting: a rented moon's availability applies once its rental ends. Renting an unavailable moon is allowed, after a warning and **Rent anyway**.
+
+#### Renters
+
+Users with only `moons.view_moonrental` see a renter view on **Rentals**: their own active rentals (contact is one of their characters) and every available, unrented moon, with value, tax and suggested rent under the Moon Values profile they pick. No notes or other renters are shown.
 
 To rent several moons to one renter, tick them and press **Rent N selected**: one contact, corporation, note and reprice method, with each moon's price starting at its suggested rent (editable). On **Rentals**, `moons.change_moonrental` can tick rentals and **Unrent N selected** with one required note. Ticking the header box selects every row matching the current filters. Both are all or nothing: if any moon was rented, or any rental ended, in the meantime, nothing changes and the error says which.
 
@@ -167,8 +175,9 @@ Fuel pricing settings: `MOONS_FUEL_BUY_SELL` (`"buy"`), `MOONS_FUEL_BUCKET` (`"p
 | `moons.add_moonscan`      | Import scans for moons that have none                         |
 | `moons.change_moonscan`   | Overwrite a moon's scan when a re-import differs              |
 | `moons.view_moonscan`     | See scan compositions and the Moon Values ranking (all moons) |
+| `moons.view_moonrental`   | Renter view: own rentals and available moons with prices      |
 | `moons.add_moonrental`    | Create rentals and see price suggestions                      |
-| `moons.change_moonrental` | See price suggestions, unrent moons (a note is required)      |
+| `moons.change_moonrental` | Unrent (note required), set reprice method and availability   |
 
 ### MOONS_DRILL_M3_PER_HOUR
 

@@ -27,7 +27,7 @@ const MoonPage = () => {
       <MoonMenu
         futureExtractions={data.view_observations}
         limitedFutureExtractions={data.view_limited_future}
-        rentals={data.view_rentals}
+        rentals={data.view_rentals || data.add_rentals || data.edit_rentals}
         importScans={data.import_scans}
         viewScans={data.view_scans}
         admin={data.su}
