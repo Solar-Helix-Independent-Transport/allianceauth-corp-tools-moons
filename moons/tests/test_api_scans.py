@@ -502,3 +502,131 @@ class TestRepriceMethodApi(_ActiveRentalApiTestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["reprice_method"], {"id": self.profile.id, "tag": "Rental"})
+
+
+class TestBulkRentalApi(_ActiveRentalApiTestCase):
+    """The base rental is on Moon 1; a second active rental is on Moon 2."""
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        system = SolarSystem.objects.get(id=30002542)
+        cls.moon2 = Moon.objects.create(id=40161709, name="Auga V - Moon 2", solar_system=system)
+        cls.moon3 = Moon.objects.create(id=40161710, name="Auga V - Moon 3", solar_system=system)
+        cls.moon4 = Moon.objects.create(id=40161711, name="Auga V - Moon 4", solar_system=system)
+        cls.rental2 = MoonRental.objects.create(
+            moon=cls.moon2, contact=cls.rental.contact, corporation=cls.rental.corporation,
+            price=200_000_000, start_date=timezone.now(), note="second")
+        cls.profile = _profile("Rental", True)
+
+    def _end(self, user, ids, note="Season over"):
+        return self.client.post("/rental/end", json={"rental_ids": ids, "note": note}, user=user)
+
+    def _rent(self, user, moons, **extra):
+        body = {"contact_id": 2112000001, "corporation_id": 2112000002, "note": "bulk",
+                "moons": [{"moon_id": m.id, "price": p} for m, p in moons], **extra}
+        return self.client.post("/rental/new/bulk", json=body, user=user)
+
+    def test_bulk_unrent_ends_all_with_the_note(self):
+        response = self._end(self.editor, [self.rental.id, self.rental2.id])
+
+        self.assertEqual(response.status_code, 200)
+        for rental in (self.rental, self.rental2):
+            rental.refresh_from_db()
+            self.assertIsNotNone(rental.end_date)
+            self.assertTrue(rental.note.endswith("\nUnrented, completed by Editor Main: Season over"))
+
+    def test_bulk_unrent_is_all_or_nothing(self):
+        self._end(self.editor, [self.rental2.id])
+
+        response = self._end(self.editor, [self.rental.id, self.rental2.id])
+
+        self.assertEqual(response.status_code, 409)
+        self.assertIn("Auga V - Moon 2", response.json())
+        self.rental.refresh_from_db()
+        self.assertIsNone(self.rental.end_date)
+
+    def test_bulk_unrent_needs_permission_and_note(self):
+        self.assertEqual(self._end(AuthUtils.create_user("plain"), [self.rental.id]).status_code, 403)
+        self.assertEqual(self._end(self.editor, [self.rental.id], note="  ").status_code, 400)
+        self.assertEqual(self._end(self.editor, []).status_code, 400)
+
+    def test_bulk_rent_creates_each_moon_at_its_own_price(self):
+        response = self._rent(self.adder, [(self.moon3, 150_000_000), (self.moon4, 90_000_000)],
+                              reprice_method_id=self.profile.id)
+
+        self.assertEqual(response.status_code, 200)
+        new = {r.moon_id: r for r in MoonRental.objects.filter(moon__in=[self.moon3, self.moon4])}
+        self.assertEqual({m: r.price for m, r in new.items()},
+                         {self.moon3.id: 150_000_000, self.moon4.id: 90_000_000})
+        self.assertTrue(all(r.note == "bulk" and r.reprice_method == self.profile for r in new.values()))
+
+    def test_bulk_rent_is_all_or_nothing(self):
+        response = self._rent(self.adder, [(self.moon3, 150_000_000), (self.moon2, 90_000_000)])
+
+        self.assertEqual(response.status_code, 409)
+        self.assertIn("Auga V - Moon 2", response.json())
+        self.assertFalse(MoonRental.objects.filter(moon=self.moon3).exists())
+
+    def test_bulk_rent_rejects_bad_input(self):
+        self.assertEqual(self._rent(self.adder, []).status_code, 400)
+        self.assertEqual(self._rent(self.adder, [(self.moon3, 1), (self.moon3, 2)]).status_code, 400)
+        self.assertEqual(self._rent(self.adder, [(self.moon3, -1)]).status_code, 400)
+        self.assertEqual(self._rent(self.adder, [(self.moon3, 1)], corporation_id=1).status_code, 400)
+        self.assertEqual(self._rent(AuthUtils.create_user("plain2"), [(self.moon3, 1)]).status_code, 403)
+
+
+class TestMoonLookupApi(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        region = Region.objects.create(id=10000001, name="Test Region")
+        constellation = Constellation.objects.create(id=20000001, name="Test Constellation", region=region)
+        system = SolarSystem.objects.create(id=30002542, name="Auga", constellation=constellation)
+        other = SolarSystem.objects.create(
+            id=30000002, name="Elsewhere",
+            constellation=Constellation.objects.create(
+                id=20000002, name="Far", region=Region.objects.create(id=10000002, name="Other Region")))
+        cls.scanned = Moon.objects.create(id=MOON_1, name="Auga V - Moon 1", solar_system=system)
+        cls.far = Moon.objects.create(id=40000099, name="Elsewhere I - Moon 1", solar_system=other)
+        cls.unscanned = Moon.objects.create(id=40161709, name="Auga V - Moon 2", solar_system=system)
+        cinnabar = ItemType.objects.create(
+            id=CINNABAR, name="Cinnabar", group=ItemGroup.objects.create(id=1922, name="Rare Moon Asteroids"))
+        cls.profile = _profile("Rental", True)
+        OrePrice.objects.create(item=cinnabar, price=Decimal("1000"))
+        OreTax.objects.create(item=cinnabar, tax=cls.profile, price=Decimal("100"))
+        for moon in (cls.scanned, cls.far):
+            MoonScan.objects.create(moon=moon, added_at=timezone.now()).ores.create(
+                ore=cinnabar, fraction=Decimal("0.5"))
+        char = EveCharacter.objects.create(
+            character_id=2112000001, character_name="Renter", corporation_id=2112000002,
+            corporation_name="Renters", corporation_ticker="RENT")
+        corp = EveCorporationInfo.objects.create(
+            corporation_id=2112000002, corporation_name="Renters", corporation_ticker="RENT", member_count=1)
+        MoonRental.objects.create(moon=cls.far, contact=char, corporation=corp, price=5, start_date=timezone.now())
+        cls.viewer = AuthUtils.create_user("scan_viewer")
+        cls.viewer.user_permissions.add(_perm("view_moonscan"))
+
+    def setUp(self):
+        self.client = TestClient(api)
+
+    def _lookup(self, names, user=None):
+        return self.client.post(f"/scans/values/lookup?tax_rate={self.profile.id}",
+                                json={"names": names}, user=user or self.viewer)
+
+    def test_matches_names_from_any_region_ignoring_case_and_spaces(self):
+        response = self._lookup(["  auga v - moon 1 ", "Elsewhere I - Moon 1"])
+
+        moons = {m["moon"]["name"]: m for m in response.json()["moons"]}
+        self.assertEqual(set(moons), {"Auga V - Moon 1", "Elsewhere I - Moon 1"})
+        self.assertEqual(moons["Auga V - Moon 1"]["rent"], 144000000)
+        self.assertFalse(moons["Auga V - Moon 1"]["rented"])
+        self.assertTrue(moons["Elsewhere I - Moon 1"]["rented"])
+
+    def test_unscanned_and_unknown_names_come_back_separately(self):
+        response = self._lookup(["Auga V - Moon 2", "Not A Moon", ""]).json()
+
+        self.assertEqual([m["moon"]["name"] for m in response["unscanned"]], ["Auga V - Moon 2"])
+        self.assertEqual(response["unknown"], ["Not A Moon"])
+
+    def test_lookup_needs_scan_view_permission(self):
+        self.assertEqual(self._lookup(["Auga V - Moon 1"], user=AuthUtils.create_user("plain")).status_code, 403)

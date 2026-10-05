@@ -96,6 +96,24 @@ class EndMoonRental(Schema):
     note: str
 
 
+class EndMoonRentals(Schema):
+    rental_ids: List[int]
+    note: str
+
+
+class BulkRentalMoon(Schema):
+    moon_id: int
+    price: int
+
+
+class NewMoonRentals(Schema):
+    contact_id: int
+    corporation_id: int
+    note: str = ""
+    reprice_method_id: Optional[int] = None
+    moons: List[BulkRentalMoon]
+
+
 class SetRepriceMethod(Schema):
     reprice_method_id: Optional[int] = None  # None: stop repricing
 
@@ -150,6 +168,25 @@ class ScannedMoonValue(Schema):
     rented: bool  # has an active rental
     rented_by: Optional[str]  # contact; only with moons.view_moonrental
     rental_price: Optional[int]  # only with moons.view_moonrental
+
+
+class MoonNames(Schema):
+    names: List[str]
+
+
+class UnscannedMoon(Schema):
+    moon: IdName
+    system: str
+    region: str
+    rented: bool
+    rented_by: Optional[str]
+    rental_price: Optional[int]
+
+
+class MoonLookup(Schema):
+    moons: List[ScannedMoonValue]
+    unscanned: List[UnscannedMoon]
+    unknown: List[str]  # pasted names that aren't moons
 
 
 class ScannedMoonValues(Schema):

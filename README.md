@@ -129,6 +129,10 @@ Below the import, **Scan coverage** shows how many of a region's moons are scann
 - Rent: the suggested monthly rent under the profile's rent options (below).
 - Rental: whether the moon is rented (who rents it and for how much with `moons.view_moonrental`). Available moons have a **Rent** button for `moons.add_moonrental` that opens New Rental with the moon and the suggested rent filled in.
 
+To rent several moons to one renter, tick them and press **Rent N selected**: one contact, corporation, note and reprice method, with each moon's price starting at its suggested rent (editable). On **Rentals**, `moons.change_moonrental` can tick rentals and **Unrent N selected** with one required note. Ticking the header box selects every row matching the current filters. Both are all or nothing: if any moon was rented, or any rental ended, in the meantime, nothing changes and the error says which.
+
+Both pages also take a pasted list, one moon per line (e.g. `FM-JK5 IX - Moon 12`): **Rent from paste** on Moon Values finds the moons in any region and prices them under the selected profile (moons without a scan need a price typed in), and **Unrent from paste** on Rentals finds their active rentals. Lines that aren't moons, or are already rented / not rented, are listed and left out before you continue to the same bulk rent or unrent.
+
 When creating a rental from **Moons > Rentals > New Rental**, the same suggested rent under a chosen profile is shown. It is only a suggestion; the price you enter is what gets invoiced.
 
 ### Discord commands

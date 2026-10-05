@@ -9,9 +9,11 @@ from ninja import Form, NinjaAPI
 from ninja.security import django_auth
 
 from django.conf import settings
+from django.db import transaction
 from django.db.models import (
     Count, ExpressionWrapper, F, FloatField, OuterRef, Subquery, Sum,
 )
+from django.db.models.functions import Lower
 from django.utils import timezone
 
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
@@ -22,6 +24,9 @@ from moons.helpers import OreHelper, what_frack_id
 from . import app_settings, models, rent, scans, schema
 
 logger = logging.getLogger(__name__)
+
+# a pasted list of moons; the alliance's moons in a few regions are a few hundred
+MAX_LOOKUP_NAMES = 2000
 
 
 api = NinjaAPI(title="MoonTool API", version="0.0.1",
@@ -491,6 +496,20 @@ def post_moon_rental_new(request, rental: schema.NewMoonRental = Form(...)):
     }
 
 
+def _who(user):
+    try:
+        return user.profile.main_character.character_name
+    except AttributeError:
+        return user.username
+
+
+def _end_rental(rental, user, note):
+    rental.end_date = timezone.now()
+    rental.note += f"\nUnrented, completed by {_who(user)}: {note}"
+    rental.save()
+    logger.info(f"{user} unrented {rental.moon.name}: {note}")
+
+
 @api.post(
     "/rental/{rental_id}/reprice_method",
     response={200: str, 400: str, 403: str, 404: str},
@@ -529,15 +548,82 @@ def post_moon_rental_end(request, rental_id: int, body: schema.EndMoonRental = F
     rental = models.MoonRental.objects.filter(id=rental_id, end_date__isnull=True).select_related("moon").first()
     if not rental:
         return 404, "No active rental found."
-    try:
-        who = request.user.profile.main_character.character_name
-    except AttributeError:
-        who = request.user.username
-    rental.end_date = timezone.now()
-    rental.note += f"\nUnrented, completed by {who}: {note}"
-    rental.save()
-    logger.info(f"{request.user} unrented {rental.moon.name}: {note}")
+    _end_rental(rental, request.user, note)
     return 200, f"Unrented {rental.moon.name}"
+
+
+@api.post(
+    "/rental/end",
+    response={200: str, 400: str, 403: str, 409: str},
+    tags=["Rentals"]
+)
+def post_moon_rentals_end(request, body: schema.EndMoonRentals):
+    """Unrent several rentals with one note. All or nothing."""
+    if not request.user.has_perm("moons.change_moonrental"):
+        return 403, "Permission Denied!"
+    note = body.note.strip()
+    if not note:
+        return 400, "A note is required to unrent a moon."
+    ids = set(body.rental_ids)
+    if not ids:
+        return 400, "No rentals selected."
+    with transaction.atomic():
+        rentals = list(models.MoonRental.objects.select_for_update().filter(
+            id__in=ids, end_date__isnull=True).select_related("moon"))
+        gone = ids - {r.id for r in rentals}
+        if gone:
+            names = models.MoonRental.objects.filter(id__in=gone).values_list("moon__name", flat=True)
+            return 409, ("Nothing was unrented: no longer active: "
+                         f"{', '.join(sorted(names)) or ', '.join(str(i) for i in sorted(gone))}")
+        for rental in rentals:
+            _end_rental(rental, request.user, note)
+    return 200, f"Unrented {len(rentals)} moon{'s' if len(rentals) != 1 else ''}"
+
+
+@api.post(
+    "/rental/new/bulk",
+    response={200: str, 400: str, 403: str, 409: str},
+    tags=["Rentals"]
+)
+def post_moon_rentals_new(request, body: schema.NewMoonRentals):
+    """Rent several moons to one contact, each at its own price. All or nothing."""
+    if not request.user.has_perm("moons.add_moonrental"):
+        return 403, "Permission Denied!"
+    prices = {m.moon_id: m.price for m in body.moons}
+    if not prices:
+        return 400, "No moons selected."
+    if len(prices) != len(body.moons):
+        return 400, "A moon is listed twice."
+    if any(price < 0 for price in prices.values()):
+        return 400, "Prices can't be negative."
+    char = EveCharacter.objects.filter(character_id=body.contact_id).first()
+    if not char:
+        return 400, "Character Unknown to Auth"
+    corp = EveCorporationInfo.objects.filter(corporation_id=body.corporation_id).first()
+    if not corp:
+        return 400, "Corporation Unknown to Auth"
+    if body.reprice_method_id and not models.OreTaxRates.objects.filter(id=body.reprice_method_id).exists():
+        return 400, "Unknown reprice method"
+    moons = Moon.objects.in_bulk(prices)
+    if unknown := sorted(set(prices) - set(moons)):
+        return 400, f"Unknown moon {', '.join(str(m) for m in unknown)}"
+
+    with transaction.atomic():
+        rented = sorted(models.MoonRental.objects.select_for_update().filter(
+            moon_id__in=prices, end_date__isnull=True).values_list("moon__name", flat=True))
+        if rented:
+            return 409, f"Nothing was rented: already rented: {', '.join(rented)}"
+        now = timezone.now()
+        models.MoonRental.objects.bulk_create(
+            models.MoonRental(
+                moon_id=moon_id, contact=char, corporation=corp, price=price, note=body.note,
+                reprice_method_id=body.reprice_method_id, start_date=now,
+            )
+            for moon_id, price in prices.items()
+        )
+    logger.info(f"{request.user} rented {len(prices)} moons to {char}: "
+                f"{', '.join(moons[m].name for m in prices)}")
+    return 200, f"Rented {len(prices)} moon{'s' if len(prices) != 1 else ''} to {char.character_name}"
 
 
 @api.get(
@@ -770,6 +856,54 @@ def get_missing_scans(request, region_id: int):
     ]
 
 
+def _active_rentals(**moon_filter):
+    """moon id -> (contact name, price) of active rentals."""
+    return {
+        moon_id: (contact, price) for moon_id, contact, price in models.MoonRental.objects.filter(
+            end_date__isnull=True, **moon_filter,
+        ).values_list("moon_id", "contact__character_name", "price")
+    }
+
+
+def _rental_status(user, moon_id, rentals):
+    # whether a moon is taken is fine to show; who rents it and for how much is not
+    rental = rentals.get(moon_id) if user.has_perm("moons.view_moonrental") else None
+    return {
+        "rented": moon_id in rentals,
+        "rented_by": rental[0] if rental else None,
+        "rental_price": rental[1] if rental else None,
+    }
+
+
+def _scan_value_row(user, v, profile, fuel, rentals):
+    return {
+        "moon": {"id": v.moon_id, "name": v.name},
+        "system": v.system,
+        "region": v.region,
+        "value": v.value_30d,
+        "tax": v.tax_30d,
+        "rent": rent.rent_breakdown(v.tax_30d, profile, fuel).final,
+        "total_fraction": v.total_fraction,
+        "ores": [{"type_id": t, "name": n, "fraction": f} for t, n, f in v.ores],
+        "unpriced": v.unpriced,
+        "added_at": v.added_at,
+        "added_by": v.added_by,
+        "rarity": v.rarity,
+        **_rental_status(user, v.moon_id, rentals),
+    }
+
+
+def _values_profile(tax_rate):
+    """(profile, fuel, None), or (None, None, (status, message)) to return."""
+    profile = models.OreTaxRates.objects.filter(id=tax_rate, show_in_moon_values=True).first()
+    if not profile:
+        return None, None, (404, "Tax profile not offered for moon values")
+    try:
+        return profile, rent.fuel_for(profile), None
+    except rent.FuelPricesUnavailable as e:
+        return None, None, (503, str(e))
+
+
 @api.get(
     "/scans/values",
     response={200: schema.ScannedMoonValues, 403: str, 404: str, 503: str},
@@ -778,43 +912,54 @@ def get_missing_scans(request, region_id: int):
 def get_scan_values(request, tax_rate: int, region_id: int):
     if not request.user.has_perm("moons.view_moonscan"):
         return 403, "Permission Denied!"
-    profile = models.OreTaxRates.objects.filter(id=tax_rate, show_in_moon_values=True).first()
-    if not profile:
-        return 404, "Tax profile not offered for moon values"
-    try:
-        fuel = rent.fuel_for(profile)
-    except rent.FuelPricesUnavailable as e:
-        return 503, str(e)
+    profile, fuel, problem = _values_profile(tax_rate)
+    if problem:
+        return problem
     prices_updated = models.OrePrice.objects.order_by("-last_update").values_list(
         "last_update", flat=True).first()
-    rentals = {
-        moon_id: (contact, price) for moon_id, contact, price in models.MoonRental.objects.filter(
-            end_date__isnull=True, moon__solar_system__constellation__region_id=region_id,
-        ).values_list("moon_id", "contact__character_name", "price")
-    }
-    # whether a moon is taken is fine to show; who rents it and for how much is not
-    see_rentals = request.user.has_perm("moons.view_moonrental")
+    rentals = _active_rentals(moon__solar_system__constellation__region_id=region_id)
     return 200, {"prices_updated": prices_updated, "fuel_30d": fuel.total_30d if fuel else None, "moons": [
-        {
-            "moon": {"id": v.moon_id, "name": v.name},
-            "system": v.system,
-            "region": v.region,
-            "value": v.value_30d,
-            "tax": v.tax_30d,
-            "rent": rent.rent_breakdown(v.tax_30d, profile, fuel).final,
-            "total_fraction": v.total_fraction,
-            "ores": [{"type_id": t, "name": n, "fraction": f} for t, n, f in v.ores],
-            "unpriced": v.unpriced,
-            "added_at": v.added_at,
-            "added_by": v.added_by,
-            "rarity": v.rarity,
-            "rented": v.moon_id in rentals,
-            "rented_by": rentals[v.moon_id][0] if see_rentals and v.moon_id in rentals else None,
-            "rental_price": rentals[v.moon_id][1] if see_rentals and v.moon_id in rentals else None,
-        }
+        _scan_value_row(request.user, v, profile, fuel, rentals)
         # one region at a time: tens of thousands of scanned moons won't fit in one response
         for v in scans.moon_values(profile, region_id=region_id)
     ]}
+
+
+@api.post(
+    "/scans/values/lookup",
+    response={200: schema.MoonLookup, 400: str, 403: str, 404: str, 503: str},
+    tags=["Scans"]
+)
+def post_scan_values_lookup(request, body: schema.MoonNames, tax_rate: int):
+    """Moon Values rows for pasted moon names, from any region. Moons without a scan
+    and names that aren't moons are returned separately."""
+    if not request.user.has_perm("moons.view_moonscan"):
+        return 403, "Permission Denied!"
+    if len(body.names) > MAX_LOOKUP_NAMES:
+        return 400, f"Paste at most {MAX_LOOKUP_NAMES:,} moons at once."
+    profile, fuel, problem = _values_profile(tax_rate)
+    if problem:
+        return problem
+    wanted = {name.strip().lower(): name.strip() for name in body.names if name.strip()}
+    found = {
+        name.lower(): (moon_id, name, system, region)
+        for moon_id, name, system, region in Moon.objects.annotate(lname=Lower("name")).filter(
+            lname__in=wanted).values_list(
+            "id", "name", "solar_system__name", "solar_system__constellation__region__name")
+    }
+    moon_ids = [m[0] for m in found.values()]
+    rentals = _active_rentals(moon_id__in=moon_ids)
+    values = {v.moon_id: v for v in scans.moon_values(profile, moon_ids=moon_ids)}
+    return 200, {
+        "moons": [_scan_value_row(request.user, values[m[0]], profile, fuel, rentals)
+                  for m in found.values() if m[0] in values],
+        "unscanned": [
+            {"moon": {"id": moon_id, "name": name}, "system": system, "region": region,
+             **_rental_status(request.user, moon_id, rentals)}
+            for moon_id, name, system, region in found.values() if moon_id not in values
+        ],
+        "unknown": [name for key, name in wanted.items() if key not in found],
+    }
 
 
 @api.get(

@@ -1,11 +1,20 @@
 import BaseTable from "../components/BaseTable/BaseTable";
+import { BulkRentModal, RentItem, rentItemFromValue } from "../components/BulkRentModal";
 import ErrorBoundary from "../components/ErrorBoundary";
 import { ErrorLoader, PanelLoader } from "../components/Loaders/Loaders";
 import { NewRentalModal } from "../components/NewRentalModal";
 import { OreColourMap } from "../components/OreColourKey";
-import { getPerms, getScanProfiles, getScanRegions, getScanValues } from "../helpers/Api";
-import { scannedMoonValue, scannedRegion, taxProfile } from "../types";
-import { createColumnHelper } from "@tanstack/react-table";
+import { PasteMoonsModal, PasteResult } from "../components/PasteMoonsModal";
+import {
+  getPerms,
+  getScanProfiles,
+  getScanRegions,
+  getScanValues,
+  postMoonLookup,
+} from "../helpers/Api";
+import { moonKey } from "../helpers/moonPaste";
+import { moonLookup, scannedMoonValue, scannedRegion, taxProfile, unscannedMoon } from "../types";
+import { RowSelectionState, createColumnHelper } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
 import { Alert, Badge, Button, Form } from "react-bootstrap";
 import { useQuery } from "react-query";
@@ -159,6 +168,27 @@ const makeColumns = (onRent?: (row: scannedMoonValue) => void) => [
   }),
 ];
 
+// pasted names -> moons to rent (in paste order) and lines that can't be rented
+const rentablesFromPaste = (names: Array<string>, found: moonLookup): PasteResult<RentItem> => {
+  const byName = new Map<string, scannedMoonValue | unscannedMoon>();
+  [...found.moons, ...found.unscanned].forEach((m) => byName.set(moonKey(m.moon.name), m));
+  const result: PasteResult<RentItem> = { matched: [], problems: [] };
+  names.forEach((name) => {
+    const moon = byName.get(moonKey(name));
+    if (!moon) {
+      result.problems.push({ name, why: "not a moon" });
+    } else if (moon.rented) {
+      result.problems.push({
+        name: moon.moon.name,
+        why: `already rented${moon.rented_by ? ` by ${moon.rented_by}` : ""}`,
+      });
+    } else {
+      result.matched.push(rentItemFromValue(moon));
+    }
+  });
+  return result;
+};
+
 const MoonValues = () => {
   const [profileId, setProfileId] = useState<number | null>(null);
   const [regionId, setRegionId] = useState<number | null>(null);
@@ -173,6 +203,10 @@ const MoonValues = () => {
   const profile: taxProfile | undefined = profiles.data?.find((p: taxProfile) => p.id === selected);
   const perms = useQuery(["perms"], () => getPerms(), { refetchOnWindowFocus: false });
   const [renting, setRenting] = useState<scannedMoonValue | null>(null);
+  const [bulkRenting, setBulkRenting] = useState<Array<RentItem> | null>(null);
+  // rows and suggested prices change with region and profile, so start a fresh selection
+  const [selectedMoons, setSelectedMoons] = useState<RowSelectionState>({});
+  const [pasting, setPasting] = useState(false);
   const canRent: boolean = !!perms.data?.add_rentals;
   const columns = useMemo(() => makeColumns(canRent ? setRenting : undefined), [canRent]);
 
@@ -213,7 +247,10 @@ const MoonValues = () => {
         <Form.Select
           style={{ width: 260 }}
           value={regionId ?? ""}
-          onChange={(e) => setRegionId(e.target.value ? Number(e.target.value) : null)}
+          onChange={(e) => {
+            setSelectedMoons({});
+            setRegionId(e.target.value ? Number(e.target.value) : null);
+          }}
         >
           <option value="">— pick a region —</option>
           {(regions.data ?? []).map((r: scannedRegion) => (
@@ -226,7 +263,10 @@ const MoonValues = () => {
         <Form.Select
           style={{ width: 260 }}
           value={selected}
-          onChange={(e) => setProfileId(Number(e.target.value))}
+          onChange={(e) => {
+            setSelectedMoons({});
+            setProfileId(Number(e.target.value));
+          }}
         >
           {profiles.data.map((p: taxProfile) => (
             <option key={p.id} value={p.id}>
@@ -234,6 +274,11 @@ const MoonValues = () => {
             </option>
           ))}
         </Form.Select>
+        {canRent && selected !== undefined && (
+          <Button size="sm" variant="outline-primary" onClick={() => setPasting(true)}>
+            Rent from paste
+          </Button>
+        )}
         <span className="text-muted small ms-auto">
           Per 30 days
           {values.data?.prices_updated &&
@@ -255,6 +300,43 @@ const MoonValues = () => {
             { sorting: [{ id: "value", desc: true }], pagination: { pageSize: 25 } } as any
           }
           exportFileName="MoonValues"
+          selection={
+            canRent
+              ? {
+                  getRowId: (row: scannedMoonValue) => String(row.moon.id),
+                  canSelect: (row: scannedMoonValue) => !row.rented,
+                  selected: selectedMoons,
+                  onChange: setSelectedMoons,
+                  actions: (rows: Array<scannedMoonValue>) => (
+                    <Button size="sm" onClick={() => setBulkRenting(rows.map(rentItemFromValue))}>
+                      Rent {rows.length} selected
+                    </Button>
+                  ),
+                }
+              : undefined
+          }
+        />
+      )}
+      {pasting && (
+        <PasteMoonsModal<RentItem>
+          title="Rent moons from a list"
+          help={`Paste the moons to rent; prices start at their suggested rent under ${profile?.tag}.`}
+          continueLabel={(n) => `Rent ${n} moon${n === 1 ? "" : "s"}…`}
+          resolve={async (names) =>
+            rentablesFromPaste(names, await postMoonLookup(selected!, names))
+          }
+          onContinue={(moons) => {
+            setPasting(false);
+            setBulkRenting(moons);
+          }}
+          onHide={() => setPasting(false)}
+        />
+      )}
+      {bulkRenting && (
+        <BulkRentModal
+          moons={bulkRenting}
+          onHide={() => setBulkRenting(null)}
+          onDone={() => setSelectedMoons({})}
         />
       )}
       {renting && (

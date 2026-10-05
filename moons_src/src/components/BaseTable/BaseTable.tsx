@@ -6,6 +6,7 @@ import {
   HeaderGroup,
   PaginationInitialTableState,
   Table as ReactTable,
+  RowSelectionState,
   SortingTableState,
   VisibilityTableState,
   flexRender,
@@ -19,12 +20,14 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { stringify } from "csv-stringify/browser/esm/sync";
+import { ReactNode, useEffect, useRef } from "react";
 import {
   Button,
   ButtonGroup,
   ButtonToolbar,
   Col,
   Dropdown,
+  Form,
   OverlayTrigger,
   Row,
   SplitButton,
@@ -59,6 +62,47 @@ const exportToCSV = (table: ReactTable<any>, exportFileName: string) => {
 
 type tableInitialState = SortingTableState | VisibilityTableState | PaginationInitialTableState;
 
+// opt in to tick boxes on rows; the page owns the selection so it can act on it and clear it
+export interface TableSelection {
+  getRowId: (row: any) => string;
+  selected: RowSelectionState;
+  onChange: (selected: RowSelectionState) => void;
+  canSelect?: (row: any) => boolean;
+  // bulk action buttons, shown while something is selected
+  actions?: (rows: Array<any>) => ReactNode;
+}
+
+const TickBox = ({
+  checked,
+  indeterminate = false,
+  disabled = false,
+  onChange,
+  label,
+}: {
+  checked: boolean;
+  indeterminate?: boolean;
+  disabled?: boolean;
+  onChange: (e: any) => void;
+  label: string;
+}) => {
+  const ref = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (ref.current) ref.current.indeterminate = indeterminate && !checked;
+  }, [indeterminate, checked]);
+  return (
+    <Form.Check
+      ref={ref}
+      aria-label={label}
+      checked={checked}
+      disabled={disabled}
+      onChange={onChange}
+    />
+  );
+};
+
+// the tick box sits right of the grid row so pages keep their 12 column layouts
+const SELECT_WIDTH = "2rem";
+
 export interface BaseTableProps extends Partial<HTMLElement> {
   isLoading?: boolean;
   isFetching?: boolean;
@@ -71,6 +115,7 @@ export interface BaseTableProps extends Partial<HTMLElement> {
   asyncExpandFunction?: any;
   initialState?: tableInitialState;
   exportFileName?: string;
+  selection?: TableSelection;
 }
 
 interface _BaseTableProps extends BaseTableProps {
@@ -84,6 +129,7 @@ const BaseTable = ({
   columns,
   initialState = undefined,
   exportFileName = undefined,
+  selection = undefined,
 }: BaseTableProps) => {
   const initState: tableInitialState = initialState ?? { pagination: { pageSize: 15 } };
 
@@ -99,11 +145,19 @@ const BaseTable = ({
     getFacetedMinMaxValues: getFacetedMinMaxValues(),
     debugTable,
     initialState: initState,
+    ...(selection && {
+      getRowId: selection.getRowId,
+      enableRowSelection: (row: any) =>
+        selection.canSelect ? selection.canSelect(row.original) : true,
+      state: { rowSelection: selection.selected },
+      onRowSelectionChange: (updater: any) =>
+        selection.onChange(typeof updater === "function" ? updater(selection.selected) : updater),
+    }),
   });
 
   return (
     <_baseTable
-      {...{ table, data, columns, isFetching, debugTable, initialState, exportFileName }}
+      {...{ table, data, columns, isFetching, debugTable, initialState, exportFileName, selection }}
     />
   );
 };
@@ -113,8 +167,14 @@ function _baseTable({
   isFetching = false,
   debugTable = false,
   exportFileName = undefined,
+  data = [],
+  selection = undefined,
 }: _BaseTableProps) {
   const { rows } = table.getRowModel();
+  // ids left over from rows that have since gone (e.g. after a refresh) don't count
+  const selectedRows: Array<any> = selection
+    ? data.filter((row: any) => selection.selected[selection.getRowId(row)])
+    : [];
   const location = useLocation();
   const fileName = exportFileName ?? `ExportedData_${location.pathname}`;
   const pageSize = table.getState().pagination.pageSize;
@@ -122,48 +182,90 @@ function _baseTable({
   return (
     <>
       {/* Header */}
+      {selection && selectedRows.length > 0 && (
+        <div className="d-flex flex-wrap align-items-center gap-2 mb-2 p-2 border rounded bg-body-tertiary">
+          <strong>{selectedRows.length} selected</strong>
+          <Button size="sm" variant="link" className="p-0" onClick={() => selection.onChange({})}>
+            Clear
+          </Button>
+          <div className="ms-auto d-flex gap-2">{selection.actions?.(selectedRows)}</div>
+        </div>
+      )}
       {table.getHeaderGroups().map((headerGroup: HeaderGroup<any>) => (
-        <Row key={headerGroup.id} className="pb-2 mb-1 border-bottom fw-semibold align-items-end">
-          {headerGroup.headers.map((header: Header<any, any> | any) => (
-            <Col key={header.id} className={`col-12 ${header.column.columnDef.width ?? "col-xl"}`}>
-              {header.isPlaceholder ? null : (
-                <>
-                  <div
-                    className={`d-flex align-items-center gap-1 ${
-                      header.column.getCanSort() ? `${tableStyles.sortable} user-select-none` : ""
-                    }`}
-                    onClick={header.column.getToggleSortingHandler()}
-                  >
-                    {header.column.getCanSort() && (
-                      <i
-                        className={`fas fa-fw ${
-                          header.column.getIsSorted() === "asc"
-                            ? "fa-sort-down"
-                            : header.column.getIsSorted() === "desc"
-                            ? "fa-sort-up"
-                            : "fa-sort text-muted"
-                        }`}
-                      />
+        <div key={headerGroup.id} className="d-flex align-items-end border-bottom pb-2 mb-1">
+          <Row className={`flex-grow-1 fw-semibold align-items-end ${selection ? "me-0" : ""}`}>
+            {headerGroup.headers.map((header: Header<any, any> | any) => (
+              <Col
+                key={header.id}
+                className={`col-12 ${header.column.columnDef.width ?? "col-xl"}`}
+              >
+                {header.isPlaceholder ? null : (
+                  <>
+                    <div
+                      className={`d-flex align-items-center gap-1 ${
+                        header.column.getCanSort() ? `${tableStyles.sortable} user-select-none` : ""
+                      }`}
+                      onClick={header.column.getToggleSortingHandler()}
+                    >
+                      {header.column.getCanSort() && (
+                        <i
+                          className={`fas fa-fw ${
+                            header.column.getIsSorted() === "asc"
+                              ? "fa-sort-down"
+                              : header.column.getIsSorted() === "desc"
+                              ? "fa-sort-up"
+                              : "fa-sort text-muted"
+                          }`}
+                        />
+                      )}
+                      {flexRender(header.column.columnDef.header, header.getContext())}
+                    </div>
+                    {header.column.getCanFilter() && (
+                      <Filter column={header.column} table={table} />
                     )}
-                    {flexRender(header.column.columnDef.header, header.getContext())}
-                  </div>
-                  {header.column.getCanFilter() && <Filter column={header.column} table={table} />}
-                </>
-              )}
-            </Col>
-          ))}
-        </Row>
+                  </>
+                )}
+              </Col>
+            ))}
+          </Row>
+          {selection && (
+            <div style={{ width: SELECT_WIDTH, flexShrink: 0 }}>
+              <TickBox
+                label="Select all matching rows"
+                checked={table.getIsAllRowsSelected()}
+                indeterminate={table.getIsSomeRowsSelected()}
+                onChange={table.getToggleAllRowsSelectedHandler()}
+              />
+            </div>
+          )}
+        </div>
       ))}
 
       {/* Data rows */}
       {rows.map((row) => (
-        <Row key={row.id} className={`py-2 border-top align-items-center ${tableStyles.tableRow}`}>
-          {row.getVisibleCells().map((cell: any) => (
-            <Col key={cell.id} className={`col-12 ${cell.column.columnDef.width ?? "col-xl"}`}>
-              {flexRender(cell.column.columnDef.cell, cell.getContext())}
-            </Col>
-          ))}
-        </Row>
+        <div
+          key={row.id}
+          className={`d-flex align-items-center border-top ${tableStyles.tableRow}`}
+        >
+          <Row className={`flex-grow-1 py-2 align-items-center ${selection ? "me-0" : ""}`}>
+            {row.getVisibleCells().map((cell: any) => (
+              <Col key={cell.id} className={`col-12 ${cell.column.columnDef.width ?? "col-xl"}`}>
+                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+              </Col>
+            ))}
+          </Row>
+          {selection && (
+            <div style={{ width: SELECT_WIDTH, flexShrink: 0 }}>
+              {row.getCanSelect() && (
+                <TickBox
+                  label="Select row"
+                  checked={row.getIsSelected()}
+                  onChange={row.getToggleSelectedHandler()}
+                />
+              )}
+            </div>
+          )}
+        </div>
       ))}
 
       {/* Empty state */}

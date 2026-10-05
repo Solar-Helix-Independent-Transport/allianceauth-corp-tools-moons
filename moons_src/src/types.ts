@@ -113,3 +113,16 @@ export interface missingMoon {
   system: string;
   constellation: string;
 }
+export interface unscannedMoon {
+  moon: KeyVal;
+  system: string;
+  region: string;
+  rented: boolean;
+  rented_by: string | null;
+  rental_price: number | null;
+}
+export interface moonLookup {
+  moons: Array<scannedMoonValue>;
+  unscanned: Array<unscannedMoon>;
+  unknown: Array<string>;
+}

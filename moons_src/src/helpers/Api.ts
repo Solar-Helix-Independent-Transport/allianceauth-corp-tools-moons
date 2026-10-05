@@ -161,14 +161,6 @@ export async function postNewRental(rental: {
   return api.data;
 }
 
-export async function postEndRental(rentalId: number, note: string) {
-  const form = new URLSearchParams();
-  form.append("note", note);
-  const api = await axios.post(`/m/api/rental/${rentalId}/end`, form, csrf());
-
-  return api.data;
-}
-
 export async function getScanCoverage() {
   const api = await axios.get(`/m/api/scans/coverage`);
 
@@ -185,6 +177,34 @@ export async function postRepriceMethod(rentalId: number, repriceMethodId: numbe
   const form = new URLSearchParams();
   if (repriceMethodId !== null) form.append("reprice_method_id", String(repriceMethodId));
   const api = await axios.post(`/m/api/rental/${rentalId}/reprice_method`, form, csrf());
+
+  return api.data;
+}
+
+export async function postEndRentals(rentalIds: Array<number>, note: string) {
+  const api = await axios.post(`/m/api/rental/end`, { rental_ids: rentalIds, note }, csrf());
+
+  return api.data;
+}
+
+export async function postNewRentals(body: {
+  contact_id: number;
+  corporation_id: number;
+  note: string;
+  reprice_method_id: number | null;
+  moons: Array<{ moon_id: number; price: number }>;
+}) {
+  const api = await axios.post(`/m/api/rental/new/bulk`, body, csrf());
+
+  return api.data;
+}
+
+export async function postMoonLookup(taxRate: number, names: Array<string>) {
+  const api = await axios.post(
+    `/m/api/scans/values/lookup`,
+    { names },
+    { ...csrf(), params: { tax_rate: taxRate } }
+  );
 
   return api.data;
 }
