@@ -157,9 +157,7 @@ const RenterRentals = () => {
             isFetching={offered.isFetching}
             columns={offerColumns}
             data={offered.data ?? []}
-            initialState={
-              { sorting: [{ id: "value", desc: true }], pagination: { pageSize: 25 } } as any
-            }
+            initialState={{ sorting: [{ id: "value", desc: true }], pagination: { pageSize: 25 } }}
             exportFileName="AvailableMoons"
           />
         </Card.Body>

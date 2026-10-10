@@ -4,11 +4,9 @@ import {
   ColumnDef,
   Header,
   HeaderGroup,
-  PaginationInitialTableState,
+  InitialTableState,
   Table as ReactTable,
   RowSelectionState,
-  SortingTableState,
-  VisibilityTableState,
   flexRender,
   getCoreRowModel,
   getFacetedMinMaxValues,
@@ -26,11 +24,9 @@ import {
   ButtonGroup,
   ButtonToolbar,
   Col,
-  Dropdown,
   Form,
   OverlayTrigger,
   Row,
-  SplitButton,
   Tooltip,
 } from "react-bootstrap";
 import { useLocation } from "react-router-dom";
@@ -39,28 +35,31 @@ function TableTooltip(message: string) {
   return <Tooltip id="table_tooltip">{message}</Tooltip>;
 }
 
+// exports what the user is looking at: every page, but only rows that pass the current filters
 const exportToCSV = (table: ReactTable<any>, exportFileName: string) => {
-  const { rows } = table.getCoreRowModel();
+  const { rows } = table.getFilteredRowModel();
 
-  const headerRows = table
-    .getHeaderGroups()
-    .map((headerGroup: HeaderGroup<any>) =>
-      headerGroup.headers.map((header: Header<any, any>) => header.column.columnDef.header)
-    );
-  const csvData = rows.map((row: any) => row.getVisibleCells().map((cell: any) => cell.getValue()));
+  const headerRows = table.getHeaderGroups().map((headerGroup: HeaderGroup<any>) =>
+    headerGroup.headers.map((header: Header<any, any>) => {
+      // a rendered header can't go in a csv, fall back to the column's key
+      if (typeof header.column.columnDef.header === "function") {
+        return (header.column.columnDef as { accessorKey?: string }).accessorKey;
+      }
+      return header.column.columnDef.header;
+    })
+  );
+  const csvData = rows.map((row) => row.getVisibleCells().map((cell) => cell.getValue()));
 
   const csv = stringify([...headerRows, ...csvData]);
   const blob = new Blob([csv], { type: "text/csv;charset=utf8;" });
   const link = document.createElement("a");
   link.download = exportFileName;
   link.href = URL.createObjectURL(blob);
-  link.setAttribute("visibility", "hidden");
+  link.style.visibility = "hidden";
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
 };
-
-type tableInitialState = SortingTableState | VisibilityTableState | PaginationInitialTableState;
 
 // opt in to tick boxes on rows; the page owns the selection so it can act on it and clear it
 export interface TableSelection {
@@ -113,7 +112,7 @@ export interface BaseTableProps extends Partial<HTMLElement> {
   hover?: boolean;
   columns: ColumnDef<any, any>[];
   asyncExpandFunction?: any;
-  initialState?: tableInitialState;
+  initialState?: InitialTableState;
   exportFileName?: string;
   selection?: TableSelection;
 }
@@ -131,8 +130,6 @@ const BaseTable = ({
   exportFileName = undefined,
   selection = undefined,
 }: BaseTableProps) => {
-  const initState: tableInitialState = initialState ?? { pagination: { pageSize: 15 } };
-
   const table = useReactTable({
     data,
     columns,
@@ -144,7 +141,11 @@ const BaseTable = ({
     getFacetedUniqueValues: getFacetedUniqueValues(),
     getFacetedMinMaxValues: getFacetedMinMaxValues(),
     debugTable,
-    initialState: initState,
+    // merge so a page that only sets sorting still gets the default page size
+    initialState: {
+      ...initialState,
+      pagination: { pageSize: 15, ...initialState?.pagination },
+    },
     ...(selection && {
       getRowId: selection.getRowId,
       enableRowSelection: (row: any) =>
@@ -333,19 +334,20 @@ function _baseTable({
             </Button>
           </ButtonGroup>
 
-          <ButtonGroup size="sm" className="ms-2">
-            <SplitButton
-              id="pageSizeDropdown"
-              variant="outline-success"
-              title={pageSize === 1_000_000 ? "All rows" : `${pageSize} rows`}
-            >
-              {[15, 30, 60, 100, 1_000_000].map((_pageSize) => (
-                <Dropdown.Item key={_pageSize} onClick={() => table.setPageSize(_pageSize)}>
-                  {_pageSize === 1_000_000 ? "Show all" : `Show ${_pageSize}`}
-                </Dropdown.Item>
-              ))}
-            </SplitButton>
-          </ButtonGroup>
+          <Form.Select
+            size="sm"
+            className="ms-2"
+            style={{ width: "auto" }}
+            aria-label="Page size"
+            value={pageSize}
+            onChange={(e) => table.setPageSize(Number(e.target.value))}
+          >
+            {[15, 30, 60, 100, 1_000_000].map((_pageSize) => (
+              <option key={_pageSize} value={_pageSize}>
+                {_pageSize === 1_000_000 ? "Show all" : `Show ${_pageSize}`}
+              </option>
+            ))}
+          </Form.Select>
         </ButtonToolbar>
       </div>
 

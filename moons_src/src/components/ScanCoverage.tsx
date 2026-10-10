@@ -107,7 +107,7 @@ export const ScanCoverage = () => {
                 isFetching={missing.isFetching}
                 columns={columns}
                 data={missing.data}
-                initialState={{ pagination: { pageSize: 25 } } as any}
+                initialState={{ pagination: { pageSize: 25 } }}
                 exportFileName={`MissingScans-${region.name}`}
               />
             )}

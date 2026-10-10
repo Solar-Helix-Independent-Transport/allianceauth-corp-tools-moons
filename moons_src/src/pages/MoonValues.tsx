@@ -313,9 +313,7 @@ const MoonValues = () => {
           isFetching={values.isFetching}
           columns={columns}
           data={values.data?.moons ?? []}
-          initialState={
-            { sorting: [{ id: "value", desc: true }], pagination: { pageSize: 25 } } as any
-          }
+          initialState={{ sorting: [{ id: "value", desc: true }], pagination: { pageSize: 25 } }}
           exportFileName="MoonValues"
           selection={
             canRent || canMark
