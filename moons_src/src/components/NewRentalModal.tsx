@@ -44,7 +44,8 @@ export const NewRentalModal = ({
   const [moon, setMoon] = useState<Option>(initialMoon);
   const [price, setPrice] = useState(initialPrice !== undefined ? String(initialPrice) : "");
   const [note, setNote] = useState("");
-  const [repriceMethodId, setRepriceMethodId] = useState<number | null>(null);
+  // undefined until picked: defaults to the first profile; null is an explicit "don't reprice"
+  const [repriceChoice, setRepriceChoice] = useState<number | null | undefined>(undefined);
   // set once the server says the moon is marked unavailable; renting then needs "Rent anyway"
   const [unavailable, setUnavailable] = useState(false);
   const [rentAnyway, setRentAnyway] = useState(false);
@@ -57,6 +58,8 @@ export const NewRentalModal = ({
     refetchOnWindowFocus: false,
   });
   const offered: Array<taxProfile> = profiles.data ?? [];
+  const repriceMethodId: number | null =
+    repriceChoice === undefined ? offered[0]?.id ?? null : repriceChoice;
   const selected = offered.find((p) => p.id === profileId)?.id ?? offered[0]?.id;
 
   const suggestion = useQuery(
@@ -144,7 +147,7 @@ export const NewRentalModal = ({
           <Form.Label>Reprice with</Form.Label>
           <Form.Select
             value={repriceMethodId ?? ""}
-            onChange={(e) => setRepriceMethodId(e.target.value ? Number(e.target.value) : null)}
+            onChange={(e) => setRepriceChoice(e.target.value ? Number(e.target.value) : null)}
           >
             <option value="">Don&apos;t reprice</option>
             {offered.map((p) => (

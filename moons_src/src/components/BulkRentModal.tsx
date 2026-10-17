@@ -44,7 +44,8 @@ export const BulkRentModal = ({
   const [contact, setContact] = useState<Option>(null);
   const [corp, setCorp] = useState<Option>(null);
   const [note, setNote] = useState("");
-  const [repriceMethodId, setRepriceMethodId] = useState<number | null>(null);
+  // undefined until picked: defaults to the first profile; null is an explicit "don't reprice"
+  const [repriceChoice, setRepriceChoice] = useState<number | null | undefined>(undefined);
   const [prices, setPrices] = useState<Record<number, string>>(() =>
     Object.fromEntries(moons.map((m) => [m.id, m.suggested === null ? "" : String(m.suggested)]))
   );
@@ -56,6 +57,8 @@ export const BulkRentModal = ({
   const profiles = useQuery(["scan-profiles"], () => getScanProfiles(), {
     refetchOnWindowFocus: false,
   });
+  const repriceMethodId: number | null =
+    repriceChoice === undefined ? profiles.data?.[0]?.id ?? null : repriceChoice;
 
   const priceOf = (m: RentItem) => prices[m.id];
   const pricesValid = moons.every((m) => priceOf(m) !== "" && Number(priceOf(m)) >= 0);
@@ -106,7 +109,7 @@ export const BulkRentModal = ({
           <Form.Label>Reprice with</Form.Label>
           <Form.Select
             value={repriceMethodId ?? ""}
-            onChange={(e) => setRepriceMethodId(e.target.value ? Number(e.target.value) : null)}
+            onChange={(e) => setRepriceChoice(e.target.value ? Number(e.target.value) : null)}
           >
             <option value="">Don&apos;t reprice</option>
             {(profiles.data ?? []).map((p: taxProfile) => (
