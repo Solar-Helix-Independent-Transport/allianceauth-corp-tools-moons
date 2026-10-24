@@ -1,6 +1,7 @@
 import { getScanProfiles, postNewRentals, searchChars, searchCorps } from "../helpers/Api";
 import { taxProfile } from "../types";
 import { ApiSelect } from "./ApiSelect";
+import { RarityBadge } from "./RarityBadge";
 import { useState } from "react";
 import { Alert, Badge, Button, Form, Modal, Table } from "react-bootstrap";
 import { useQuery, useQueryClient } from "react-query";
@@ -12,6 +13,7 @@ export interface RentItem {
   id: number;
   name: string;
   place: string;
+  rarity: number | null;
   suggested: number | null;
   available: boolean;
 }
@@ -20,12 +22,14 @@ export const rentItemFromValue = (m: {
   moon: { id: string | number; name: string };
   system: string;
   region: string;
+  rarity?: number | null;
   rent?: number;
   available: boolean;
 }): RentItem => ({
   id: Number(m.moon.id),
   name: m.moon.name,
   place: `${m.system} - ${m.region}`,
+  rarity: m.rarity ?? null,
   suggested: m.rent ?? null,
   available: m.available,
 });
@@ -124,6 +128,7 @@ export const BulkRentModal = ({
             <thead>
               <tr>
                 <th>Moon</th>
+                <th>Rating</th>
                 <th className="text-end">Suggested</th>
                 <th style={{ width: 200 }}>Monthly price (ISK)</th>
               </tr>
@@ -139,6 +144,9 @@ export const BulkRentModal = ({
                       </Badge>
                     )}
                     <div className="text-muted">{m.place}</div>
+                  </td>
+                  <td>
+                    <RarityBadge rarity={m.rarity} />
                   </td>
                   <td className="text-end">
                     {m.suggested === null ? (
@@ -161,7 +169,7 @@ export const BulkRentModal = ({
             </tbody>
             <tfoot>
               <tr>
-                <th colSpan={2}>Total per month</th>
+                <th colSpan={3}>Total per month</th>
                 <th>{total.toLocaleString()} ISK</th>
               </tr>
             </tfoot>
