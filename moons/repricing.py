@@ -68,6 +68,9 @@ def reprice(settings):
             v = values.get(rental.moon_id)
             if v and v.tax_30d:
                 new_prices[rental.pk] = rent.rent_breakdown(v.tax_30d, tax_rate, fuel).final
+            elif v and v.value_30d and tax_rate.rent_minimum:
+                # ore worth mining, just none of it taxed: charge the minimum
+                new_prices[rental.pk] = tax_rate.rent_minimum
             else:
                 unpriced[rental.pk] = "No Moon Scan" if not v else "No Value"
 

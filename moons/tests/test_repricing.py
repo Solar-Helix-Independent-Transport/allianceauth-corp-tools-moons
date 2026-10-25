@@ -79,6 +79,7 @@ class TestRepricing(TestCase):
         cls.ended.end_date = timezone.now()
         cls.ended.save()
 
+        cls.system, cls.owned = system, owned
         cls.settings = RentalRepricing.get_solo()
         cls.settings.channel_id = 123
         cls.settings.save()
@@ -112,6 +113,43 @@ class TestRepricing(TestCase):
             "Auga I - Moon 2 (Unknown Owner: Stranger)",
             "Auga I - Moon 3 (Renter) (No Moon Scan)",
         ])
+
+    def _untaxed_rental(self, moon_id, method, priced=True):
+        """A rental on a moon of ore that is priced (or not) but has no tax under any profile."""
+        bitumens = ItemType.objects.get_or_create(
+            id=45492, name="Bitumens",
+            group=ItemGroup.objects.get_or_create(id=1884, name="Ubiquitous Moon Asteroids")[0])[0]
+        if priced:
+            OrePrice.objects.get_or_create(item=bitumens, defaults={"price": Decimal("1000")})
+        m = Moon.objects.create(id=moon_id, name=f"Auga II - Moon {moon_id % 100}", solar_system=self.system)
+        MoonScan.objects.create(moon=m, added_at=timezone.now()).ores.create(ore=bitumens, fraction=Decimal("0.5"))
+        return MoonRental.objects.create(
+            moon=m, contact=self.owned, corporation=self.renters, price=100_000_000,
+            start_date=timezone.now(), note="rented", reprice_method=method)
+
+    def test_valued_but_untaxed_moon_gets_the_minimum(self):
+        rental = self._untaxed_rental(40000011, self.profile)
+
+        result = repricing.reprice(self.settings)
+
+        self.assertIn((rental.pk, 100_000_000, 50_000_000),
+                      [(c.rental.pk, c.old, c.new) for c in result.changes])
+        rental.refresh_from_db()
+        self.assertEqual(rental.price, 50_000_000)
+
+    def test_untaxed_moon_without_a_minimum_is_skipped(self):
+        rental = self._untaxed_rental(40000012, self.metenox)
+
+        result = repricing.reprice(self.settings)
+
+        self.assertIn(f"{rental.moon.name} (Renter) (No Value)", result.skipped)
+
+    def test_untaxed_moon_without_a_value_is_skipped(self):
+        rental = self._untaxed_rental(40000013, self.profile, priced=False)
+
+        result = repricing.reprice(self.settings)
+
+        self.assertIn(f"{rental.moon.name} (Renter) (No Value)", result.skipped)
 
     def test_dry_run_changes_nothing(self):
         self.settings.dry_run = True
